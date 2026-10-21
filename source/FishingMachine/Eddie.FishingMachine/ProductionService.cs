@@ -302,8 +302,7 @@ internal sealed partial class ProductionService
         => StatusCore(c) + " · " + Mod.T("status.collectible", new { count = CollectibleCount(c) });
     internal long CollectibleCount(Chest c)
     {
-        try { return c.Items.Where(i => i != null && i.Stack > 0 && !CrabBaitItem(i)
-            && i.QualifiedItemId is not ("(O)685" or "(O)ChallengeBait" or "(O)DeluxeBait" or "(O)SpecificBait" or GiantLobsterRules.Bait)).Sum(i => (long)i.Stack); }
+        try { return c.Items.Where(IsCollectible).Sum(i => (long)i.Stack); }
         catch { return 0; }
     }
     private string StatusCore(Chest c)
@@ -344,6 +343,7 @@ internal sealed partial class ProductionService
             Mod.Message("remove.resumed");
             return true;
         }
+        try{if(PanelButton(c,menu,button))return true;}catch{}
         if(ModEntry.IsCrab(c)){try{return CrabMenuButton(c,menu,button);}catch{Mod.Message("status.error");return true;}}
         return false; // Fishing machines have no trash toggle.
     }
@@ -357,6 +357,7 @@ internal sealed partial class ProductionService
     internal void DrawMenu(SpriteBatch b)
     {
         if(!CurrentMenu(out var c,out var menu))return;
+        try{if(TryDrawPanel(b,c,menu))return;}catch{}
         if(ModEntry.IsCrab(c)){try{DrawCrabMenu(b,c,menu);}catch{}return;}
         ProductionState s;
         try{s=Read(c);}catch{return;}

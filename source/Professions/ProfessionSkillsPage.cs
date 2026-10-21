@@ -11,16 +11,48 @@ namespace BetterStardewValley.Professions;
 
 // Only the five vanilla rows are replaced. Native avatar, wallet, mastery and
 // other draw code (including other mods' postfixes) continue to execute.
+//
+// Row layout (left to right): skill icon, name, native-style level beads, the two level-5
+// professions side by side, the four level-10 professions as a 2x2 grid, level number.
+// Grid columns follow the vanilla tree: the left column holds the two level-10 choices that
+// grew out of the left level-5 profession, the right column those of the right one.
 internal static class ProfessionSkillsPage
 {
-    internal const int RowHeight=68, IconSize=32;
+    // Pitch is adaptive: vanilla leaves roughly 55 px per skill, a roomier page gets up to 68.
+    internal const int MaxPitch=68, MinPitch=52, HeaderHeight=20, MinWidth=336, SlotGap=3, GroupGap=12, NumberWidth=32, BeadSpan=101;
+    internal const int RowHeight=MaxPitch;
     private static readonly FieldInfo Areas=AccessTools.Field(typeof(SkillsPage),"skillAreas"),Bars=AccessTools.Field(typeof(SkillsPage),"skillBars"),Avatar=AccessTools.Field(typeof(SkillsPage),"playerPanel");
     private static readonly ConditionalWeakTable<SkillsPage,State> States=new();
     internal sealed class State
     {
-        internal Farmer Owner=null!;internal Rectangle Bounds;internal int First,Focus=-1,Pinned=-1,Hover=-1,HoverSkill=-1;
+        internal Farmer Owner=null!;internal Rectangle Bounds;internal int First,Focus=-1,Pinned=-1,Hover=-1,HoverSkill=-1,NameWidth=72;
         internal readonly List<(int Id,Rectangle Box)> Icons=new();
-        internal int Visible=>Math.Max(1,Math.Min(5,Bounds.Height/RowHeight));
+        internal int Pitch=>PitchFor(Bounds.Height);
+        internal int Visible=>Math.Max(1,Math.Min(5,Math.Max(0,Bounds.Height-HeaderHeight)/Pitch));
+        internal int RowTop(int row)=>Bounds.Y+HeaderHeight+(row-First)*Pitch;
+        /// <summary>Visible skill row under a screen y coordinate, or -1.</summary>
+        internal int RowAt(int y)
+        {
+            int rel=y-Bounds.Y-HeaderHeight;if(rel<0)return -1;
+            int row=First+rel/Pitch;return row<Math.Min(5,First+Visible)?row:-1;
+        }
+    }
+    /// <summary>Horizontal arrangement of one row, relative to the left edge of the page area.</summary>
+    internal readonly record struct Metrics(int Slot,int BeadScale,int NameX,int NameWidth,int BarX,int PairX,int GridX,int NumberX);
+    internal static int PitchFor(int height)=>Math.Clamp((height-HeaderHeight)/5,MinPitch,MaxPitch);
+    /// <summary>Slot edge in pixels: the 16 px profession sprite at 1.5x to 2x, small enough that the 2x2 grid fits a row.</summary>
+    internal static int SlotFor(int pitch)=>Math.Clamp((pitch-SlotGap)/2/2*2,24,32);
+    /// <summary>Slot edge limited by the width too: the bar, both icon groups and the level number must all fit.</summary>
+    internal static int SlotFor(int pitch,int width)=>Math.Max(24,Math.Min(SlotFor(pitch),(width-223)/4/2*2));
+    internal static Metrics Measure(int width,int slot,int nameWidth)
+    {
+        int group=2*slot+SlotGap,numberX=width-NumberWidth,gridX=numberX-8-group,pairX=gridX-GroupGap-group;
+        const int nameX=24;
+        // The bar at its smallest scale always fits; a long skill name is truncated instead.
+        nameWidth=Math.Max(24,Math.Min(nameWidth,pairX-8-(nameX+8)-BeadSpan));
+        int barX=nameX+nameWidth+8,room=pairX-8-barX;
+        int scale=room>=BeadSpan*4?4:room>=BeadSpan*3?3:room>=BeadSpan*2?2:1;
+        return new(slot,scale,nameX,nameWidth,barX,pairX,gridX,numberX);
     }
     internal static bool Installed;
     private static Harmony? UiPatches;
@@ -66,7 +98,7 @@ internal static class ProfessionSkillsPage
         int top=Math.Max(viewport.Top+16,boxes.Min(b=>b.Top));
         int right=Math.Min(page.Right-32,viewport.Right-24);
         int bottom=Math.Min(boxes.Max(b=>b.Bottom)+32,Math.Min(page.Bottom-32,viewport.Bottom-32));
-        return right-left<304||bottom-top<RowHeight?Rectangle.Empty:new(left,top,right-left,Math.Min(RowHeight*5,bottom-top));
+        return right-left<MinWidth||bottom-top<HeaderHeight+MinPitch?Rectangle.Empty:new(left,top,right-left,Math.Min(HeaderHeight+MaxPitch*5,bottom-top));
     }
     private static State? Get(SkillsPage page)
     {
@@ -76,19 +108,30 @@ internal static class ProfessionSkillsPage
         var rect=Layout((Rectangle)Avatar.GetValue(page)!,vanilla.Select(c=>c.bounds),new(page.xPositionOnScreen,page.yPositionOnScreen,page.width,page.height),new(0,0,Game1.uiViewport.Width,Game1.uiViewport.Height));
         // Respect custom skill components that occupy the same horizontal region.
         foreach(var c in areas.Except(vanilla))if(c.bounds.Left<rect.Right&&c.bounds.Right>rect.Left&&c.bounds.Top>=rect.Top&&c.bounds.Top<rect.Bottom)rect.Height=c.bounds.Top-rect.Top;
-        if(rect.Width<304||rect.Height<RowHeight)return null;
+        if(rect.Width<MinWidth||rect.Height<HeaderHeight+MinPitch)return null;
         var state=States.GetValue(page,_=>new State{Owner=Game1.player});
         if(state.Owner!=Game1.player){state.Owner=Game1.player;state.Focus=state.Pinned=state.Hover=-1;}
         if(rect!=state.Bounds){state.Bounds=rect;state.First=Math.Clamp(state.First,0,5-state.Visible);Build(state);}
         return state;
     }
+    /// <summary>Hit boxes only. Icon positions depend on the area, never on font metrics.</summary>
     internal static void Build(State s)
     {
         s.Icons.Clear();
+        int pitch=s.Pitch,slot=SlotFor(pitch,s.Bounds.Width),group=2*slot+SlotGap;
+        var m=Measure(s.Bounds.Width,slot,s.NameWidth);
+        int pairX=s.Bounds.X+m.PairX,gridX=s.Bounds.X+m.GridX;
         for(int row=s.First;row<Math.Min(5,s.First+s.Visible);row++)
         {
             var ids=ProfessionRules.Skills[row].All.ToArray();
-            for(int col=0;col<6;col++)s.Icons.Add((ids[col],new(s.Bounds.X+col*40+(col>=2?16:0),s.Bounds.Y+(row-s.First)*RowHeight+30,IconSize,IconSize)));
+            int top=s.RowTop(row),pairY=top+(pitch-slot)/2,gridY=top+(pitch-group)/2,step=slot+SlotGap;
+            // Level 5: left and right profession. Level 10: one column per level-5 profession.
+            s.Icons.Add((ids[0],new(pairX,pairY,slot,slot)));
+            s.Icons.Add((ids[1],new(pairX+step,pairY,slot,slot)));
+            s.Icons.Add((ids[2],new(gridX,gridY,slot,slot)));
+            s.Icons.Add((ids[3],new(gridX,gridY+step,slot,slot)));
+            s.Icons.Add((ids[4],new(gridX+step,gridY,slot,slot)));
+            s.Icons.Add((ids[5],new(gridX+step,gridY+step,slot,slot)));
         }
     }
     private static List<ClickableTextureComponent> VisibleBars(SkillsPage page)
@@ -103,38 +146,88 @@ internal static class ProfessionSkillsPage
         while(text.Length>0&&Game1.smallFont.MeasureString(text+"…").X>width)text=text[..^1];return text+"…";
     }
     internal static Rectangle ProfessionIcon(int id)=>new(id%6*16,624+id/6*16,16,16);
+
+    // Flat slot palette: left branch teal, right branch purple, locked beige.
+    private static readonly Color LeftFill=new(95,194,180),LeftEdge=new(31,111,101),RightFill=new(165,129,214),RightEdge=new(84,51,127),
+        LockedFill=new(217,197,155),LockedEdge=new(179,158,114),LockedMark=new(150,128,86),HeaderText=new(122,74,20);
+    private static void Fill(SpriteBatch b,Rectangle r,Color c,float depth)=>b.Draw(Game1.staminaRect,r,null,c,0f,Vector2.Zero,SpriteEffects.None,depth);
+    private static void Outline(SpriteBatch b,Rectangle r,int t,Color c,float depth)
+    {
+        Fill(b,new Rectangle(r.X,r.Y,r.Width,t),c,depth);Fill(b,new Rectangle(r.X,r.Bottom-t,r.Width,t),c,depth);
+        Fill(b,new Rectangle(r.X,r.Y+t,t,r.Height-2*t),c,depth);Fill(b,new Rectangle(r.Right-t,r.Y+t,t,r.Height-2*t),c,depth);
+    }
+    private static void Centered(SpriteBatch b,string text,float centerX,float y,float scale,Color c,float depth)
+    {
+        var size=Game1.smallFont.MeasureString(text)*scale;
+        b.DrawString(Game1.smallFont,text,new Vector2(centerX-size.X/2f,y),c,0f,Vector2.Zero,scale,SpriteEffects.None,depth);
+    }
+    /// <summary>The native ten-bead level bar (8x9 beads, 14x9 at levels 5 and 10), scaled by an integer.</summary>
+    private static void Beads(SpriteBatch b,int x,int midY,int scale,int level)
+    {
+        int top=midY-9*scale/2,extra=0;
+        for(int n=0;n<10;n++)
+        {
+            bool red=level>n,big=(n+1)%5==0;
+            var at=new Vector2(x+n*9*scale+extra,top);
+            var shade=big?new Rectangle(145,338,14,9):new Rectangle(129,338,8,9);
+            var bead=big?new Rectangle(145+(red?14:0),338,14,9):new Rectangle(129+(red?8:0),338,8,9);
+            b.Draw(Game1.mouseCursors,at+new Vector2(-scale,scale),shade,Color.Black*.35f,0f,Vector2.Zero,(float)scale,SpriteEffects.None,.85f);
+            b.Draw(Game1.mouseCursors,at,bead,Color.White*(red?1f:.65f),0f,Vector2.Zero,(float)scale,SpriteEffects.None,.87f);
+            if(big)extra+=6*scale;
+        }
+    }
+    private static int Branch(ProfessionRules.Skill skill,int id)=>skill.Basic.Contains(id)?Array.IndexOf(skill.Basic,id):Array.IndexOf(skill.Advanced,id)/2;
+    private static void Slot(SpriteBatch b,ProfessionRules.Skill skill,int id,Rectangle box,bool owned,bool selected)
+    {
+        bool left=Branch(skill,id)==0;
+        Fill(b,box,owned?left?LeftFill:RightFill:LockedFill,.87f);
+        if(owned)b.Draw(Game1.mouseCursors,box,ProfessionIcon(id),Color.White,0f,Vector2.Zero,SpriteEffects.None,.88f);
+        else Centered(b,"?",box.Center.X,box.Center.Y-Game1.smallFont.MeasureString("?").Y/2f,1f,LockedMark,.88f);
+        Outline(b,box,1,owned?left?LeftEdge:RightEdge:LockedEdge,.89f);
+        if(selected){var frame=box;frame.Inflate(2,2);Outline(b,frame,2,Color.White,.9f);}
+    }
     internal static bool DrawRows(SkillsPage page,SpriteBatch b)
     {
         var s=Get(page);if(s==null)return false;
+        int pitch=s.Pitch,slot=SlotFor(pitch,s.Bounds.Width),group=2*slot+SlotGap;
+        s.NameWidth=(int)Math.Ceiling(ProfessionRules.Skills.Max(k=>Game1.smallFont.MeasureString(Farmer.getSkillDisplayNameFromIndex(k.Id)).X));
+        var m=Measure(s.Bounds.Width,slot,s.NameWidth);
+        int left=s.Bounds.X;
+        // Column headers sit above the first visible row and follow the icon groups.
+        Centered(b,ProfessionService.Text("professions.ui.level-header",new{level=5}),left+m.PairX+group/2f,s.Bounds.Y,.8f,HeaderText,.87f);
+        Centered(b,ProfessionService.Text("professions.ui.level-header",new{level=10}),left+m.GridX+group/2f,s.Bounds.Y,.8f,HeaderText,.87f);
+        if(s.Visible<5)b.DrawString(Game1.smallFont,$"{s.First+1}–{s.First+s.Visible}/5",new Vector2(left+2,s.Bounds.Y),HeaderText,0f,Vector2.Zero,.8f,SpriteEffects.None,.87f);
         for(int row=s.First;row<Math.Min(5,s.First+s.Visible);row++)
         {
-            var skill=ProfessionRules.Skills[row];int level=s.Owner.GetUnmodifiedSkillLevel(skill.Id),y=s.Bounds.Y+(row-s.First)*RowHeight;
+            var skill=ProfessionRules.Skills[row];int level=s.Owner.GetUnmodifiedSkillLevel(skill.Id),mid=s.RowTop(row)+pitch/2;
             // The original five skill sprites are 10x10 pixels in mouseCursors.
             int sprite=skill.Id switch{0=>10,1=>20,2=>60,3=>30,_=>120};
-            b.Draw(Game1.mouseCursors,new Rectangle(s.Bounds.X,y,20,20),new Rectangle(sprite,428,10,10),Color.White);
-            string name=Farmer.getSkillDisplayNameFromIndex(skill.Id)+" "+level;
-            int progressWidth=Math.Min(120,s.Bounds.Width/3);
-            b.DrawString(Game1.smallFont,Fit(name,s.Bounds.Width-progressWidth-36),new Vector2(s.Bounds.X+24,y-3),Game1.textColor);
-            for(int n=0;n<10;n++)b.Draw(Game1.staminaRect,new Rectangle(s.Bounds.Right-progressWidth+n*(progressWidth/10),y+5,Math.Max(3,progressWidth/10-3),10),n<level?Color.SaddleBrown:Color.Tan);
-            string count=skill.All.Count(s.Owner.professions.Contains)+"/6";
-            b.DrawString(Game1.smallFont,count,new Vector2(s.Bounds.Right-48,y+32),Game1.textColor);
+            var source=new Rectangle(sprite,428,10,10);
+            // Native sprites carry a soft shadow offset by one source pixel down and to the left.
+            b.Draw(Game1.mouseCursors,new Rectangle(left,mid-10+2,20,20),source,Color.Black*.3f,0f,Vector2.Zero,SpriteEffects.None,.85f);
+            b.Draw(Game1.mouseCursors,new Rectangle(left+2,mid-10,20,20),source,Color.White,0f,Vector2.Zero,SpriteEffects.None,.87f);
+            string name=Fit(Farmer.getSkillDisplayNameFromIndex(skill.Id),m.NameWidth);
+            b.DrawString(Game1.smallFont,name,new Vector2(left+m.NameX,mid-Game1.smallFont.MeasureString(name).Y/2f),Game1.textColor,0f,Vector2.Zero,1f,SpriteEffects.None,.87f);
+            Beads(b,left+m.BarX,mid,m.BeadScale,level);
+            string number=level.ToString();var numberSize=Game1.smallFont.MeasureString(number)*1.25f;
+            var numberAt=new Vector2(s.Bounds.Right-numberSize.X-2,mid-numberSize.Y/2f);
+            b.DrawString(Game1.smallFont,number,numberAt+new Vector2(2,2),Color.Black*.35f,0f,Vector2.Zero,1.25f,SpriteEffects.None,.86f);
+            b.DrawString(Game1.smallFont,number,numberAt,Color.SandyBrown*(level==0?.75f:1f),0f,Vector2.Zero,1.25f,SpriteEffects.None,.87f);
         }
         foreach(var icon in s.Icons)
         {
-            bool owned=s.Owner.professions.Contains(icon.Id);bool selected=icon.Id==s.Focus||icon.Id==s.Pinned;
-            var border=icon.Box;border.Inflate(2,2);b.Draw(Game1.staminaRect,border,selected?Color.Goldenrod:owned?Color.SaddleBrown:Color.Gray);
-            b.Draw(Game1.mouseCursors,icon.Box,ProfessionIcon(icon.Id),owned?Color.White:Color.White*.28f);
-            // Ownership has an additional shape marker; never rely on colour alone.
-            if(owned){b.Draw(Game1.staminaRect,new Rectangle(icon.Box.Right-7,icon.Box.Bottom-5,5,3),Color.White);b.Draw(Game1.staminaRect,new Rectangle(icon.Box.Right-4,icon.Box.Bottom-9,2,7),Color.White);}
+            var skill=ProfessionRules.Skills.First(k=>k.All.Contains(icon.Id));
+            Slot(b,skill,icon.Id,icon.Box,s.Owner.professions.Contains(icon.Id),icon.Id==s.Focus||icon.Id==s.Pinned);
         }
-        if(s.Visible<5&&s.Bounds.Height-s.Visible*RowHeight>=22)b.DrawString(Game1.smallFont,$"{s.First+1}–{s.First+s.Visible}/5",new Vector2(s.Bounds.Right-74,s.Bounds.Bottom-22),Game1.textColor);
         return true;
     }
     private static bool Hover(SkillsPage __instance,int x,int y,ref string ___hoverText,ref string ___hoverTitle,ref int ___professionImage)
     {
         var s=Get(__instance);if(s==null)return true;
         s.Hover=s.Icons.Where(c=>c.Box.Contains(x,y)).Select(c=>c.Id).DefaultIfEmpty(-1).First();
-        s.HoverSkill=s.Bounds.Contains(x,y)&&((y-s.Bounds.Top)%RowHeight)<28?s.First+(y-s.Bounds.Top)/RowHeight:-1;
+        // The skill name tooltip belongs to the skill icon and name only, not the whole row.
+        int row=s.RowAt(y);
+        s.HoverSkill=row>=0&&x>=s.Bounds.X&&x<s.Bounds.X+24+s.NameWidth&&Math.Abs(y-(s.RowTop(row)+s.Pitch/2))<=14?row:-1;
         if(!s.Bounds.Contains(x,y)){s.Focus=-1;return true;}
         ___hoverText=___hoverTitle="";___professionImage=-1;return false;
     }
