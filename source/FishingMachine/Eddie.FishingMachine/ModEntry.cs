@@ -82,7 +82,7 @@ public sealed class ModEntry
             throw;
         }
         helper.Events.GameLoop.SaveLoaded+=(_,_)=>{LastLevel.Value=-1; Unlock(); Caves.Load(); Machines.Rebuild();World.Audit();Actions.Tick();Production.Tick();};
-        helper.Events.GameLoop.DayStarted+=(_,_)=>{Saving=false;Unlock();Caves.Restore();Machines.Rebuild();World.Audit();ObserveTimeline();Actions.Tick();Production.Tick();};
+        helper.Events.GameLoop.DayStarted+=(_,_)=>{Saving=false;Unlock();Caves.Restore();Machines.Rebuild();World.Audit();ObserveTimeline();Actions.Tick();Production.Tick();Production.LogAllFishPools();};
         helper.Events.GameLoop.TimeChanged+=(_,_)=>{ObserveTimeline();Production.Tick();};
         helper.Events.GameLoop.DayEnding+=(_,_)=>ObserveTimeline(true);
         helper.Events.Content.AssetsInvalidated+=(_,e)=>

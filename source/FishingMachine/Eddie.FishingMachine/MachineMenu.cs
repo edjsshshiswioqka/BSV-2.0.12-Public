@@ -45,6 +45,15 @@ internal sealed partial class ProductionService
     private static readonly ConditionalWeakTable<ItemGrabMenu,object> Prepared=new();
     private static readonly ConditionalWeakTable<ItemGrabMenu,object> Diagnosed=new();
 
+    /// <summary>Logs the fish pool of every fishing machine (on load / new day), so catch problems show up in the SMAPI log.</summary>
+    internal void LogAllFishPools()
+    {
+        foreach(var entry in Mod.Machines.All)
+        {
+            var c=entry.Key;if(ModEntry.IsCrab(c))continue;
+            try{LogFishPool(c,Read(c));}catch(Exception ex){Mod.Monitor.Log("[BSV fishing pool] "+ex.Message,LogLevel.Warn);}
+        }
+    }
     /// <summary>Writes the fish this machine can catch right now (and why others are excluded) to the SMAPI log.</summary>
     private void LogFishPool(Chest c,ProductionState s)
     {
@@ -56,8 +65,18 @@ internal sealed partial class ProductionService
             string timeline;
             try{var t=TimelineEnvironment.Candidates(c,s,owner);timeline=t.Count+" ["+string.Join(", ",t.Select(f=>f.Id))+"]";}
             catch(Exception ex){timeline="error: "+ex.Message;}
+            string journal="none";
+            try
+            {
+                if(!string.IsNullOrEmpty(s.CycleToken))
+                {
+                    var env=TimelineEnvironment.At(s.CycleToken,Now);
+                    journal=$"day {env.Day} unknownWeather {env.UnknownWeather} error {env.Error ?? "-"} segments "+string.Join(" ",env.Fish.Select(f=>$"{f.From}-{f.Until}:{f.Fish.Count}"))+$" other {env.Other.Count}";
+                }
+            }
+            catch(Exception ex){journal="error: "+ex.Message;}
             Mod.Monitor.Log($"[BSV fishing pool] {c.Location.NameOrUniqueName} tile {c.TileLocation.X},{c.TileLocation.Y} facing {WorldService.GetFacing(c)} extended {WorldService.IsExtended(c)}; time {Game1.timeOfDay}, owner {owner.Name} fishing level {owner.fishingLevel.Value}, machine Lv{s.Level}, phase {s.Phase}."
-                +$"\n  now: {now.Count} fish [{string.Join(", ",now.Select(f=>f.Id))}]\n  cycle candidates: {timeline}\n  rejected: {string.Join("; ",rejected.Take(80))}",LogLevel.Info);
+                +$"\n  journal: {journal}\n  now: {now.Count} fish [{string.Join(", ",now.Select(f=>f.Id))}]\n  cycle candidates: {timeline}\n  rejected: {string.Join("; ",rejected.Take(80))}",LogLevel.Info);
         }
         catch(Exception ex){Mod.Monitor.Log("[BSV fishing pool] diagnostic failed: "+ex,LogLevel.Warn);}
     }
