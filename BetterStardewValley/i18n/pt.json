@@ -435,6 +435,7 @@
   "spirit.roe.name": "Ovas de peixe espiritual",
   "spirit.aged_roe.name": "Ovas de peixe espiritual envelhecidas",
   "professions.confirm": "{{skill}} {{level}}: confirme para desbloquear todas as profissões deste patamar.",
+  "professions.granted": "Novas profissões: {{names}}",
   "professions.owned": "Profissões desbloqueadas:",
   "professions.migrated": "O BSV adicionou {{count}} profissões ausentes. Os aumentos de nível pendentes não mudaram.",
   "professions.statue": "Todas as profissões são desbloqueadas com seu nível de habilidade. Você não precisa mudar de profissão. Nenhum ouro foi cobrado.",

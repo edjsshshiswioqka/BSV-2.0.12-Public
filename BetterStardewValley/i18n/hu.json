@@ -435,6 +435,7 @@
   "spirit.roe.name": "Szellemhalikra",
   "spirit.aged_roe.name": "Érlelt szellemhalikra",
   "professions.confirm": "{{skill}} {{level}}: erősítsd meg e fokozat összes szakmájának feloldását.",
+  "professions.granted": "Új szakmák: {{names}}",
   "professions.owned": "Feloldott szakmák:",
   "professions.migrated": "A BSV hozzáadott {{count}} hiányzó szakmát. A függő szintlépések változatlanok.",
   "professions.statue": "Minden szakma a képességszinteddel nyílik meg. Nem kell szakmát váltanod. Nem vontunk le aranyat.",

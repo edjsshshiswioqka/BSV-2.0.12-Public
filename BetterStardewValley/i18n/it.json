@@ -435,6 +435,7 @@
   "spirit.roe.name": "Uova di pesce spirito",
   "spirit.aged_roe.name": "Uova di pesce spirito stagionate",
   "professions.confirm": "{{skill}} {{level}}: conferma per sbloccare tutte le professioni di questa fascia.",
+  "professions.granted": "Nuove professioni: {{names}}",
   "professions.owned": "Professioni sbloccate:",
   "professions.migrated": "BSV ha aggiunto {{count}} professioni mancanti. Gli avanzamenti in attesa non cambiano.",
   "professions.statue": "Tutte le professioni si sbloccano con il livello della competenza. Non occorre cambiarle. Nessun denaro è stato addebitato.",

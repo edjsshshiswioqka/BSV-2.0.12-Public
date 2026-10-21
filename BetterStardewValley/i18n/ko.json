@@ -435,6 +435,7 @@
   "spirit.roe.name": "정령 물고기 어란",
   "spirit.aged_roe.name": "숙성 정령 물고기 어란",
   "professions.confirm": "{{skill}} {{level}}: 확인하면 이 단계의 모든 전문직이 해금됩니다.",
+  "professions.granted": "새 직업: {{names}}",
   "professions.owned": "해금된 전문직:",
   "professions.migrated": "BSV가 빠진 전문직 {{count}}개를 추가했습니다. 대기 중인 레벨업은 변경하지 않았습니다.",
   "professions.statue": "모든 전문직은 기술 레벨에 맞춰 해금됩니다. 전문직을 변경할 필요가 없습니다. 골드는 차감되지 않았습니다.",

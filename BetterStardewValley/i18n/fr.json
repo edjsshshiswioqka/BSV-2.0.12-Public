@@ -435,6 +435,7 @@
   "spirit.roe.name": "Œufs de poisson-esprit",
   "spirit.aged_roe.name": "Œufs de poisson-esprit affinés",
   "professions.confirm": "{{skill}} {{level}} : confirmez pour débloquer toutes les professions de ce palier.",
+  "professions.granted": "Nouveaux métiers : {{names}}",
   "professions.owned": "Professions débloquées :",
   "professions.migrated": "BSV a ajouté {{count}} professions manquantes. Niveaux en attente inchangés.",
   "professions.statue": "Toutes les professions se débloquent avec votre niveau. Inutile d’en changer. Aucun or prélevé.",

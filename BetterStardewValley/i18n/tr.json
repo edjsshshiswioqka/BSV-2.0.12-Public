@@ -435,6 +435,7 @@
   "spirit.roe.name": "Ruh Balığı Yumurtası",
   "spirit.aged_roe.name": "Olgunlaştırılmış Ruh Balığı Yumurtası",
   "professions.confirm": "{{skill}} {{level}}: bu kademenin tüm mesleklerini açmak için onaylayın.",
+  "professions.granted": "Yeni meslekler: {{names}}",
   "professions.owned": "Açılan meslekler:",
   "professions.migrated": "BSV eksik {{count}} mesleği ekledi. Bekleyen seviye artışları değişmedi.",
   "professions.statue": "Tüm meslekler beceri seviyenizle açılır. Meslek değiştirmeniz gerekmez. Altın alınmadı.",

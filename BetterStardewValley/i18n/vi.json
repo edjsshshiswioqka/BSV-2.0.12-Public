@@ -435,6 +435,7 @@
   "spirit.roe.name": "Trứng Cá Linh Hồn",
   "spirit.aged_roe.name": "Trứng Cá Linh Hồn Ủ",
   "professions.confirm": "{{skill}} {{level}}: xác nhận để mở mọi nghề ở bậc này.",
+  "professions.granted": "Nghề mới: {{names}}",
   "professions.owned": "Nghề đã mở:",
   "professions.migrated": "BSV đã thêm {{count}} nghề còn thiếu. Các lần lên cấp đang chờ không đổi.",
   "professions.statue": "Mọi nghề mở theo cấp kỹ năng. Bạn không cần đổi nghề. Chưa trừ vàng.",

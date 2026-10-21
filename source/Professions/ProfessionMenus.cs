@@ -24,15 +24,21 @@ internal static class ProfessionMenus
         if(!ProfessionService.Active || __instance.GetType()!=typeof(LevelUpMenu) || !__instance.isActive
             || !__instance.informationUp || !__instance.isProfessionChooser)return;
         int skill=(int)Skill.GetValue(__instance)!,level=(int)Level.GetValue(__instance)!;
-        if(!ProfessionGrant.CanConfirm(Game1.player,skill,level))return;
+        // There is never a profession choice: the chooser becomes a normal level-up page.
+        // A queued stage is granted on OK (native flow); a chooser opened without a queued
+        // level (e.g. by another mod or a cheat) grants the stage immediately.
+        bool queued=ProfessionGrant.CanConfirm(Game1.player,skill,level);
+        if(!queued&&!(ProfessionGrant.Owns(Game1.player)&&ProfessionRules.Stage(skill,level)&&Game1.player.GetUnmodifiedSkillLevel(skill)>=level))return;
         var info=(List<string>)Extra.GetValue(__instance)!;
         // Native combat extra-info advertises +5 HP for ordinary levels. Profession pages
         // never grant that amount. Keep any unrelated mod-added info intact.
         if(skill==Farmer.combatSkill)
             info.Remove(Game1.content.LoadString("Strings\\UI:LevelUp_ExtraInfo_Combat"));
-        string message=ProfessionService.Text("professions.confirm",new{skill=Farmer.getSkillDisplayNameFromIndex(skill),level});
+        var tier=ProfessionRules.Find(skill) is {} s?(level<10?s.Basic:s.Advanced):Array.Empty<int>();
+        string message=ProfessionService.Text("professions.granted",new{names=string.Join(", ",tier.Select(LevelUpMenu.getProfessionTitleFromNumber))});
         info.Add(message);
-        Pages.Remove(__instance);Pages.Add(__instance,new Page{Owner=Game1.player,Skill=skill,Level=level});
+        if(!queued){ProfessionGrant.Missing(Game1.player,skill,level);Game1.player.modData[ProfessionGrant.SettledKey(skill,level)]="1";}
+        Pages.Remove(__instance);Pages.Add(__instance,new Page{Owner=Game1.player,Skill=skill,Level=level,Confirmed=!queued});
         __instance.isProfessionChooser=false;
         // Native confirmation, recipes, resize and controller navigation remain in use.
         __instance.leftProfession=null;__instance.rightProfession=null;

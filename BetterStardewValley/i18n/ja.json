@@ -435,6 +435,7 @@
   "spirit.roe.name": "精霊魚の魚卵",
   "spirit.aged_roe.name": "精霊魚の熟成魚卵",
   "professions.confirm": "{{skill}} {{level}}：確定すると、この段階の職業をすべて解放します。",
+  "professions.granted": "新しい職業：{{names}}",
   "professions.owned": "解放済みの職業：",
   "professions.migrated": "BSV が不足していた職業を {{count}} 個追加しました。未精算のレベルアップは変更していません。",
   "professions.statue": "すべての職業はスキルレベルに応じて解放されます。職業を変更する必要はありません。お金は消費していません。",

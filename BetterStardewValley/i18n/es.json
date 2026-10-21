@@ -435,6 +435,7 @@
   "spirit.roe.name": "Huevas de pez espiritual",
   "spirit.aged_roe.name": "Huevas de pez espiritual curadas",
   "professions.confirm": "{{skill}} {{level}}: confirma para desbloquear todas las profesiones de este nivel.",
+  "professions.granted": "Nuevas profesiones: {{names}}",
   "professions.owned": "Profesiones desbloqueadas:",
   "professions.migrated": "BSV añadió {{count}} profesiones que faltaban. Subidas de nivel pendientes intactas.",
   "professions.statue": "Todas las profesiones se desbloquean por nivel. No necesitas cambiarlas. No se cobró oro.",

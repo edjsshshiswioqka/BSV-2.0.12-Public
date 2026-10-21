@@ -435,6 +435,7 @@
   "spirit.roe.name": "精灵鱼鱼籽",
   "spirit.aged_roe.name": "陈年精灵鱼鱼籽",
   "professions.confirm": "{{skill}} {{level}}级：确认后解锁本阶段全部职业。",
+  "professions.granted": "获得职业：{{names}}",
   "professions.owned": "已解锁的职业：",
   "professions.migrated": "BSV 已补全 {{count}} 个缺失职业。待结算升级保留原流程。",
   "professions.statue": "全部职业会随技能等级自动解锁，无须重选。本次未扣除金币。",

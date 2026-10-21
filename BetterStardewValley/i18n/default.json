@@ -435,6 +435,7 @@
   "spirit.roe.name": "Spirit Fish Roe",
   "spirit.aged_roe.name": "Aged Spirit Fish Roe",
   "professions.confirm": "{{skill}} {{level}}: confirm to unlock all professions for this tier.",
+  "professions.granted": "New professions: {{names}}",
   "professions.owned": "Unlocked professions:",
   "professions.migrated": "BSV added {{count}} missing professions. Pending level-ups are unchanged.",
   "professions.statue": "All professions unlock with your skill level. You do not need to change professions. No gold was charged.",

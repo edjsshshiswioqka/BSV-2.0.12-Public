@@ -435,6 +435,7 @@
   "spirit.roe.name": "Geisterfischrogen",
   "spirit.aged_roe.name": "Gereifter Geisterfischrogen",
   "professions.confirm": "{{skill}} {{level}}: Bestätigen schaltet alle Berufe dieser Stufe frei.",
+  "professions.granted": "Neue Berufe: {{names}}",
   "professions.owned": "Freigeschaltete Berufe:",
   "professions.migrated": "BSV hat {{count}} fehlende Berufe ergänzt. Ausstehende Stufenaufstiege bleiben unverändert.",
   "professions.statue": "Alle Berufe werden mit der Fertigkeitsstufe freigeschaltet. Ein Wechsel ist unnötig. Kein Gold abgezogen.",
