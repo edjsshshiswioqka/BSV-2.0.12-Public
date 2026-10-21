@@ -13,6 +13,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" />
+    <!-- SMAPI ships Newtonsoft.Json in smapi-internal; ModBuildConfig 4.4 does not reference it automatically. -->
+    <Reference Include="Newtonsoft.Json" HintPath="$(GamePath)\smapi-internal\Newtonsoft.Json.dll" Private="false" />
     <Compile Include="GlobalUsings.cs" />
     <Compile Include="DisplayText.cs" />
     <Compile Include="Configuration/*.cs" /><Compile Include="Farming/*.cs" />
