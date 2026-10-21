@@ -102,7 +102,8 @@ internal static class ProfessionSkillsPage
     }
     private static State? Get(SkillsPage page)
     {
-        if(!Installed||page.GetType()!=typeof(SkillsPage))return null;
+        // K04: with the all-professions option off, leave the native Skills page untouched.
+        if(!Installed||!ProfessionService.Active||page.GetType()!=typeof(SkillsPage))return null;
         var areas=(List<ClickableTextureComponent>)Areas.GetValue(page)!;
         var vanilla=areas.Where(c=>int.TryParse(c.name,out int n)&&n>=0&&n<5).ToArray();
         var rect=Layout((Rectangle)Avatar.GetValue(page)!,vanilla.Select(c=>c.bounds),new(page.xPositionOnScreen,page.yPositionOnScreen,page.width,page.height),new(0,0,Game1.uiViewport.Width,Game1.uiViewport.Height));

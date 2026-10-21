@@ -5,6 +5,7 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using StardewValley.Objects;
+using StardewValley.Tools;
 namespace Eddie.FishingMachine;
 
 // Shared vanilla-style information panel for the Crab Catcher and the Fishing Machine.
@@ -18,6 +19,13 @@ internal sealed partial class ProductionService
     {
         public Rectangle Frame,Title,Badge,Bar,Stats,Take,UpgradeTitle,Cycles,Button,Note;
         public Rectangle[] Cards=Array.Empty<Rectangle>();
+    }
+
+    private static bool PanelLogged;
+    internal void PanelFailed(Exception ex)
+    {
+        if(PanelLogged)return;PanelLogged=true;
+        Mod.Monitor.Log("BSV machine panel failed; compact overlay used instead.\n"+ex,LogLevel.Warn);
     }
 
     internal static bool IsCollectible(Item? i)
@@ -144,7 +152,7 @@ internal sealed partial class ProductionService
         if(g.Bar.Contains(mx,my))hover=Status(c);
 
         // Cycles and item counts.
-        string stats=Mod.T("panel.cycles-done",new{count=s.CompletedCycles})+" · "+Mod.T("panel.items",new{count=CollectibleCount(c)});
+        string stats=Mod.T("panel.cycles-done",new{count=s.CompletedCycles})+" · "+Mod.T("panel.items",new{count=TakeCandidates(c,s).Sum(i=>(long)i.Stack)});
         PanelText(b,stats,new Vector2(g.Stats.X,g.Stats.Y+2),Game1.textColor,g.Stats.Width,.7f);
 
         // Take all.
@@ -207,7 +215,7 @@ internal sealed partial class ProductionService
     }
 
     private bool Upgradable(Chest c,ProductionState s,(int Have,int Need,string Id)[] materials)
-        => s.Level==1&&!s.StageProgressUnverified&&s.Phase!="working"&&MachineUpgrade.Progress(s)>=MachineCycleRules.RequiredCycles(s)&&materials.All(m=>m.Have>=m.Need);
+        => s.Level==1&&!s.StageProgressUnverified&&s.Phase=="idle"&&MachineUpgrade.Progress(s)>=MachineCycleRules.RequiredCycles(s)&&materials.All(m=>m.Have>=m.Need);
 
     // Items "Take all" may move: catch only. Bait and (while an upgrade is still possible) upgrade materials stay in the machine.
     private IEnumerable<Item> TakeCandidates(Chest c,ProductionState s)
@@ -238,7 +246,8 @@ internal sealed partial class ProductionService
 
     private void UpgradeFeedback(Chest c,ProductionState s,(int Have,int Need,string Id)[] materials)
     {
-        if(s.Phase=="working"){Mod.Message("crab.upgrade-unavailable");return;}
+        // Matches the host check in CrabControl: only an idle machine can upgrade (K09).
+        if(s.Phase!="idle"){Mod.Message("crab.upgrade-unavailable");return;}
         var lacking=new List<string>();
         long progress=MachineUpgrade.Progress(s);int needed=MachineCycleRules.RequiredCycles(s);
         if(progress<needed)lacking.Add(Mod.T("panel.cycles-req",new{count=progress,needed}));

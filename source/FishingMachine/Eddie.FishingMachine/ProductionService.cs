@@ -343,7 +343,7 @@ internal sealed partial class ProductionService
             Mod.Message("remove.resumed");
             return true;
         }
-        try{if(PanelButton(c,menu,button))return true;}catch{}
+        try{if(PanelButton(c,menu,button))return true;}catch(Exception ex){PanelFailed(ex);}
         if(ModEntry.IsCrab(c)){try{return CrabMenuButton(c,menu,button);}catch{Mod.Message("status.error");return true;}}
         return false; // Fishing machines have no trash toggle.
     }
@@ -357,7 +357,7 @@ internal sealed partial class ProductionService
     internal void DrawMenu(SpriteBatch b)
     {
         if(!CurrentMenu(out var c,out var menu))return;
-        try{if(TryDrawPanel(b,c,menu))return;}catch{}
+        try{if(TryDrawPanel(b,c,menu))return;}catch(Exception ex){PanelFailed(ex);}
         if(ModEntry.IsCrab(c)){try{DrawCrabMenu(b,c,menu);}catch{}return;}
         ProductionState s;
         try{s=Read(c);}catch{return;}
