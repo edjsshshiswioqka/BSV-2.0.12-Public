@@ -19,8 +19,26 @@ internal static class ProfessionMenus
     private static readonly FieldInfo Recipes=AccessTools.Field(typeof(LevelUpMenu),"newCraftingRecipes");
     private static readonly FieldInfo Extra=AccessTools.Field(typeof(LevelUpMenu),"extraInfoForLevel");
     internal static void Clear()=>Pages=new();
+    /// <summary>BSV machine recipes are unlocked by code, so the native page would not list them. Show them like native recipes.</summary>
+    private static void AddMachineRecipes(LevelUpMenu menu)
+    {
+        if(menu.GetType()!=typeof(LevelUpMenu)||!menu.isActive||!menu.informationUp||menu.isProfessionChooser&&!ProfessionService.Active)return;
+        int skill=(int)Skill.GetValue(menu)!,level=(int)Level.GetValue(menu)!;
+        string? id=skill==Farmer.fishingSkill?level switch{5=>Eddie.FishingMachine.ModEntry.Id,6=>Eddie.FishingMachine.ModEntry.CrabId,_=>null}:null;
+        if(id==null||!CraftingRecipe.craftingRecipes.ContainsKey(id))return;
+        var recipes=(List<CraftingRecipe>)Recipes.GetValue(menu)!;
+        if(recipes.Any(r=>r.name==id))return;
+        var recipe=new CraftingRecipe(id,false);
+        recipes.Add(recipe);
+        if(!menu.isProfessionChooser)
+        {
+            menu.height+=recipe.bigCraftable?128:64;
+            menu.gameWindowSizeChanged(Rectangle.Empty,Rectangle.Empty);
+        }
+    }
     internal static void Convert(LevelUpMenu __instance)
     {
+        try{AddMachineRecipes(__instance);}catch(Exception ex){ProfessionService.Trace("BSV machine recipe could not be listed on the level-up page: "+ex.Message);}
         if(!ProfessionService.Active || __instance.GetType()!=typeof(LevelUpMenu) || !__instance.isActive
             || !__instance.informationUp || !__instance.isProfessionChooser)return;
         int skill=(int)Skill.GetValue(__instance)!,level=(int)Level.GetValue(__instance)!;
@@ -34,9 +52,7 @@ internal static class ProfessionMenus
         // never grant that amount. Keep any unrelated mod-added info intact.
         if(skill==Farmer.combatSkill)
             info.Remove(Game1.content.LoadString("Strings\\UI:LevelUp_ExtraInfo_Combat"));
-        var tier=ProfessionRules.Find(skill) is {} s?(level<10?s.Basic:s.Advanced):Array.Empty<int>();
-        string message=ProfessionService.Text("professions.granted",new{names=string.Join(", ",tier.Select(LevelUpMenu.getProfessionTitleFromNumber))});
-        info.Add(message);
+        // Like any other level: the page only lists what this level teaches (recipes); professions are granted silently.
         if(!queued){ProfessionGrant.Missing(Game1.player,skill,level);Game1.player.modData[ProfessionGrant.SettledKey(skill,level)]="1";}
         Pages.Remove(__instance);Pages.Add(__instance,new Page{Owner=Game1.player,Skill=skill,Level=level,Confirmed=!queued});
         __instance.isProfessionChooser=false;

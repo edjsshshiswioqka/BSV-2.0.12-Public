@@ -12,12 +12,12 @@ namespace Eddie.FishingMachine;
 internal static class FishPool
 {
     private static readonly HashSet<string> Excluded = new() { "159", "160", "163", "682", "775", "898", "899", "900", "901", "902" };
-    internal static List<FishChoice> Get(GameLocation location, Vector2 anchor, Facing facing, Farmer owner, bool extended=false, int machineLevel=1, int catchYear=0, int? observedTime=null,int? historicalDay=null)
+    internal static List<FishChoice> Get(GameLocation location, Vector2 anchor, Facing facing, Farmer owner, bool extended=false, int machineLevel=1, int catchYear=0, int? observedTime=null,int? historicalDay=null,Action<string,string>? reject=null)
     {
         int clock=observedTime??Game1.timeOfDay;
         var fishData = DataLoader.Fish(Game1.content);
         var waterTile = SavedFootprint.WaterBobber(new((int)anchor.X,(int)anchor.Y),facing,p=>WorldService.Water(location,p),extended);
-        if(!waterTile.HasValue)return new(); // A changed map must not consume bait for dry land.
+        if(!waterTile.HasValue){reject?.Invoke("*","no water tile in front of the machine");return new();} // A changed map must not consume bait for dry land.
         var castTile = waterTile.Value;
         var bankTile = DirectionRules.BankTiles(new((int)anchor.X,(int)anchor.Y),facing)[0];
         var bobber = new Vector2(castTile.X,castTile.Y);
@@ -36,16 +36,20 @@ internal static class FishPool
                 bool spirit=BetterStardewValley.SpiritFish.SpiritRules.IsFish(raw);
                 if(spirit)continue; // Never enter the weighted pool through a data candidate.
                 bool allowedLegend=legendary && (machineLevel>=2) && (historicalDay.HasValue?MachineLegendaryBridge.AvailableTimeline(owner,raw,catchYear,true):MachineLegendaryBridge.Available(owner,raw,catchYear>0?catchYear:Game1.year));
-                if (legendary && !allowedLegend || spawn.IsBossFish && !allowedLegend || spawn.RequireMagicBait || spawn.CatchLimit >= 0 && !allowedLegend
-                    || !string.IsNullOrEmpty(spawn.SetFlagOnCatch) || spawn.UseFishCaughtSeededRandom
-                    || inherited && !spawn.CanBeInherited || spawn.Chance <= 0
-                    || spawn.FishAreaId != null && spawn.FishAreaId != area
-                    || spawn.Season.HasValue && (int)spawn.Season != (historicalDay.HasValue?MachineTimeline.Season(historicalDay.Value):(int)Game1.GetSeasonForLocation(environment))
-                    || owner.fishingLevel.Value < spawn.MinFishingLevel || castDepth < spawn.MinDistanceFromShore
-                    || spawn.MaxDistanceFromShore >= 0 && castDepth > spawn.MaxDistanceFromShore
-                    || spawn.BobberPosition.HasValue && !spawn.BobberPosition.Value.Contains((int)cast.X, (int)cast.Y)
-                    || spawn.PlayerPosition.HasValue && !spawn.PlayerPosition.Value.Contains(bankTile.X, bankTile.Y)
-                    || !(historicalDay.HasValue?MachineTimeConditions.Historical(spawn.Condition,clock,historicalDay.Value):MachineTimeConditions.Check(spawn.Condition,clock,environment,owner))) continue;
+                string? why = legendary && !allowedLegend ? "legendary" : spawn.IsBossFish && !allowedLegend ? "boss"
+                    : spawn.RequireMagicBait ? "magic bait" : spawn.CatchLimit >= 0 && !allowedLegend ? "catch limit"
+                    : !string.IsNullOrEmpty(spawn.SetFlagOnCatch) ? "sets flag" : spawn.UseFishCaughtSeededRandom ? "seeded random"
+                    : inherited && !spawn.CanBeInherited ? "not inheritable" : spawn.Chance <= 0 ? "chance 0"
+                    : spawn.FishAreaId != null && spawn.FishAreaId != area ? $"fish area {spawn.FishAreaId} (cast area {area ?? "none"})"
+                    : spawn.Season.HasValue && (int)spawn.Season != (historicalDay.HasValue?MachineTimeline.Season(historicalDay.Value):(int)Game1.GetSeasonForLocation(environment)) ? "season"
+                    : owner.fishingLevel.Value < spawn.MinFishingLevel ? $"fishing level {owner.fishingLevel.Value}<{spawn.MinFishingLevel}"
+                    : castDepth < spawn.MinDistanceFromShore ? $"distance {castDepth}<{spawn.MinDistanceFromShore}"
+                    : spawn.MaxDistanceFromShore >= 0 && castDepth > spawn.MaxDistanceFromShore ? $"distance {castDepth}>{spawn.MaxDistanceFromShore}"
+                    : spawn.BobberPosition.HasValue && !spawn.BobberPosition.Value.Contains((int)cast.X, (int)cast.Y) ? "bobber position"
+                    : spawn.PlayerPosition.HasValue && !spawn.PlayerPosition.Value.Contains(bankTile.X, bankTile.Y) ? "player position"
+                    : !(historicalDay.HasValue?MachineTimeConditions.Historical(spawn.Condition,clock,historicalDay.Value):MachineTimeConditions.Check(spawn.Condition,clock,environment,owner)) ? "condition: "+spawn.Condition
+                    : null;
+                if (why != null) { reject?.Invoke(raw, why); continue; }
                 if (raw.StartsWith("LOCATION_FISH ", StringComparison.Ordinal))
                 {
                     var parts = raw.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -64,9 +68,9 @@ internal static class FishPool
                 }
                 string id = raw.StartsWith("(O)", StringComparison.Ordinal) ? raw[3..] : raw;
                 // Only explicit object IDs from Data/Fish; queries, traps, flags and boss fish are deliberately excluded.
-                if (Excluded.Contains(id) && !allowedLegend || !fishData.TryGetValue(id, out var text)) continue;
+                if (Excluded.Contains(id) && !allowedLegend || !fishData.TryGetValue(id, out var text)) { reject?.Invoke(raw, "excluded or no Data/Fish row"); continue; }
                 var fields = text.Split('/');
-                if (fields.Length < 13 || fields[1] == "trap") continue;
+                if (fields.Length < 13 || fields[1] == "trap") { reject?.Invoke(raw, "trap fish"); continue; }
                 if (!spawn.IgnoreFishDataRequirements)
                 {
                     var times = fields[5].Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -74,15 +78,15 @@ internal static class FishPool
                     for (int i = 0; i + 1 < times.Length; i += 2)
                         if (int.TryParse(times[i], out int from) && int.TryParse(times[i + 1], out int to)
                             && clock >= from && clock < to) timeOk = true;
-                    if (!timeOk || historicalDay.HasValue && fields[7] != "both"
-                        || fields[7] == "rainy" && !environment.IsRainingHere()
-                        || fields[7] == "sunny" && environment.IsRainingHere()
-                        || !int.TryParse(fields[12], out int level) || owner.fishingLevel.Value < level) continue;
+                    string? whyData = !timeOk ? $"time {clock} not in {fields[5]}" : historicalDay.HasValue && fields[7] != "both" ? "weather unknown"
+                        : fields[7] == "rainy" && !environment.IsRainingHere() ? "needs rain" : fields[7] == "sunny" && environment.IsRainingHere() ? "needs sun"
+                        : !int.TryParse(fields[12], out int level) || owner.fishingLevel.Value < level ? $"fish level {fields[12]} > {owner.fishingLevel.Value}" : null;
+                    if (whyData != null) { reject?.Invoke(raw, whyData); continue; }
                 }
                 if (!double.TryParse(fields[10], NumberStyles.Float, CultureInfo.InvariantCulture, out var weight)) continue;
                 weight = Math.Clamp(weight, .001, 1) * Math.Clamp(spawn.Chance, .001f, 1);
                 string qualified = "(O)" + id;
-                if (ItemRegistry.Create(qualified) is not StardewValley.Object item || item.Category != -4 || item.questItem.Value) continue;
+                if (ItemRegistry.Create(qualified) is not StardewValley.Object item || item.Category != -4 || item.questItem.Value) { reject?.Invoke(raw, "not a fish item"); continue; }
                 result[qualified] = Math.Max(result.GetValueOrDefault(qualified), weight);
             }
         }

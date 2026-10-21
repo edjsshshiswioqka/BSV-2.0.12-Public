@@ -47,7 +47,7 @@ internal static class ProfessionSkillsPage
     internal readonly record struct Metrics(int Slot,int BeadScale,int NameX,int NameWidth,int BarX,int PairX,int GridX,int NumberX);
     internal static int PitchFor(int height)=>Math.Clamp((height-HeaderHeight)/5,MinPitch,MaxPitch);
     /// <summary>Slot edge in pixels: the 16 px profession sprite at 1.5x to 2x, small enough that the 2x2 grid fits a row.</summary>
-    internal static int SlotFor(int pitch)=>Math.Clamp((pitch-SlotGap-6)/2/2*2,24,32); // keeps a visible gap between rows
+    internal static int SlotFor(int pitch)=>Math.Clamp((pitch-SlotGap-4)/2/2*2,24,32); // keeps a visible gap between rows
     /// <summary>Slot edge limited by the width too: the bar, both icon groups and the level number must all fit.</summary>
     internal static int SlotFor(int pitch,int width)=>Math.Max(24,Math.Min(SlotFor(pitch),(width-223)/4/2*2));
     internal static Metrics Measure(int width,int slot,int nameWidth)
@@ -160,7 +160,8 @@ internal static class ProfessionSkillsPage
         // The "Lv 5 / Lv 10" header sits in the free band above the first native row, so rows keep their full pitch.
         int top=Math.Max(viewport.Top+16,boxes.Min(b=>b.Top)-HeaderHeight);
         int right=Math.Min(page.Right-48,viewport.Right-24);
-        int bottom=Math.Min(boxes.Max(b=>b.Bottom)+32,Math.Min(page.Bottom-32,viewport.Bottom-32));
+        // The band under the last native row is free down to the mastery strip; use it for taller rows (bigger icons).
+        int bottom=Math.Min(boxes.Max(b=>b.Bottom)+48,Math.Min(page.Bottom-32,viewport.Bottom-32));
         return right-left<MinWidth||bottom-top<HeaderHeight+MinPitch?Rectangle.Empty:new(left,top,right-left,Math.Min(HeaderHeight+MaxPitch*5,bottom-top));
     }
     private static State? Get(IClickableMenu page)

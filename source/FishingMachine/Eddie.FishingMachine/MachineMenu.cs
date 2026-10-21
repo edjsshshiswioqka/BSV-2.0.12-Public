@@ -42,6 +42,24 @@ internal sealed partial class ProductionService
     internal ItemGrabMenu? FullMenu;
     internal FullLayout? FullGeometry;
     private static readonly ConditionalWeakTable<ItemGrabMenu,object> Prepared=new();
+    private static readonly ConditionalWeakTable<ItemGrabMenu,object> Diagnosed=new();
+
+    /// <summary>Writes the fish this machine can catch right now (and why others are excluded) to the SMAPI log.</summary>
+    private void LogFishPool(Chest c,ProductionState s)
+    {
+        try
+        {
+            var owner=Game1.GetPlayer(s.OwnerId==0?c.owner.Value:s.OwnerId,onlyOnline:false)??Game1.player;
+            var rejected=new List<string>();
+            var now=FishPool.Get(c.Location,c.TileLocation,WorldService.GetFacing(c),owner,WorldService.IsExtended(c),s.Level,Game1.year,null,null,(id,why)=>rejected.Add(id+" → "+why));
+            string timeline;
+            try{var t=TimelineEnvironment.Candidates(c,s,owner);timeline=t.Count+" ["+string.Join(", ",t.Select(f=>f.Id))+"]";}
+            catch(Exception ex){timeline="error: "+ex.Message;}
+            Mod.Monitor.Log($"[BSV fishing pool] {c.Location.NameOrUniqueName} tile {c.TileLocation.X},{c.TileLocation.Y} facing {WorldService.GetFacing(c)} extended {WorldService.IsExtended(c)}; time {Game1.timeOfDay}, owner {owner.Name} fishing level {owner.fishingLevel.Value}, machine Lv{s.Level}, phase {s.Phase}."
+                +$"\n  now: {now.Count} fish [{string.Join(", ",now.Select(f=>f.Id))}]\n  cycle candidates: {timeline}\n  rejected: {string.Join("; ",rejected.Take(80))}",LogLevel.Info);
+        }
+        catch(Exception ex){Mod.Monitor.Log("[BSV fishing pool] diagnostic failed: "+ex,LogLevel.Warn);}
+    }
 
     // Mockup palette.
     private static readonly Color Ink=new(74,44,10),Soft=new(122,74,20),Rule=new(199,118,31),
@@ -115,6 +133,8 @@ internal sealed partial class ProductionService
     {
         if(Prepared.TryGetValue(menu,out _))return;
         Prepared.Add(menu,new object());
+        // Mockup: the colour strip is closed until the colour button is clicked.
+        if(menu.chestColorPicker!=null)menu.chestColorPicker.visible=false;
     }
 
     private static List<ClickableComponent>? PickerCells(ItemGrabMenu menu)
@@ -162,6 +182,7 @@ internal sealed partial class ProductionService
         if(g==null){FullMenu=null;FullGeometry=null;return false;}
         Prepare(menu);Apply(menu,g);
         FullMenu=menu;FullGeometry=g;
+        if(!crab&&!Diagnosed.TryGetValue(menu,out _)){Diagnosed.Add(menu,new object());LogFishPool(c,s);}
 
         int mx=Game1.getMouseX(),my=Game1.getMouseY();string tip="";
         if(menu.drawBG&&!Game1.options.showClearBackgrounds)
@@ -188,7 +209,8 @@ internal sealed partial class ProductionService
         if(!crab&&g.Badge.Contains(mx,my))tip=FishingBalanceTip(s);
         int titleRight=g.Badge.X-12;
         if(!g.Labels){g.Take=new Rectangle(g.Badge.X-12-g.Take.Width,colorButton.Y,g.Take.Width,colorButton.Height);titleRight=g.Take.X-12;}
-        string name=Mod.T(crab?"crab.name":"machine.name");
+        // The level lives in the badge; drop a trailing "Lv1"-style suffix from the item name.
+        string name=System.Text.RegularExpressions.Regex.Replace(Mod.T(crab?"crab.name":"machine.name"),@"\s*[Ll][Vv]\.?\s*\d+$","");
         Heading(b,name,new Vector2(g.Title.X,g.Title.Y+4),titleRight-g.Title.X);
 
         // State, time left and progress bar.
