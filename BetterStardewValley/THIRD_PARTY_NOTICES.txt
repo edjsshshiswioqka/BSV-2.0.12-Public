@@ -1,0 +1,44 @@
+## Automate API interoperability declarations
+
+Project: Automate, https://github.com/Pathoschild/StardewMods
+Author: Jesse Plamondon-Willard (Pathoschild).
+Source evidence: commit 76565e83ede4bc8b3c293f1c659032ba9c39c213, root LICENSE.
+Scope: legacy metadata-shaped declarations in `source/tests-automate/AutomateBoundary.cs` only; production bridge references the separately installed Automate API. This notice is retained conservatively; it does not claim that Automate implementation code is bundled.
+
+The MIT License (MIT)
+
+Copyright 2016–2025 Jesse Plamondon-Willard (Pathoschild)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+## UI Info Suite 2
+
+Project: https://github.com/Annosz/UIInfoSuite2
+Author/maintainer: Annosz; official README credits cdaragorn and Demiacle.
+Project license NOT VERIFIED. No project-level license text is invented or substituted. No UI2 DLL, renderer, localization, graphics or audio is bundled. Legacy test method/property signatures and existing runtime interoperability are disclosed in LICENSE_REPORT.md; attribution alone is not a replacement for permission.
+
+## Horse whistle
+
+The original `THIRD_PARTY_LICENSES_HORSES.txt` is included unchanged. Its existing notice applies only to the described BSV whistle and generator, not all BSV code or third-party mods.
+
+
+## Totem artwork / code
+
+Four totem source artworks were supplied by the BSV author for this task. BSV ships only necessary technical derivatives in the mod asset folder; no third-party Mod totem artwork or implementation was added. This attribution is not an independently verified chain-of-title claim.
+

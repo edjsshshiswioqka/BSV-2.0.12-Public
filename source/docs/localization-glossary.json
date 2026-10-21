@@ -1,0 +1,31 @@
+{
+  "review": "Initial translations and terminology review; no independent native-speaker or live font review.",
+  "language_order": ["default", "zh", "ja", "ko", "de", "ru", "es", "fr", "pt", "it", "tr", "hu", "vi"],
+  "terms": {
+    "spirit.fish.name": ["Spirit Fish", "精灵鱼", "精霊魚", "정령 물고기", "Geisterfisch", "Рыба-дух", "Pez espiritual", "Poisson-esprit", "Peixe espiritual", "Pesce spirito", "Ruh Balığı", "Szellemhal", "Cá Linh Hồn"],
+    "lobster.fish.name": ["Giant Lobster", "大龙虾", "巨大ロブスター", "대왕 바닷가재", "Riesenhummer", "Гигантский омар", "Langosta gigante", "Homard géant", "Lagosta gigante", "Aragosta gigante", "Dev Istakoz", "Óriáshomár", "Tôm Hùm Khổng Lồ"],
+    "kingcrab.fish.name": ["King Crab", "帝王蟹", "タラバガニ", "킹크랩", "Königskrabbe", "Королевский краб", "Cangrejo real", "Crabe royal", "Caranguejo-real", "Granchio reale", "Kral Yengeç", "Királyrák", "Cua Hoàng Đế"],
+    "king.fish.name": ["Lobster King", "龙虾王", "ロブスター王", "바닷가재 왕", "Hummerkönig", "Король омаров", "Rey de las langostas", "Roi des homards", "Rei das lagostas", "Re delle aragoste", "Istakoz Kralı", "Homárkirály", "Vua Tôm Hùm"],
+    "mutant.name": ["Mutant Lobster King", "变异龙虾王", "ミュータント・ロブスター王", "돌연변이 바닷가재 왕", "Mutierter Hummerkönig", "Мутировавший король омаров", "Rey de las langostas mutante", "Roi des homards mutant", "Rei das lagostas mutante", "Re delle aragoste mutante", "Mutant Istakoz Kralı", "Mutáns homárkirály", "Vua Tôm Hùm Đột Biến"],
+    "lobster.bait.name": ["Giant Lobster Bait", "大龙虾钓饵", "巨大ロブスターのエサ", "대왕 바닷가재 미끼", "Riesenhummerköder", "Наживка из гигантского омара", "Cebo de langosta gigante", "Appât de homard géant", "Isca de lagosta gigante", "Esca di aragosta gigante", "Dev Istakoz Yemi", "Óriáshomárcsali", "Mồi Tôm Hùm Khổng Lồ"],
+    "lobster.dinner.name": ["Lobster Dinner", "龙虾大餐", "ロブスターディナー", "바닷가재 정찬", "Hummermahlzeit", "Ужин с омаром", "Cena de langosta", "Festin de homard", "Jantar de lagosta", "Cena di aragosta", "Istakoz Ziyafeti", "Homárvacsora", "Bữa Tối Tôm Hùm"],
+    "king.sashimi.name": ["Lobster King Sashimi", "龙虾王刺身", "ロブスター王の刺身", "바닷가재 왕 사시미", "Hummerkönig-Sashimi", "Сашими из короля омаров", "Sashimi de rey de las langostas", "Sashimi de roi des homards", "Sashimi de rei das lagostas", "Sashimi di re delle aragoste", "Istakoz Kralı Saşimisi", "Homárkirály-szasimi", "Sashimi Vua Tôm Hùm"],
+    "kingcrab.bowl.name": ["King Crab Rice Bowl", "帝王蟹盖浇饭", "タラバガニ丼", "킹크랩 덮밥", "Reisschale mit Königskrabbe", "Рис с королевским крабом", "Bol de arroz con cangrejo real", "Bol de riz au crabe royal", "Tigela de arroz com caranguejo-real", "Ciotola di riso con granchio reale", "Kral Yengeçli Pilav", "Királyrákos rizstál", "Cơm Cua Hoàng Đế"],
+    "spirit.soup.name": ["Spirit Fish Soup", "精灵鱼汤", "精霊魚のスープ", "정령 물고기 수프", "Geisterfischsuppe", "Суп из рыбы-духа", "Sopa de pez espiritual", "Soupe de poisson-esprit", "Sopa de peixe espiritual", "Zuppa di pesce spirito", "Ruh Balığı Çorbası", "Szellemhalleves", "Súp Cá Linh Hồn"],
+    "spirit.smoked.name": ["Smoked Spirit Fish", "熏制精灵鱼", "精霊魚の燻製", "훈제 정령 물고기", "Geräucherter Geisterfisch", "Копчёная рыба-дух", "Pez espiritual ahumado", "Poisson-esprit fumé", "Peixe espiritual defumado", "Pesce spirito affumicato", "Tütsülenmiş Ruh Balığı", "Füstölt szellemhal", "Cá Linh Hồn Hun Khói"],
+    "spirit.roe.name": ["Spirit Fish Roe", "精灵鱼鱼籽", "精霊魚の魚卵", "정령 물고기 어란", "Geisterfischrogen", "Икра рыбы-духа", "Huevas de pez espiritual", "Œufs de poisson-esprit", "Ovas de peixe espiritual", "Uova di pesce spirito", "Ruh Balığı Yumurtası", "Szellemhalikra", "Trứng Cá Linh Hồn"],
+    "spirit.aged_roe.name": ["Aged Spirit Fish Roe", "陈年精灵鱼鱼籽", "精霊魚の熟成魚卵", "숙성 정령 물고기 어란", "Gereifter Geisterfischrogen", "Выдержанная икра рыбы-духа", "Huevas de pez espiritual curadas", "Œufs de poisson-esprit affinés", "Ovas de peixe espiritual envelhecidas", "Uova di pesce spirito stagionate", "Olgunlaştırılmış Ruh Balığı Yumurtası", "Érlelt szellemhalikra", "Trứng Cá Linh Hồn Ủ"],
+    "rescue.give-up": ["Give Up", "放弃等待", "救助をあきらめる", "구조 대기 포기", "Aufgeben", "Сдаться", "Rendirse", "Abandonner", "Desistir", "Arrenditi", "Vazgeç", "Feladás", "Bỏ cuộc"],
+    "rescue.reviving": ["Reviving", "救助中", "救助中", "구조 중", "Wiederbelebung", "Спасение", "Reanimando", "Réanimation", "Reanimando", "Rianimazione", "Canlandırılıyor", "Újraélesztés", "Đang cứu trợ"]
+  },
+  "distinctions": {
+    "identity": "Giant Lobster and Lobster King are different stable items. Never merge them or translate IDs.",
+    "original_names": "Original skills, professions, NPCs and items use the game's current localized display names where available; this glossary does not override them.",
+    "luck": "Daily luck is distinct from luck skill/buff level. Keep 0.125, 13 and local slots 14 as separate displayed concepts.",
+    "critical": "Critical chance is not critical damage. Native critical points are not literal percentage points; preserve the supplied explanatory scale.",
+    "speed": "Movement speed and effective melee weapon speed are distinct.",
+    "clock": "Calendar game day = 1440 calendar minutes for machine cycles. Rescue seconds and lobster dinner seconds are real-time units. Rice bowl/sashimi use world-clock minutes.",
+    "afk": "Chest search is the player's centered 3×3 area, not a radius of three or nine tiles. Invalid cells do not disable valid neighboring chests.",
+    "support": "Vietnamese vi resources require a compatible additional-language pack with locale vi and fonts; no pack is included or tested. All non-English additions are initial translations, not independently native-reviewed."
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "DebugMode": false,
+  "CycleGameMinutes": 2880,
+  "CycleRulesVersion": 1,
+  "LevelOneBait": 150,
+  "LevelTwoBait": 350,
+  "LevelOneCriticalChance": 0.2,
+  "LevelTwoCriticalChance": 0.55,
+  "LevelDurationVersion": 1,
+  "LevelTwoCycleGameMinutes": 5760
+}

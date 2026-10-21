@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+    <Version>1.5.0</Version>
+    <GamePath Condition="'$(GamePath)' == ''">$(STARDEW_GAME_PATH)</GamePath>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../BetterStardewValley.csproj" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath Condition="Exists('$(GamePath)/Newtonsoft.Json.dll')">$(GamePath)/Newtonsoft.Json.dll</HintPath>
+      <HintPath Condition="!Exists('$(GamePath)/Newtonsoft.Json.dll')">$(GamePath)/smapi-internal/Newtonsoft.Json.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

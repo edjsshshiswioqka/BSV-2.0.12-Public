@@ -1,0 +1,61 @@
+{
+  "provenance": "Author reference 1 -> imagegen transparent terminal adaptation -> technical crop/resize/pad. UI reference 2 -> original C# layout. Portraits supplied at runtime by game; not copied from reference2.",
+  "generator": "image_gen.imagegen",
+  "generation_instructions_summary": "Preserve warm wooden desk, beige retro CRT, green screen, printer and small desk items from author reference. Transparent background; remove all baked English words; small sprout/package motifs; no people or extra applications.",
+  "generated_original": "terminal-generated.png",
+  "generated_sha256": "9cc1f488c83e3c737197d2f5b25de2b270891a310615b0ac611e15e8c0bacf8a",
+  "reference_sha256": {
+    "terminal-reference.png": "5a1ae2f384c8ba9266b3119a6f9b4658465e238825e48ac306eede591f1ac135",
+    "ui-reference.png": "b181bda510ae1410e4a9958953219d2a4fcba4c527464cd6987f315e0d52e4f3"
+  },
+  "runtime": [
+    {
+      "file": "terminal-world.png",
+      "canvas": [
+        64,
+        128
+      ],
+      "fit": [
+        60,
+        112
+      ],
+      "bottom": 126,
+      "resampling": "Pillow LANCZOS",
+      "sha256": "ea0b17a350c28097dc4f0b86adac712531c7e5341a9f8f089972839bf231e427"
+    },
+    {
+      "file": "terminal-icon.png",
+      "canvas": [
+        64,
+        64
+      ],
+      "fit": [
+        56,
+        56
+      ],
+      "bottom": 60,
+      "resampling": "Pillow LANCZOS",
+      "sha256": "e2efad0662647b162d0fde2a32fd47c020b9473dcb5383a14c75568f4b13d779"
+    },
+    {
+      "file": "terminal-native.png",
+      "canvas": [
+        16,
+        32
+      ],
+      "fit": [
+        16,
+        28
+      ],
+      "bottom": 32,
+      "resampling": "Pillow LANCZOS",
+      "sha256": "95728fe81c6ce8b0ac3297a18c816c14541610908fb9ba0f0bff6a52de5d59d7"
+    }
+  ],
+  "alpha_crop": [
+    0,
+    19,
+    1216,
+    1254
+  ]
+}

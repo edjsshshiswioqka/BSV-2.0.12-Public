@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net6.0</TargetFramework><OutputType>Exe</OutputType><Nullable>enable</Nullable></PropertyGroup><ItemGroup><Reference Include="BetterStardewValley"><HintPath>../bin/Debug/net6.0/BetterStardewValley.dll</HintPath></Reference></ItemGroup></Project>

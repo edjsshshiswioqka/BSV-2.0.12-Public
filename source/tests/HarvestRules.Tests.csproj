@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../GlobalUsings.cs" Link="GlobalUsings.cs" />
+    <Compile Include="../HarvestRules.cs" Link="HarvestRules.cs" />
+  </ItemGroup>
+</Project>

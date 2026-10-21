@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net6.0</TargetFramework><Nullable>enable</Nullable><AssemblyName>CompatibilityNativeChecks</AssemblyName></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../tests-automation-native/*.cs" />
+    <Compile Include="../tests-orders-market-native/Boundary.cs" />
+  </ItemGroup>
+</Project>

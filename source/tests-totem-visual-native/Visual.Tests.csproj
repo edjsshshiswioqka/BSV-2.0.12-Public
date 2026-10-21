@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net6.0</TargetFramework><OutputType>Exe</OutputType><Nullable>enable</Nullable></PropertyGroup><ItemGroup>
+<Compile Include="../tests-orders-market-native/Boundary.cs" />
+<Compile Include="../tests-automation-native/TotemVisual114.cs" />
+<Compile Include="../Totems/TotemArt.cs" /><Compile Include="../Totems/TotemLighting.cs" />
+<Compile Include="../Totems/TotemRules.cs" /><Compile Include="../Totems/TotemStorage.cs" />
+<Compile Include="../Totems/TotemUnlockRules.cs" />
+<Compile Include="../BsvI18n.cs" /><Compile Include="../DrawPatchTargets.cs" />
+</ItemGroup></Project>

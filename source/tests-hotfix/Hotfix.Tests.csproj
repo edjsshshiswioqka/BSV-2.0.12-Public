@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net6.0</TargetFramework><Nullable>enable</Nullable></PropertyGroup><ItemGroup><Compile Include="../HarvestRules.cs"/><Compile Include="../HarvestBonus.cs"/><Compile Include="../BsvI18n.cs"/><Compile Include="../DisplayText.cs"/></ItemGroup></Project>

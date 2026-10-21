@@ -1,0 +1,63 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>10</LangVersion>
+    <AssemblyName>BetterStardewValley</AssemblyName>
+    <RootNamespace>BetterStardewValley</RootNamespace>
+    <Version>2.0.12</Version>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableHarmony>true</EnableHarmony>
+    <EnableModDeploy>false</EnableModDeploy>
+    <EnableModZip>false</EnableModZip>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.4.0" />
+    <Compile Include="GlobalUsings.cs" />
+    <Compile Include="DisplayText.cs" />
+    <Compile Include="Configuration/*.cs" /><Compile Include="Farming/*.cs" />
+    <Compile Include="CellarAppearance.cs" />
+    <Compile Include="AfkFishing/*.cs" />
+    <Compile Include="MultiplayerRescue/*.cs" />
+    <Compile Include="DeveloperAppreciation/*.cs" />
+    <Compile Include="SpiritFish/*.cs" />
+    <Compile Include="GiantLobster/*.cs" />
+    <Compile Include="LobsterKing/*.cs" />
+    <Compile Include="KingCrab/*.cs" />
+    <Compile Include="MutantLobsterKing/*.cs" />
+    <Compile Include="Professions/*.cs" />
+    <Compile Include="Transactions/*.cs" />
+    <Compile Include="Totems/*.cs" />
+    <Compile Include="Orders/*.cs" />
+    <Compile Include="CrabCatcher/*.cs" />
+    <Compile Include="FishingMachine/Eddie.FishingMachine/*.cs" />
+    <Compile Include="FishingMachine/Eddie.FishingMachine.Core/*.cs" />
+    <Compile Include="ModEntry.cs" /><Compile Include="StartupLog.cs" /><Compile Include="HdSprites.cs" /><Compile Include="DrawPatchTargets.cs" />
+    <Compile Include="IntegrationHost.cs" />
+    <Compile Include="CompatibilityDiagnostics.cs" />
+    <Compile Include="BsvApi.cs" />
+    <Compile Include="CoalPriceFeature.cs" />
+    <Compile Include="WineRules.cs" />
+    <Compile Include="WineData.cs" />
+    <Compile Include="GrapeWineFeature.cs" /><Compile Include="Brewing/*.cs" />
+    <Compile Include="CellarMap.cs" />
+    <Compile Include="CellarFeature.cs" />
+    <Compile Include="ModConfig.cs" />
+    <Compile Include="Horse*.cs" />
+    <Compile Include="Tea*.cs" />
+    <Compile Include="GoldenApple*.cs" />
+    <Compile Include="HarvestRules.cs" /><Compile Include="HarvestBonus.cs" /><Compile Include="BsvI18n.cs" />
+    <Compile Include="GreenhouseLayout.cs" />
+    <Compile Include="GreenhouseMap.cs" />
+    <Compile Include="GreenhouseFeature.cs" />
+    <Compile Include="GreenhouseBackup.cs" />
+    <Compile Include="AnnualLegendaryRules.cs" />
+    <Compile Include="AnnualLegendaryData.cs" />
+    <Compile Include="AnnualLegendaryFeature.cs" />
+    <None Include="../BetterStardewValley/manifest.json" Link="manifest.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../BetterStardewValley/assets/**/*" Link="assets/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../BetterStardewValley/i18n/**/*" Link="i18n/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../BetterStardewValley/crab-catcher.json" Link="crab-catcher.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../BetterStardewValley/fishing-machine.json" Link="fishing-machine.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

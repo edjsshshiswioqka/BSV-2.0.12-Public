@@ -1,0 +1,43 @@
+{
+  "mode": "built-in image_gen; background-extraction edit, followed by deterministic alpha threshold/common alignment/nearest-neighbour normalization",
+  "source_mapping": {
+    "grape_wine": "User attachment 1: ChatGPT 图像 2026年10月1日 18_21_04(5).png",
+    "blood_of_jesus": "User attachment 2: ChatGPT 图像 2026年10月1日 18_53_13(1).png"
+  },
+  "prompt_set": {
+    "grape_wine": "Use case: background-extraction. Edit target: attached ordinary purple/burgundy grape-wine bottle. Strictly retain its silhouette, diagonal lower-left base to upper-right cork angle, grape-cluster label composition, cork location, pixel block structure, original colors, highlights and shading. Remove only the beige background and produce a real transparent PNG; no halo, background shadow, border, checkerboard, text or additional decorations. Do not redesign the bottle. Preserve a high-resolution transparent source for the Stardew Valley item pipeline.",
+    "blood_of_jesus": "Use case: background-extraction. Edit target: attached deep crimson Blood of Jesus bottle. Strictly retain its silhouette, angle, ornate grape label, cork, golden neck ornament/bands, red wax seal and gold ribbons. Keep its premium deep-red appearance and existing pixel design; do not invent a new shape or change the packaging. Remove the beige background completely and return genuine transparency with no halo, background shadow, border, checkerboard, text or added objects. Preserve a high-resolution transparent source for the Stardew Valley item pipeline."
+  },
+  "normalization": {
+    "canonical_dimensions": [
+      16,
+      16
+    ],
+    "source_dimensions": [
+      1254,
+      1254
+    ],
+    "crop_shared_bounds": [
+      278,
+      96,
+      992,
+      1167
+    ],
+    "crop_to_dimensions": [
+      11,
+      16
+    ],
+    "placement": [
+      2,
+      0
+    ],
+    "resampler": "nearest-neighbour",
+    "alpha_threshold": 128,
+    "final_alpha_values": [
+      0,
+      255
+    ],
+    "palette": "sampled from supplied-source cutouts; no color re-design"
+  },
+  "runtime_texture_source": "StardewValley.ItemTypeDefinitions.ObjectDataDefinition.GetSourceRect uses standard 16x16 cells; SpriteIndex=0; native Object draw scale."
+}

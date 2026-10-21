@@ -1,0 +1,1 @@
+namespace BetterStardewValley { internal static class BsvI18n { internal static string Get(StardewModdingAPI.IModHelper helper,string key,object? tokens=null) => helper.Translation.Get(key).ToString(); } }

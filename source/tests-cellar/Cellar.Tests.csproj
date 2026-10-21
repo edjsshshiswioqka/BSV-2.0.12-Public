@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net6.0</TargetFramework><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../GlobalUsings.cs" Link="GlobalUsings.cs" />
+    <Compile Include="../WineRules.cs" Link="WineRules.cs" />
+    <Compile Include="../CellarMap.cs" Link="CellarMap.cs" />
+    <Compile Include="../CellarAppearance.cs" Link="CellarAppearance.cs" />
+    <Compile Include="../GreenhouseMap.cs" Link="GreenhouseMap.cs" />
+    <Compile Include="../GreenhouseLayout.cs" Link="GreenhouseLayout.cs" />
+    <Reference Include="xTile"><HintPath>$(GamePath)/xTile.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>

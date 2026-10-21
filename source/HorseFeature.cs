@@ -1,0 +1,206 @@
+using System.Diagnostics;
+using HarmonyLib;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
+using StardewModdingAPI;
+using StardewModdingAPI.Events;
+using StardewModdingAPI.Utilities;
+using StardewValley;
+using StardewValley.Buildings;
+using StardewValley.Characters;
+using StardewValley.Menus;
+
+namespace BetterStardewValley;
+
+internal sealed partial class HorseFeature
+{
+    private const string Tag = "Eddie.BetterStardewValley/";
+    private const string NameKey = Tag + "HorseName", SelectedKey = Tag + "SelectedHorse", RunKey = Tag + "HorseRun";
+    private const string RequestType = "BSV.Horse.Request.v1", ReplyType = "BSV.Horse.Receipt.v1", ViewType = "BSV.Horse.View.v1";
+    private static HorseFeature? Instance;
+    private static readonly AccessTools.FieldRef<Character, bool> Frozen = AccessTools.FieldRefAccess<Character, bool>("freezeMotion");
+    private readonly IModHelper Helper;
+    private readonly IMonitor Monitor;
+    private readonly string ModId;
+    private readonly ModConfig Config;
+    private readonly HashSet<string> Warnings = new();
+    private readonly PerScreen<LocalState> Local = new(() => new LocalState());
+    private readonly Dictionary<Guid, Summon> Active = new();
+    private readonly HashSet<Guid> Arrived = new();
+    private readonly Dictionary<long, (HorseViewport View, double Time)> Views = new();
+    private readonly Dictionary<long, HorseReceipt> Replies = new();
+    private readonly Dictionary<long, HorseRequest> Incoming = new();
+    private readonly HorseRequestGate Calls = new(), Interactions = new();
+    private SoundEffect? Whistle;
+    private bool Ready;
+    internal bool Initialized => Ready;
+    private static double Now => (double)Stopwatch.GetTimestamp() / Stopwatch.Frequency;
+    private sealed class LocalState
+    {
+        internal double NextCall, NextView, PendingSince;
+        internal string Pending = "";
+        internal string LastReceipt = "";
+        internal bool Busy;
+        internal readonly Dictionary<Guid, (string Token, Vector2 Position, double Phase)> Animations = new();
+    }
+
+    internal HorseFeature(IModHelper helper, IMonitor monitor, string modId, ModConfig config)
+    {
+        Helper = helper; Monitor = monitor; ModId = modId; Config = config; Instance = this;
+        Config.CallHorseCooldownSeconds = double.IsFinite(Config.CallHorseCooldownSeconds) ? Math.Clamp(Config.CallHorseCooldownSeconds, .5, 60) : 5;
+        Config.HorseStopDistance = Math.Clamp(Config.HorseStopDistance, 1, 8);
+        Config.HorseSpawnOutsideViewportMinTiles = Math.Clamp(Config.HorseSpawnOutsideViewportMinTiles, 2, 12);
+        Config.HorseSpawnOutsideViewportMaxTiles = Math.Clamp(Config.HorseSpawnOutsideViewportMaxTiles, Config.HorseSpawnOutsideViewportMinTiles, 16);
+        Config.HorseCallBlacklist ??= Array.Empty<string>();
+        var harmony = new Harmony(modId + ".Horses");
+        try
+        {
+            void Patch(Type type, string method, string? before = null, string? after = null, Type[]? args = null)
+            {
+                var target = AccessTools.Method(type, method, args) ?? throw new MissingMethodException(type.FullName, method);
+                harmony.Patch(target, before is null ? null : new HarmonyMethod(typeof(HorseFeature), before) { priority = Priority.First },
+                    after is null ? null : new HarmonyMethod(typeof(HorseFeature), after) { priority = Priority.Last });
+            }
+            Patch(typeof(Horse), nameof(Horse.checkAction), nameof(BeforeAction));
+            Patch(typeof(Farmer), nameof(Farmer.getMovementSpeed), after: nameof(AfterMovementSpeed));
+            Patch(typeof(Horse), nameof(Horse.update), after: nameof(AfterHorseUpdate), args: new[] { typeof(GameTime), typeof(GameLocation) });
+            Patch(typeof(Stable), nameof(Stable.updateHorseOwnership), nameof(BeforeOwnership), nameof(AfterOwnership));
+            Patch(typeof(Stable), nameof(Stable.grabHorse), nameof(BeforeGrab), nameof(AfterOwnership));
+            Patch(typeof(Stable), nameof(Stable.performActionOnDemolition), nameof(BeforeDemolition));
+            Ready = true;
+        }
+        catch (Exception ex)
+        {
+            harmony.UnpatchAll(modId + ".Horses");
+            Monitor.Log("BSV horse feature could not initialize: " + ex, LogLevel.Error);
+            return;
+        }
+        helper.Events.Input.ButtonPressed += OnButton;
+        helper.Events.GameLoop.UpdateTicked += OnTick;
+        helper.Events.Display.RenderedWorld += DrawNames;
+        helper.Events.Multiplayer.ModMessageReceived += OnMessage;
+        helper.Events.World.BuildingListChanged += (_, e) =>
+        {
+            if (Context.IsMainPlayer) foreach (var stable in e.Removed.OfType<Stable>()) CleanupStable(stable);
+        };
+        helper.Events.GameLoop.SaveLoaded += (_, _) => { ResetLocal(); if (Context.IsMainPlayer) RecoverAll(); };
+        helper.Events.GameLoop.DayStarted += (_, _) => { if (Context.IsMainPlayer) RecoverAll(); };
+        helper.Events.GameLoop.Saving += (_, _) => { if (Context.IsMainPlayer) StopAll(); };
+        helper.Events.GameLoop.ReturnedToTitle += (_, _) => { ResetLocal(); if (Context.IsMainPlayer) ClearHost(); };
+        helper.Events.Multiplayer.PeerDisconnected += (_, e) =>
+        {
+            if (!Context.IsMainPlayer) return;
+            Views.Remove(e.Peer.PlayerID);
+            foreach (var state in Active.Values.Where(s => s.Actor == e.Peer.PlayerID).ToArray()) Finish(state, "");
+        };
+        helper.ConsoleCommands.Add("bsv_horse_status", BsvI18n.Get(helper, "cmd.horse-status"), (_, _) =>
+        {
+            if (!Context.IsWorldReady) return;
+            AuditTractors();
+            foreach (var stable in Stables())
+            {
+                var h = stable.getStableHorse();
+                Monitor.Log($"Stable {stable.HorseId}: owner={stable.owner.Value}; horseOwner={h?.ownerId.Value}; name={h?.Name}; active={Active.ContainsKey(stable.HorseId)}; unclaimed={stable.owner.Value == 0 && (h?.ownerId.Value ?? 0) == 0}", LogLevel.Info);
+            }
+        });
+        helper.ConsoleCommands.Add("bsv_horse_name", BsvI18n.Get(helper, "cmd.horse-name"), (_, args) =>
+        {
+            if (!Context.IsPlayerFree) return;
+            var h = PickOwnedHorse(false);
+            if (h != null) { if (args.Length == 0) OpenNaming(h, false); else SendAction(h, "Name", string.Join(" ", args)); }
+        });
+        helper.ConsoleCommands.Add("bsv_horse_choose", BsvI18n.Get(helper, "cmd.horse-choose"), (_, _) =>
+        { if (Context.IsPlayerFree) CallLocal(forceChoice: true); });
+    }
+
+    // Read-only support audit; never repair tractor/garage metadata automatically.
+    private void AuditTractors()
+    {
+        var seen = new HashSet<Horse>();
+        void Inspect(Horse horse)
+        {
+            if (!IsTractorHorse(horse) || !seen.Add(horse)) return;
+            Monitor.Log($"[Tractor audit; read-only] horse={horse.HorseId}; owner={horse.ownerId.Value}; name={horse.Name}; BSV keys={string.Join(",", horse.modData.Keys.Where(k => k.StartsWith(Tag, StringComparison.Ordinal)))}", LogLevel.Info);
+        }
+        Utility.ForEachLocation(location =>
+        {
+            foreach (var horse in location.characters.OfType<Horse>()) Inspect(horse);
+            foreach (var stable in location.buildings.OfType<Stable>().Where(IsTractorStable))
+            {
+                Monitor.Log($"[Tractor audit; read-only] garage={stable.HorseId}; type={stable.buildingType.Value}; owner={stable.owner.Value}; BSV keys={string.Join(",", stable.modData.Keys.Where(k => k.StartsWith(Tag, StringComparison.Ordinal)))}", LogLevel.Info);
+                if (stable.getStableHorse() is { } horse) Inspect(horse);
+            }
+            return true;
+        });
+        foreach (var farmer in Game1.getAllFarmers()) if (farmer.mount is { } horse) Inspect(horse);
+    }
+
+    // Apply once to the native final speed; preserve diagonal movement and other buffs.
+    private static void AfterMovementSpeed(Farmer __instance, ref float __result)
+    {
+        if (Instance is null || !IsRealManagedHorse(__instance.mount)) return;
+        var effective=Configuration.SharedPreferences.Effective(Instance!.Config);
+        if (__instance.isRidingHorse() && effective.EnableHorseSpeedBonus) __result *= (float)(1 + effective.HorseSpeedBonus);
+    }
+
+    private string T(string key, object? tokens = null) => BetterStardewValley.BsvI18n.Get(Helper, key, tokens).ToString();
+    private void Message(string key, object? tokens = null) { if (key.Length > 0) Game1.showRedMessage(T(key, tokens)); }
+    private void WarnOnce(string key, Exception ex)
+    {
+        if (Warnings.Add(key)) Monitor.Log("BSV horses [" + key + "]: " + ex.Message, LogLevel.Warn);
+    }
+    private void ResetLocal() => Local.Value = new LocalState();
+    private void ClearHost() { StopAll(); Arrived.Clear(); Views.Clear(); Replies.Clear(); Incoming.Clear(); Calls.Clear(); Interactions.Clear(); }
+    private void StopAll() { foreach (var s in Active.Values.ToArray()) Finish(s, ""); }
+
+    private void OnButton(object? sender, ButtonPressedEventArgs e)
+    {
+        if (!Ready || !Context.IsPlayerFree) return;
+        var key = Config.CallHorseKey;
+        if (key == SButton.None || e.Button != key || Helper.Input.IsSuppressed(e.Button)) return;
+        Helper.Input.Suppress(e.Button);
+        CallLocal();
+    }
+    private void CallLocal(bool forceChoice = false)
+    {
+        if (forceChoice)
+        {
+            var selected = PickOwnedHorse(true, forceChoice: true);
+            if (IsRealManagedHorse(selected)) SendAction(selected!, "Select");
+            return;
+        }
+        var local = Local.Value;
+        double now = Now;
+        if (now < local.NextCall) return;
+        local.NextCall = now + Config.CallHorseCooldownSeconds;
+        PlayWhistle(); // Immediate feedback, before map, rider, horse or route validation.
+        if (!Allowed(Game1.currentLocation)) { Message("horse.call.unavailable_location"); return; }
+        if (Game1.player.mount != null) { Message("horse.call.already_here"); return; }
+        var horse = PickOwnedHorse(true, forceChoice);
+        if (horse != null) SendAction(horse, "Call");
+    }
+
+    private void PlayWhistle()
+    {
+        try
+        {
+            if (Whistle is null)
+            {
+                using var stream = File.OpenRead(Path.Combine(Helper.DirectoryPath, "assets", "horse-whistle.wav"));
+                Whistle = SoundEffect.FromStream(stream);
+            }
+            Whistle.Play(Math.Clamp(Game1.options.soundVolumeLevel * .65f, 0, 1), 0, 0);
+        }
+        catch (Exception ex) { WarnOnce("whistle", ex); }
+    }
+
+    private static bool Allowed(GameLocation? location)
+    {
+        if (location?.Map?.Layers.Count is not > 0 || location.Map.GetLayer("Back") is null || location.Map.GetLayer("Buildings") is null) return false;
+        var types = new List<string>();
+        for (Type? t = location.GetType(); t != null; t = t.BaseType) types.Add(t.Name);
+        bool denied = location.Map.Properties.TryGetValue("BSVNoHorseCall", out var value) && value.ToString().Equals("true", StringComparison.OrdinalIgnoreCase);
+        return !denied && HorseRules.Allowed(location.IsOutdoors, location.IsTemporary, location.currentEvent != null,
+            location.Name, types, Instance?.Config.HorseCallBlacklist ?? Array.Empty<string>());
+    }
+}

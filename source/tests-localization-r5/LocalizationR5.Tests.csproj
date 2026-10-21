@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net6.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><LangVersion>10</LangVersion></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../DisplayText.cs" Link="DisplayText.cs" />
+    <Compile Include="../FishingMachine/Eddie.FishingMachine/MachinePauseText.cs" Link="MachinePauseText.cs" />
+    <Compile Include="../FishingMachine/Eddie.FishingMachine.Core/*.cs" Link="Core/%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+  <Compile Include="../CrabBoundary.cs" />
+    <Compile Include="../../Eddie.FishingMachine.Core/*.cs" />
+    <Compile Include="../../Eddie.FishingMachine/ProductionService.cs" />
+    <Compile Include="../../Eddie.FishingMachine/ProductionContinuity.cs" />
+    <Compile Include="../../Eddie.FishingMachine/MachinePauseText.cs" />
+    <Compile Include="../../Eddie.FishingMachine/ProductionTimeline.cs" />
+    <Compile Include="../../tests/TimelineBoundary.cs" />
+    <Compile Include="../../Eddie.FishingMachine/MachineGuards.cs" /><Compile Include="../../Eddie.FishingMachine/ProductionDispatch.cs" />
+    <Compile Include="../../../CrabCatcher/CrabProduction.cs" />
+    <Compile Include="../../Eddie.FishingMachine/MachineLegendaryBridge.cs" />
+    <Compile Include="../../../AnnualLegendaryRules.cs" />
+  <Compile Include="../KingQuotaBoundary.cs"/></ItemGroup>
+</Project>

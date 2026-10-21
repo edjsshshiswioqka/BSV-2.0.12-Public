@@ -1,0 +1,198 @@
+[
+  {
+    "kind": "harvest",
+    "source_attachment": "ChatGPT 图像 2026年10月4日 23_36_55-1.png",
+    "source_sha256": "74083758baf86b5ca9552da6411619123513e67592beae59a349c2f003a0ce88",
+    "original_size": [
+      1254,
+      1254
+    ],
+    "alpha_threshold": 200,
+    "crop_box": [
+      298,
+      65,
+      956,
+      1175
+    ],
+    "world_size": [
+      64,
+      128
+    ],
+    "world_alpha_box": [
+      2,
+      25,
+      62,
+      126
+    ],
+    "icon_size": [
+      64,
+      64
+    ],
+    "icon_alpha_box": [
+      15,
+      4,
+      48,
+      60
+    ],
+    "native_size": [
+      16,
+      32
+    ],
+    "recolor": false,
+    "simplify": "alpha cleanup and nearest-neighbour reduction only",
+    "repack": false,
+    "runtime_tint": [
+      140,
+      140,
+      140,
+      255
+    ]
+  },
+  {
+    "kind": "growth",
+    "source_attachment": "ChatGPT 图像 2026年10月4日 23_36_56-2.png",
+    "source_sha256": "cde178e19adec9dc7bda17227357c4076d5193d36393ad09acec95ffb2c81622",
+    "original_size": [
+      1254,
+      1254
+    ],
+    "alpha_threshold": 200,
+    "crop_box": [
+      295,
+      50,
+      960,
+      1182
+    ],
+    "world_size": [
+      64,
+      128
+    ],
+    "world_alpha_box": [
+      2,
+      24,
+      62,
+      126
+    ],
+    "icon_size": [
+      64,
+      64
+    ],
+    "icon_alpha_box": [
+      15,
+      4,
+      48,
+      60
+    ],
+    "native_size": [
+      16,
+      32
+    ],
+    "recolor": false,
+    "simplify": "alpha cleanup and nearest-neighbour reduction only",
+    "repack": false,
+    "runtime_tint": [
+      140,
+      140,
+      140,
+      255
+    ]
+  },
+  {
+    "kind": "processing",
+    "source_attachment": "ChatGPT 图像 2026年10月4日 23_36_57-3.png",
+    "source_sha256": "2ab5d5db6a58d115e5e03e7b591239b636f4f5f3c966e786762cde60a93853ab",
+    "original_size": [
+      1254,
+      1254
+    ],
+    "alpha_threshold": 200,
+    "crop_box": [
+      298,
+      63,
+      956,
+      1184
+    ],
+    "world_size": [
+      64,
+      128
+    ],
+    "world_alpha_box": [
+      2,
+      24,
+      62,
+      126
+    ],
+    "icon_size": [
+      64,
+      64
+    ],
+    "icon_alpha_box": [
+      15,
+      4,
+      48,
+      60
+    ],
+    "native_size": [
+      16,
+      32
+    ],
+    "recolor": false,
+    "simplify": "alpha cleanup and nearest-neighbour reduction only",
+    "repack": false,
+    "runtime_tint": [
+      140,
+      140,
+      140,
+      255
+    ]
+  },
+  {
+    "kind": "thunderstorm",
+    "source_attachment": "ChatGPT 图像 2026年10月4日 23_36_58-4.png",
+    "source_sha256": "0b8b1c81d546b25b3c675721e7770fa86306555e444c410ded0069d0d3091437",
+    "original_size": [
+      1254,
+      1254
+    ],
+    "alpha_threshold": 200,
+    "crop_box": [
+      289,
+      41,
+      966,
+      1184
+    ],
+    "world_size": [
+      64,
+      128
+    ],
+    "world_alpha_box": [
+      2,
+      25,
+      62,
+      126
+    ],
+    "icon_size": [
+      64,
+      64
+    ],
+    "icon_alpha_box": [
+      15,
+      4,
+      48,
+      60
+    ],
+    "native_size": [
+      16,
+      32
+    ],
+    "recolor": false,
+    "simplify": "alpha cleanup and nearest-neighbour reduction only",
+    "repack": false,
+    "runtime_tint": [
+      140,
+      140,
+      140,
+      255
+    ]
+  }
+]

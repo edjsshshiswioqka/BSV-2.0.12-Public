@@ -1,0 +1,38 @@
+{
+  "EnableHarvestSeeds": false,
+  "SeedChance": 0.5,
+  "EnableAnnualLegendaryFish": true,
+  "CallHorseKey": "H",
+  "CallHorseCooldownSeconds": 5,
+  "HorseStopDistance": 3,
+  "HorseSpawnOutsideViewportMinTiles": 2,
+  "HorseSpawnOutsideViewportMaxTiles": 5,
+  "EnableHorseNameUI": true,
+  "HorseCallBlacklist": [],
+  "AfkFishing": {
+    "ToggleKey": "F8",
+    "ShowIndicator": true,
+    "Enabled": true,
+    "ReturnStaminaThreshold": 0.05
+  },
+  "HomeTerminalPlacementDistance": 3,
+  "EnableGreenhouseExpansion": true,
+  "EnableCellarExpansion": true,
+  "OrderItemExclusions": [],
+  "EnableCellarAppearance": true,
+  "HorseSpeedBonus": 0.2,
+  "HarvestBonus": {
+    "Enabled": true,
+    "DoubleChance": 0.2,
+    "TripleChance": 0.05,
+    "BasicDoubleChance": 0.25,
+    "BasicTripleChance": 0.05,
+    "QualityDoubleChance": 0.35,
+    "QualityTripleChance": 0.08,
+    "DeluxeDoubleChance": 0.45,
+    "DeluxeTripleChance": 0.1,
+    "EnableFertilizerYieldBonus": true
+  },
+  "EnableBsvSpeedGro": true,
+  "ConfigSchemaVersion": 2
+}

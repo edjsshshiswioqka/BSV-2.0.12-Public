@@ -1,0 +1,34 @@
+{
+  "Width": 72,
+  "Height": 48,
+  "OriginX": 36,
+  "OriginY": 42,
+  "WorldScale": 4,
+  "HeldScale": 1,
+  "HeldHeight": 40,
+  "IconWidth": 32,
+  "IconHeight": 16,
+  "IconScale": 2,
+  "Frames": 6,
+  "FrameOrder": [
+    "Idle",
+    "Drop25",
+    "Drop50",
+    "Drop75",
+    "Waterline",
+    "Submerged"
+  ],
+  "Footprint": [
+    2,
+    2
+  ],
+  "CableColumns": [
+    4,
+    11,
+    59,
+    66
+  ],
+  "WaterlineRow": 44,
+  "BodyBobMaxPixels": 1,
+  "CableSwayMaxPixels": 1
+}
