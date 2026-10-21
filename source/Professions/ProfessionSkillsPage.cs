@@ -47,9 +47,9 @@ internal static class ProfessionSkillsPage
     internal readonly record struct Metrics(int Slot,int BeadScale,int NameX,int NameWidth,int BarX,int PairX,int GridX,int NumberX);
     internal static int PitchFor(int height)=>Math.Clamp((height-HeaderHeight)/5,MinPitch,MaxPitch);
     /// <summary>Slot edge in pixels: the 16 px profession sprite at 1.5x to 2x, small enough that the 2x2 grid fits a row.</summary>
-    internal static int SlotFor(int pitch)=>Math.Clamp((pitch-SlotGap-4)/2/2*2,24,32); // keeps a visible gap between rows
+    internal static int SlotFor(int pitch)=>Math.Clamp((pitch-SlotGap-2)/2,24,32); // as large as the row allows, with a small gap between rows
     /// <summary>Slot edge limited by the width too: the bar, both icon groups and the level number must all fit.</summary>
-    internal static int SlotFor(int pitch,int width)=>Math.Max(24,Math.Min(SlotFor(pitch),(width-223)/4/2*2));
+    internal static int SlotFor(int pitch,int width)=>Math.Max(24,Math.Min(SlotFor(pitch),(width-223)/4));
     internal static Metrics Measure(int width,int slot,int nameWidth)
     {
         int group=2*slot+SlotGap,numberX=width-NumberWidth,gridX=numberX-16-group,pairX=gridX-GroupGap-group;
@@ -161,7 +161,7 @@ internal static class ProfessionSkillsPage
         int top=Math.Max(viewport.Top+16,boxes.Min(b=>b.Top)-HeaderHeight);
         int right=Math.Min(page.Right-48,viewport.Right-24);
         // The band under the last native row is free down to the mastery strip; use it for taller rows (bigger icons).
-        int bottom=Math.Min(boxes.Max(b=>b.Bottom)+48,Math.Min(page.Bottom-32,viewport.Bottom-32));
+        int bottom=Math.Min(boxes.Max(b=>b.Bottom)+72,Math.Min(page.Bottom-32,viewport.Bottom-32));
         return right-left<MinWidth||bottom-top<HeaderHeight+MinPitch?Rectangle.Empty:new(left,top,right-left,Math.Min(HeaderHeight+MaxPitch*5,bottom-top));
     }
     private static State? Get(IClickableMenu page)
@@ -251,7 +251,8 @@ internal static class ProfessionSkillsPage
         Fill(b,box,owned?left?LeftFill:RightFill:LockedFill,.87f);
         if(owned)b.Draw(Game1.mouseCursors,box,ProfessionIcon(id),Color.White,0f,Vector2.Zero,SpriteEffects.None,.88f);
         else Centered(b,"?",box.Center.X,box.Center.Y-Game1.smallFont.MeasureString("?").Y/2f,1f,LockedMark,.88f);
-        Outline(b,box,1,owned?left?LeftEdge:RightEdge:LockedEdge,.89f);
+        // 2 px branch-coloured edge (teal left branch, purple right branch) keeps the tree readable around the icon.
+        Outline(b,box,owned?2:1,owned?left?LeftEdge:RightEdge:LockedEdge,.89f);
         if(selected){var frame=box;frame.Inflate(2,2);Outline(b,frame,2,Color.White,.9f);}
     }
     internal static bool DrawRows(IClickableMenu page,SpriteBatch b)
