@@ -261,8 +261,18 @@ internal sealed partial class ProductionService
     {
         bool click=button==SButton.MouseLeft;
         if(!click&&button is not (SButton.T or SButton.ControllerX or SButton.G))return false;
-        if(!PanelModel(c,menu,out var s,out var g,out var materials)||g==null)return false;
         bool crab=ModEntry.IsCrab(c);
+        ProductionState s;(int Have,int Need,string Id)[] materials;Rectangle takeBox,buttonBox;
+        if(ReferenceEquals(FullMenu,menu)&&FullGeometry is {} full)
+        {
+            try{s=Read(c);}catch{return false;}
+            materials=PanelMaterials(c,s);takeBox=full.Take;buttonBox=full.Button;
+        }
+        else
+        {
+            if(!PanelModel(c,menu,out s,out var g,out materials)||g==null)return false;
+            takeBox=g.Take;buttonBox=g.Button;
+        }
         bool take=button==SButton.G,upgrade=button is SButton.T or SButton.ControllerX;
         if(click)
         {
@@ -270,14 +280,14 @@ internal sealed partial class ProductionService
             try
             {
                 int x=Game1.getMouseX(),y=Game1.getMouseY();
-                take=g.Take.Contains(x,y);
-                upgrade=crab&&g.Button.Width>0&&g.Button.Contains(x,y);
+                take=takeBox.Contains(x,y);
+                upgrade=crab&&buttonBox.Width>0&&buttonBox.Contains(x,y);
             }
             finally{Game1.PopUIMode();}
             if(!take&&!upgrade)return false;
         }
         if(take){try{TakeAll(c,s);}catch{Mod.Message("status.error");}return true;}
-        if(!crab||g.Button.Width==0)return false;
+        if(!crab||buttonBox.Width==0)return false;
         if(!Upgradable(c,s,materials)){UpgradeFeedback(c,s,materials);return true;}
         Mod.Actions.Control(c,ActionKind.Upgrade);Mod.ReleaseChest(startCrab:false);Game1.exitActiveMenu();return true;
     }

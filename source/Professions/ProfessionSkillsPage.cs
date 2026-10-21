@@ -22,7 +22,13 @@ internal static class ProfessionSkillsPage
     internal const int MaxPitch=68, MinPitch=52, HeaderHeight=20, MinWidth=336, SlotGap=3, GroupGap=12, NumberWidth=32, BeadSpan=101;
     internal const int RowHeight=MaxPitch;
     private static readonly FieldInfo Areas=AccessTools.Field(typeof(SkillsPage),"skillAreas"),Bars=AccessTools.Field(typeof(SkillsPage),"skillBars"),Avatar=AccessTools.Field(typeof(SkillsPage),"playerPanel");
-    private static readonly ConditionalWeakTable<SkillsPage,State> States=new();
+    private static readonly ConditionalWeakTable<IClickableMenu,State> States=new();
+    // SpaceCore replaces the Skills tab with its own page (same five rows, same component IDs).
+    // Its row loop skips rows outside [skillScrollOffset, +4]; while BSV draws, the offset is parked out of range.
+    private static Type? SpaceCorePage;
+    private static FieldInfo? ScAreas,ScPanel,ScOffset,ScLastSnap;
+    private static PropertyInfo? ScGameCount,ScVisible;
+    private const int ParkedOffset=1000;
     internal sealed class State
     {
         internal Farmer Owner=null!;internal Rectangle Bounds;internal int First,Focus=-1,Pinned=-1,Hover=-1,HoverSkill=-1,NameWidth=72;
@@ -68,8 +74,62 @@ internal static class ProfessionSkillsPage
         h.Patch(AccessTools.Method(typeof(GameMenu),"receiveGamePadButton",new[]{typeof(Buttons)}),prefix:new(typeof(ProfessionSkillsPage),nameof(Pad)));
         h.Patch(AccessTools.Method(typeof(GameMenu),"receiveScrollWheelAction",new[]{typeof(int)}),prefix:new(typeof(ProfessionSkillsPage),nameof(Scroll)));
         Installed=true;
+        InstallSpaceCore(h);
         } catch {Remove();throw;}
     }
+    private static void InstallSpaceCore(Harmony h)
+    {
+        var type=AccessTools.TypeByName("SpaceCore.Interface.NewSkillsPage");
+        if(type==null)return;
+        ScAreas=AccessTools.Field(type,"skillAreas");ScPanel=AccessTools.Field(type,"playerPanel");ScOffset=AccessTools.Field(type,"skillScrollOffset");
+        ScLastSnap=AccessTools.Field(type,"lastSnappedComponent");ScGameCount=AccessTools.Property(type,"GameSkillCount");ScVisible=AccessTools.Property(type,"VisibleSkills");
+        if(ScAreas==null||ScPanel==null||ScOffset==null||ScGameCount==null||ScVisible==null||ScOffset.FieldType!=typeof(int))
+        {ProfessionService.Trace("SpaceCore skills page layout not recognised; its own page is kept.");return;}
+        var draw=AccessTools.Method(type,"draw",new[]{typeof(SpriteBatch)});
+        var hover=AccessTools.Method(type,"performHoverAction",new[]{typeof(int),typeof(int)});
+        var click=AccessTools.Method(type,"receiveLeftClick",new[]{typeof(int),typeof(int),typeof(bool)});
+        if(draw==null||hover==null||click==null){ProfessionService.Trace("SpaceCore skills page methods not found; its own page is kept.");return;}
+        h.Patch(draw,prefix:new(typeof(ProfessionSkillsPage),nameof(ScDrawPrefix)),postfix:new(typeof(ProfessionSkillsPage),nameof(ScDrawPostfix)),finalizer:new(typeof(ProfessionSkillsPage),nameof(ScDrawFinalizer)));
+        h.Patch(hover,prefix:new(typeof(ProfessionSkillsPage),nameof(ScHover)));
+        h.Patch(click,prefix:new(typeof(ProfessionSkillsPage),nameof(ScClick)));
+        SpaceCorePage=type;
+        ProfessionService.Trace("BSV skills page attached to SpaceCore's skills page.");
+    }
+    private static bool IsSpaceCore(IClickableMenu page)=>SpaceCorePage!=null&&page.GetType()==SpaceCorePage;
+    /// <summary>Only the plain five-skill SpaceCore page is redrawn; with custom skills or scrolling SpaceCore keeps its own rows.</summary>
+    private static bool SpaceCoreSimple(IClickableMenu page)
+    {
+        try{return (int)ScGameCount!.GetValue(page)!==5&&((Array)ScVisible!.GetValue(page)!).Length==0;}catch{return false;}
+    }
+    private static void ScDrawPrefix(IClickableMenu __instance,out int __state)
+    {
+        __state=-1;
+        if(Get(__instance)==null)return;
+        __state=(int)ScOffset!.GetValue(__instance)!;
+        // Skip SpaceCore's own scroll correction for this frame; all five rows are visible anyway.
+        ScLastSnap?.SetValue(__instance,__instance.currentlySnappedComponent);
+        ScOffset.SetValue(__instance,ParkedOffset);
+    }
+    private static void ScDrawPostfix(IClickableMenu __instance,SpriteBatch b,int __state)
+    {
+        if(__state<0)return;
+        ScOffset!.SetValue(__instance,__state);
+        if(DrawRows(__instance,b))Details(__instance,b);
+    }
+    private static Exception? ScDrawFinalizer(IClickableMenu __instance,Exception? __exception,int __state)
+    {
+        if(__state>=0&&(int)ScOffset!.GetValue(__instance)!==ParkedOffset)ScOffset.SetValue(__instance,__state);
+        return __exception;
+    }
+    private static bool ScHover(IClickableMenu __instance,int x,int y)
+    {
+        var s=Get(__instance);if(s==null)return true;
+        bool native=HoverCore(s,x,y);
+        if(native)return true;
+        try{AccessTools.Field(__instance.GetType(),"hoverText")?.SetValue(__instance,"");AccessTools.Field(__instance.GetType(),"hoverTitle")?.SetValue(__instance,"");AccessTools.Field(__instance.GetType(),"professionImage")?.SetValue(__instance,-1);}catch{}
+        return false;
+    }
+    private static bool ScClick(IClickableMenu __instance,int x,int y)=>ClickCore(__instance,x,y);
     internal static IEnumerable<CodeInstruction> ReplaceRows(IEnumerable<CodeInstruction> instructions,ILGenerator generator)
     {
         var code=instructions.Select(c=>new CodeInstruction(c)).ToList();
@@ -86,10 +146,11 @@ internal static class ProfessionSkillsPage
         code.InsertRange(start,new[]{new CodeInstruction(OpCodes.Ldarg_0),new CodeInstruction(OpCodes.Ldarg_1),new CodeInstruction(OpCodes.Call,AccessTools.Method(typeof(ProfessionSkillsPage),nameof(DrawRows))),new CodeInstruction(OpCodes.Brtrue,finish)});
         return code;
     }
-    private static SkillsPage? Page(GameMenu menu)
+    private static IClickableMenu? Page(GameMenu menu)
     {
         var pages=(List<IClickableMenu>)AccessTools.Field(typeof(GameMenu),"pages").GetValue(menu)!;
-        return menu.currentTab>=0&&menu.currentTab<pages.Count?pages[menu.currentTab] as SkillsPage:null;
+        var page=menu.currentTab>=0&&menu.currentTab<pages.Count?pages[menu.currentTab]:null;
+        return page is SkillsPage||page!=null&&IsSpaceCore(page)?page:null;
     }
     internal static Rectangle Layout(Rectangle avatar,IEnumerable<Rectangle> rows,Rectangle page,Rectangle viewport)
     {
@@ -100,13 +161,16 @@ internal static class ProfessionSkillsPage
         int bottom=Math.Min(boxes.Max(b=>b.Bottom)+32,Math.Min(page.Bottom-32,viewport.Bottom-32));
         return right-left<MinWidth||bottom-top<HeaderHeight+MinPitch?Rectangle.Empty:new(left,top,right-left,Math.Min(HeaderHeight+MaxPitch*5,bottom-top));
     }
-    private static State? Get(SkillsPage page)
+    private static State? Get(IClickableMenu page)
     {
         // K04: with the all-professions option off, leave the native Skills page untouched.
-        if(!Installed||!ProfessionService.Active||page.GetType()!=typeof(SkillsPage))return null;
-        var areas=(List<ClickableTextureComponent>)Areas.GetValue(page)!;
+        if(!Installed||!ProfessionService.Active)return null;
+        List<ClickableTextureComponent> areas;Rectangle avatar;
+        if(page.GetType()==typeof(SkillsPage)){areas=(List<ClickableTextureComponent>)Areas.GetValue(page)!;avatar=(Rectangle)Avatar.GetValue(page)!;}
+        else if(IsSpaceCore(page)&&SpaceCoreSimple(page)){areas=(List<ClickableTextureComponent>)ScAreas!.GetValue(page)!;avatar=((ClickableComponent)ScPanel!.GetValue(page)!).bounds;}
+        else return null;
         var vanilla=areas.Where(c=>int.TryParse(c.name,out int n)&&n>=0&&n<5).ToArray();
-        var rect=Layout((Rectangle)Avatar.GetValue(page)!,vanilla.Select(c=>c.bounds),new(page.xPositionOnScreen,page.yPositionOnScreen,page.width,page.height),new(0,0,Game1.uiViewport.Width,Game1.uiViewport.Height));
+        var rect=Layout(avatar,vanilla.Select(c=>c.bounds),new(page.xPositionOnScreen,page.yPositionOnScreen,page.width,page.height),new(0,0,Game1.uiViewport.Width,Game1.uiViewport.Height));
         // Respect custom skill components that occupy the same horizontal region.
         foreach(var c in areas.Except(vanilla))if(c.bounds.Left<rect.Right&&c.bounds.Right>rect.Left&&c.bounds.Top>=rect.Top&&c.bounds.Top<rect.Bottom)rect.Height=c.bounds.Top-rect.Top;
         if(rect.Width<MinWidth||rect.Height<HeaderHeight+MinPitch)return null;
@@ -135,7 +199,7 @@ internal static class ProfessionSkillsPage
             s.Icons.Add((ids[5],new(gridX+step,gridY+step,slot,slot)));
         }
     }
-    private static List<ClickableTextureComponent> VisibleBars(SkillsPage page)
+    private static List<ClickableTextureComponent> VisibleBars(IClickableMenu page)
     {
         var list=(List<ClickableTextureComponent>)Bars.GetValue(page)!;
         // Native component IDs: 100..104 for level 5, 200..204 for level 10.
@@ -187,7 +251,7 @@ internal static class ProfessionSkillsPage
         Outline(b,box,1,owned?left?LeftEdge:RightEdge:LockedEdge,.89f);
         if(selected){var frame=box;frame.Inflate(2,2);Outline(b,frame,2,Color.White,.9f);}
     }
-    internal static bool DrawRows(SkillsPage page,SpriteBatch b)
+    internal static bool DrawRows(IClickableMenu page,SpriteBatch b)
     {
         var s=Get(page);if(s==null)return false;
         int pitch=s.Pitch,slot=SlotFor(pitch,s.Bounds.Width),group=2*slot+SlotGap;
@@ -224,17 +288,23 @@ internal static class ProfessionSkillsPage
     }
     private static bool Hover(SkillsPage __instance,int x,int y,ref string ___hoverText,ref string ___hoverTitle,ref int ___professionImage)
     {
-        var s=Get(__instance);if(s==null)return true;
+        var s=Get(__instance);if(s==null||HoverCore(s,x,y))return true;
+        ___hoverText=___hoverTitle="";___professionImage=-1;return false;
+    }
+    /// <summary>Updates hover state; true when the pointer is outside the BSV rows and native hover should run.</summary>
+    private static bool HoverCore(State s,int x,int y)
+    {
         s.Hover=s.Icons.Where(c=>c.Box.Contains(x,y)).Select(c=>c.Id).DefaultIfEmpty(-1).First();
         // The skill name tooltip belongs to the skill icon and name only, not the whole row.
         int row=s.RowAt(y);
         s.HoverSkill=row>=0&&x>=s.Bounds.X&&x<s.Bounds.X+24+s.NameWidth&&Math.Abs(y-(s.RowTop(row)+s.Pitch/2))<=14?row:-1;
         if(!s.Bounds.Contains(x,y)){s.Focus=-1;return true;}
-        ___hoverText=___hoverTitle="";___professionImage=-1;return false;
+        return false;
     }
-    private static bool Click(SkillsPage __instance,int x,int y)
+    private static bool Click(SkillsPage __instance,int x,int y)=>ClickCore(__instance,x,y);
+    private static bool ClickCore(IClickableMenu page,int x,int y)
     {
-        var s=Get(__instance);if(s==null||!s.Bounds.Contains(x,y))return true;
+        var s=Get(page);if(s==null||!s.Bounds.Contains(x,y))return true;
         int id=s.Icons.Where(c=>c.Box.Contains(x,y)).Select(c=>c.Id).DefaultIfEmpty(-1).First();
         s.Pinned=s.Pinned==id?-1:id;s.Focus=id;return false;
     }
@@ -244,9 +314,9 @@ internal static class ProfessionSkillsPage
         index=index<0?s.First*6:Math.Clamp(index+direction,0,29);s.Focus=ids[index];
         int row=index/6;if(row<s.First)s.First=row;if(row>=s.First+s.Visible)s.First=row-s.Visible+1;Build(s);
     }
-    private static bool NativeFocus(SkillsPage page,State s)=>s.Focus<0&&page.currentlySnappedComponent is {} c
+    private static bool NativeFocus(IClickableMenu page,State s)=>s.Focus<0&&page.currentlySnappedComponent is {} c
         && !(c.myID is >=0 and <=4 or >=100 and <=104 or >=200 and <=204 or >=60000 and <60030);
-    private static bool Navigate(SkillsPage page,State s,int direction)
+    private static bool Navigate(IClickableMenu page,State s,int direction)
     {
         if(NativeFocus(page,s))return false;
         int[] ids=ProfessionRules.Skills.SelectMany(k=>k.All).ToArray();int index=Array.IndexOf(ids,s.Focus);
@@ -284,7 +354,7 @@ internal static class ProfessionSkillsPage
         var page=Page(__instance);var s=page==null?null:Get(page);if(s==null||s.Visible==5||!s.Bounds.Contains(Game1.getMouseX(),Game1.getMouseY()))return true;
         s.First=Math.Clamp(s.First+(direction<0?1:-1),0,5-s.Visible);s.Focus=s.Hover=-1;Build(s);return false;
     }
-    private static void Details(SkillsPage __instance,SpriteBatch b)
+    private static void Details(IClickableMenu __instance,SpriteBatch b)
     {
         var s=Get(__instance);if(s==null)return;
         int id=s.Pinned>=0?s.Pinned:s.Hover>=0?s.Hover:s.Focus;

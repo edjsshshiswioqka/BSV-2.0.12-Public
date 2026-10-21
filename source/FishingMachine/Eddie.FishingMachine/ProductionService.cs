@@ -357,6 +357,7 @@ internal sealed partial class ProductionService
     internal void DrawMenu(SpriteBatch b)
     {
         if(!CurrentMenu(out var c,out var menu))return;
+        if(ReferenceEquals(FullMenu,menu))return; // already drawn as one window by MachineMenuDrawPatch
         try{if(TryDrawPanel(b,c,menu))return;}catch(Exception ex){PanelFailed(ex);}
         if(ModEntry.IsCrab(c)){try{DrawCrabMenu(b,c,menu);}catch{}return;}
         ProductionState s;
