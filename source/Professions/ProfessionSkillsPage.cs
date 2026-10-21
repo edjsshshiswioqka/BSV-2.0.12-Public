@@ -99,7 +99,7 @@ internal static class ProfessionSkillsPage
     /// <summary>Only the plain five-skill SpaceCore page is redrawn; with custom skills or scrolling SpaceCore keeps its own rows.</summary>
     private static bool SpaceCoreSimple(IClickableMenu page)
     {
-        try{return (int)ScGameCount!.GetValue(page)!==5&&((Array)ScVisible!.GetValue(page)!).Length==0;}catch{return false;}
+        try{return (int)(ScGameCount!.GetValue(page)!)==5&&((Array)ScVisible!.GetValue(page)!).Length==0;}catch{return false;}
     }
     private static void ScDrawPrefix(IClickableMenu __instance,out int __state)
     {
@@ -118,7 +118,7 @@ internal static class ProfessionSkillsPage
     }
     private static Exception? ScDrawFinalizer(IClickableMenu __instance,Exception? __exception,int __state)
     {
-        if(__state>=0&&(int)ScOffset!.GetValue(__instance)!==ParkedOffset)ScOffset.SetValue(__instance,__state);
+        if(__state>=0&&(int)(ScOffset!.GetValue(__instance)!)==ParkedOffset)ScOffset.SetValue(__instance,__state);
         return __exception;
     }
     private static bool ScHover(IClickableMenu __instance,int x,int y)
