@@ -19,7 +19,7 @@ namespace BetterStardewValley.Professions;
 internal static class ProfessionSkillsPage
 {
     // Pitch is adaptive: vanilla leaves roughly 55 px per skill, a roomier page gets up to 68.
-    internal const int MaxPitch=68, MinPitch=52, HeaderHeight=20, MinWidth=336, SlotGap=3, GroupGap=12, NumberWidth=32, BeadSpan=101;
+    internal const int MaxPitch=68, MinPitch=52, HeaderHeight=20, MinWidth=336, SlotGap=3, GroupGap=16, NumberWidth=32, BeadSpan=101;
     internal const int RowHeight=MaxPitch;
     private static readonly FieldInfo Areas=AccessTools.Field(typeof(SkillsPage),"skillAreas"),Bars=AccessTools.Field(typeof(SkillsPage),"skillBars"),Avatar=AccessTools.Field(typeof(SkillsPage),"playerPanel");
     private static readonly ConditionalWeakTable<IClickableMenu,State> States=new();
@@ -47,17 +47,18 @@ internal static class ProfessionSkillsPage
     internal readonly record struct Metrics(int Slot,int BeadScale,int NameX,int NameWidth,int BarX,int PairX,int GridX,int NumberX);
     internal static int PitchFor(int height)=>Math.Clamp((height-HeaderHeight)/5,MinPitch,MaxPitch);
     /// <summary>Slot edge in pixels: the 16 px profession sprite at 1.5x to 2x, small enough that the 2x2 grid fits a row.</summary>
-    internal static int SlotFor(int pitch)=>Math.Clamp((pitch-SlotGap)/2/2*2,24,32);
+    internal static int SlotFor(int pitch)=>Math.Clamp((pitch-SlotGap-6)/2/2*2,24,32); // keeps a visible gap between rows
     /// <summary>Slot edge limited by the width too: the bar, both icon groups and the level number must all fit.</summary>
     internal static int SlotFor(int pitch,int width)=>Math.Max(24,Math.Min(SlotFor(pitch),(width-223)/4/2*2));
     internal static Metrics Measure(int width,int slot,int nameWidth)
     {
-        int group=2*slot+SlotGap,numberX=width-NumberWidth,gridX=numberX-8-group,pairX=gridX-GroupGap-group;
+        int group=2*slot+SlotGap,numberX=width-NumberWidth,gridX=numberX-16-group,pairX=gridX-GroupGap-group;
         const int nameX=0; // mockup: skill name first, no skill icon
         // The bar at its smallest scale always fits; a long skill name is truncated instead.
-        nameWidth=Math.Max(24,Math.Min(nameWidth,pairX-8-(nameX+8)-BeadSpan));
-        int barX=nameX+nameWidth+8,room=pairX-8-barX;
-        int scale=room>=BeadSpan*4?4:room>=BeadSpan*3?3:room>=BeadSpan*2?2:1;
+        nameWidth=Math.Max(24,Math.Min(nameWidth,pairX-16-(nameX+8)-BeadSpan));
+        int barX=nameX+nameWidth+8,room=pairX-16-barX;
+        // At most 3x: the bar should not crowd out the profession slots (mockup proportions).
+        int scale=room>=BeadSpan*3?3:room>=BeadSpan*2?2:1;
         return new(slot,scale,nameX,nameWidth,barX,pairX,gridX,numberX);
     }
     internal static bool Installed;
@@ -156,8 +157,9 @@ internal static class ProfessionSkillsPage
     {
         var boxes=rows.ToArray();if(boxes.Length!=5)return Rectangle.Empty;
         int left=Math.Max(avatar.Right+24,boxes.Min(b=>b.Left));
-        int top=Math.Max(viewport.Top+16,boxes.Min(b=>b.Top));
-        int right=Math.Min(page.Right-32,viewport.Right-24);
+        // The "Lv 5 / Lv 10" header sits in the free band above the first native row, so rows keep their full pitch.
+        int top=Math.Max(viewport.Top+16,boxes.Min(b=>b.Top)-HeaderHeight);
+        int right=Math.Min(page.Right-48,viewport.Right-24);
         int bottom=Math.Min(boxes.Max(b=>b.Bottom)+32,Math.Min(page.Bottom-32,viewport.Bottom-32));
         return right-left<MinWidth||bottom-top<HeaderHeight+MinPitch?Rectangle.Empty:new(left,top,right-left,Math.Min(HeaderHeight+MaxPitch*5,bottom-top));
     }
