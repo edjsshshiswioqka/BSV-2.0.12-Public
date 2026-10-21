@@ -549,6 +549,8 @@
   "panel.catch": "产出",
   "panel.backpack": "背包",
   "panel.cycles": "轮数",
+  "panel.color": "机器颜色",
+  "panel.take-help": "把产出放进背包。鱼饵和升级材料会留在机器里。",
   "professions.ui.owned": "已获得 · {{level}} 级",
   "professions.ui.locked": "未获得 · 需要 {{level}} 级",
   "professions.ui.pending": "已达到所需等级，请检查待确认升级或全职业设置。",

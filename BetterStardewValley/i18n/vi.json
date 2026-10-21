@@ -549,6 +549,8 @@
   "panel.catch": "Catch",
   "panel.backpack": "Backpack",
   "panel.cycles": "Cycles",
+  "panel.color": "Machine colour",
+  "panel.take-help": "Moves the catch into your backpack. Bait and upgrade materials stay in the machine.",
   "professions.ui.owned": "Đã nhận · cấp {{level}}",
   "professions.ui.locked": "Chưa nhận · cần cấp {{level}}",
   "professions.ui.pending": "Đã đạt cấp yêu cầu. Kiểm tra lần lên cấp đang chờ xác nhận hoặc cài đặt tất cả nghề.",

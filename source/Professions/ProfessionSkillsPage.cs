@@ -53,7 +53,7 @@ internal static class ProfessionSkillsPage
     internal static Metrics Measure(int width,int slot,int nameWidth)
     {
         int group=2*slot+SlotGap,numberX=width-NumberWidth,gridX=numberX-8-group,pairX=gridX-GroupGap-group;
-        const int nameX=24;
+        const int nameX=0; // mockup: skill name first, no skill icon
         // The bar at its smallest scale always fits; a long skill name is truncated instead.
         nameWidth=Math.Max(24,Math.Min(nameWidth,pairX-8-(nameX+8)-BeadSpan));
         int barX=nameX+nameWidth+8,room=pairX-8-barX;
@@ -237,7 +237,7 @@ internal static class ProfessionSkillsPage
             var shade=big?new Rectangle(145,338,14,9):new Rectangle(129,338,8,9);
             var bead=big?new Rectangle(145+(red?14:0),338,14,9):new Rectangle(129+(red?8:0),338,8,9);
             b.Draw(Game1.mouseCursors,at+new Vector2(-scale,scale),shade,Color.Black*.35f,0f,Vector2.Zero,(float)scale,SpriteEffects.None,.85f);
-            b.Draw(Game1.mouseCursors,at,bead,Color.White*(red?1f:.65f),0f,Vector2.Zero,(float)scale,SpriteEffects.None,.87f);
+            b.Draw(Game1.mouseCursors,at,bead,Color.White,0f,Vector2.Zero,(float)scale,SpriteEffects.None,.87f);
             if(big)extra+=6*scale;
         }
     }
@@ -265,19 +265,12 @@ internal static class ProfessionSkillsPage
         for(int row=s.First;row<Math.Min(5,s.First+s.Visible);row++)
         {
             var skill=ProfessionRules.Skills[row];int level=s.Owner.GetUnmodifiedSkillLevel(skill.Id),mid=s.RowTop(row)+pitch/2;
-            // The original five skill sprites are 10x10 pixels in mouseCursors.
-            int sprite=skill.Id switch{0=>10,1=>20,2=>60,3=>30,_=>120};
-            var source=new Rectangle(sprite,428,10,10);
-            // Native sprites carry a soft shadow offset by one source pixel down and to the left.
-            b.Draw(Game1.mouseCursors,new Rectangle(left,mid-10+2,20,20),source,Color.Black*.3f,0f,Vector2.Zero,SpriteEffects.None,.85f);
-            b.Draw(Game1.mouseCursors,new Rectangle(left+2,mid-10,20,20),source,Color.White,0f,Vector2.Zero,SpriteEffects.None,.87f);
             string name=Fit(Farmer.getSkillDisplayNameFromIndex(skill.Id),m.NameWidth);
             b.DrawString(Game1.smallFont,name,new Vector2(left+m.NameX,mid-Game1.smallFont.MeasureString(name).Y/2f),Game1.textColor,0f,Vector2.Zero,1f,SpriteEffects.None,.87f);
             Beads(b,left+m.BarX,mid,m.BeadScale,level);
             string number=level.ToString();var numberSize=Game1.smallFont.MeasureString(number)*1.25f;
             var numberAt=new Vector2(s.Bounds.Right-numberSize.X-2,mid-numberSize.Y/2f);
-            b.DrawString(Game1.smallFont,number,numberAt+new Vector2(2,2),Color.Black*.35f,0f,Vector2.Zero,1.25f,SpriteEffects.None,.86f);
-            b.DrawString(Game1.smallFont,number,numberAt,Color.SandyBrown*(level==0?.75f:1f),0f,Vector2.Zero,1.25f,SpriteEffects.None,.87f);
+            b.DrawString(Game1.smallFont,number,numberAt,Game1.textColor,0f,Vector2.Zero,1.25f,SpriteEffects.None,.87f);
         }
         foreach(var icon in s.Icons)
         {
@@ -361,9 +354,13 @@ internal static class ProfessionSkillsPage
         if(id<0){if(s.HoverSkill>=0&&s.HoverSkill<5)IClickableMenu.drawHoverText(b,Farmer.getSkillDisplayNameFromIndex(ProfessionRules.Skills[s.HoverSkill].Id),Game1.smallFont);return;}
         var skill=ProfessionRules.Skills.First(k=>k.All.Contains(id));int level=skill.Basic.Contains(id)?5:10;
         bool owned=s.Owner.professions.Contains(id);
-        string status=ProfessionService.Text(owned?"professions.ui.owned":"professions.ui.locked",new{level});
-        string text=string.Join("\n",LevelUpMenu.getProfessionDescription(id).Skip(1))+"\n\n"+status;
-        if(!owned&&s.Owner.GetUnmodifiedSkillLevel(skill.Id)>=level)text+="\n"+ProfessionService.Text("professions.ui.pending");
+        // Mockup: title + description; locked professions also say when they unlock.
+        string text=string.Join("\n",LevelUpMenu.getProfessionDescription(id).Skip(1));
+        if(!owned)
+        {
+            text+="\n\n"+ProfessionService.Text("professions.ui.locked",new{level});
+            if(s.Owner.GetUnmodifiedSkillLevel(skill.Id)>=level)text+="\n"+ProfessionService.Text("professions.ui.pending");
+        }
         text=Game1.parseText(text,Game1.smallFont,Math.Max(180,Math.Min(380,Game1.uiViewport.Width-96)));
         IClickableMenu.drawHoverText(b,text,Game1.smallFont,0,0,-1,LevelUpMenu.getProfessionTitleFromNumber(id));
     }

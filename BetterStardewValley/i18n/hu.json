@@ -549,6 +549,8 @@
   "panel.catch": "Catch",
   "panel.backpack": "Backpack",
   "panel.cycles": "Cycles",
+  "panel.color": "Machine colour",
+  "panel.take-help": "Moves the catch into your backpack. Bait and upgrade materials stay in the machine.",
   "professions.ui.owned": "Megszerzett · {{level}}. szint",
   "professions.ui.locked": "Nincs megszerezve · {{level}}. szint szükséges",
   "professions.ui.pending": "A szükséges szintet elérted. Ellenőrizd a függő szintlépéseket vagy az összes szakma beállítását.",

@@ -549,6 +549,8 @@
   "panel.catch": "Catch",
   "panel.backpack": "Backpack",
   "panel.cycles": "Cycles",
+  "panel.color": "Machine colour",
+  "panel.take-help": "Moves the catch into your backpack. Bait and upgrade materials stay in the machine.",
   "professions.ui.owned": "Kazanıldı · seviye {{level}}",
   "professions.ui.locked": "Kazanılmadı · {{level}}. seviye gerekir",
   "professions.ui.pending": "Gerekli seviyeye ulaşıldı. Bekleyen seviye artışlarını veya tüm meslekler ayarını kontrol edin.",

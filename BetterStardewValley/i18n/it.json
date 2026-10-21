@@ -549,6 +549,8 @@
   "panel.catch": "Catch",
   "panel.backpack": "Backpack",
   "panel.cycles": "Cycles",
+  "panel.color": "Machine colour",
+  "panel.take-help": "Moves the catch into your backpack. Bait and upgrade materials stay in the machine.",
   "professions.ui.owned": "Acquisita · livello {{level}}",
   "professions.ui.locked": "Non acquisita · richiede livello {{level}}",
   "professions.ui.pending": "Livello richiesto raggiunto. Controlla gli avanzamenti in sospeso o l’impostazione di tutte le professioni.",
