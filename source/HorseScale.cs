@@ -11,7 +11,7 @@ using StardewValley.Objects;
 namespace BetterStardewValley;
 
 /// <summary>
-/// Draws BSV horses 1.3x larger, scaled around the hooves so they stand on the same ground line.
+/// Draws BSV horses 1.15x larger, scaled around the hooves so they stand on the same ground line.
 /// Everything Horse.draw paints (body, the head drawn over a rider facing down, hats, carrot-munching
 /// heads) goes through the same transform. Collision, mounting and pathing are unchanged.
 /// The rider is NOT scaled: it is lifted onto the bigger saddle by the saddle's measured displacement.
@@ -19,7 +19,7 @@ namespace BetterStardewValley;
 /// </summary>
 internal static class HorseScale
 {
-    internal const float Factor = 1.3f;
+    internal const float Factor = 1.15f;
     [ThreadStatic] private static Horse? current;
     [ThreadStatic] private static Vector2 pivot;
     private static IMonitor? Monitor;
@@ -89,7 +89,7 @@ internal static class HorseScale
             failed = true; // unknown Horse.draw: the helpers below pass everything through unchanged
             Monitor?.Log($"BSV horse size: Horse.draw differs from 1.6.15 (body {body}, draws {sprites}, hats {hats}); horses keep native size.", LogLevel.Warn);
         }
-        else Monitor?.Log($"BSV horse size: 1.3x active (body {body}, draws {sprites}, hats {hats}).", LogLevel.Trace);
+        else Monitor?.Log($"BSV horse size: 1.15x active (body {body}, draws {sprites}, hats {hats}).", LogLevel.Trace);
     }
 
     /// <summary>NPC.draw (non-swimming branch) with the 1.3x scale around the hooves.</summary>

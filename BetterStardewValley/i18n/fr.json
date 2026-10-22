@@ -630,7 +630,7 @@
   "horse.skin.locked": "La robe de ce cheval a déjà été choisie.",
   "horse.skin.unavailable": "Tu ne peux pas choisir la robe de ce cheval.",
   "config.horse-large": "Grands chevaux",
-  "config.horse-large.help": "Réglage de l'hôte. Les chevaux sont affichés 30 % plus grands ; les cavaliers gardent leur taille. Purement visuel.",
+  "config.horse-large.help": "Réglage de l'hôte. Les chevaux sont affichés 15 % plus grands ; les cavaliers gardent leur taille. Purement visuel.",
   "horse.call.cross_map_unavailable": "Le rappel depuis une autre carte est indisponible. Rejoignez la carte de votre cheval.",
   "horse.call.withdrawal_unavailable": "Le cheval est sorti du champ de vision. Dans cette version de test, il reste dans le monde par sécurité."
 }

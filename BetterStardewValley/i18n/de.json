@@ -630,7 +630,7 @@
   "horse.skin.locked": "Für dieses Pferd wurde das Fell schon gewählt.",
   "horse.skin.unavailable": "Du kannst das Fell dieses Pferdes nicht wählen.",
   "config.horse-large": "Große Pferde",
-  "config.horse-large.help": "Host-Einstellung. Pferde werden 30 % größer gezeichnet; Reiter behalten ihre Größe. Nur optisch.",
+  "config.horse-large.help": "Host-Einstellung. Pferde werden 15 % größer gezeichnet; Reiter behalten ihre Größe. Nur optisch.",
   "horse.call.cross_map_unavailable": "Ein Ruf aus einem anderen Gebiet ist nicht verfügbar. Rufe dein Pferd im selben Gebiet.",
   "horse.call.withdrawal_unavailable": "Das Pferd hat den Sichtbereich verlassen. In dieser Testversion bleibt es aus Sicherheitsgründen in der Welt."
 }

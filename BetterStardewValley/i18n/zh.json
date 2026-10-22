@@ -630,7 +630,7 @@
   "horse.skin.locked": "这匹马的毛色已经选好了。",
   "horse.skin.unavailable": "你不能为这匹马选择毛色。",
   "config.horse-large": "大体型马匹",
-  "config.horse-large.help": "房主设置。马匹显示放大 30%，骑手保持原来大小。仅影响外观。",
+  "config.horse-large.help": "房主设置。马匹显示放大 15%，骑手保持原来大小。仅影响外观。",
   "horse.call.cross_map_unavailable": "暂不支持跨地图召回，请到马匹所在地图召唤。",
   "horse.call.withdrawal_unavailable": "马匹已走出视野。本测试版暂不撤除持久马匹实体，马仍留在地图中。"
 }

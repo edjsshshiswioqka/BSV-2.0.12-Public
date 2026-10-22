@@ -630,7 +630,7 @@
   "horse.skin.locked": "Bu atın donu zaten seçildi.",
   "horse.skin.unavailable": "Bu atın donunu seçemezsin.",
   "config.horse-large": "Büyük atlar",
-  "config.horse-large.help": "Ev sahibi ayarı. Atlar %30 daha büyük çizilir; biniciler boyutunu korur. Yalnızca görsel.",
+  "config.horse-large.help": "Ev sahibi ayarı. Atlar %15 daha büyük çizilir; biniciler boyutunu korur. Yalnızca görsel.",
   "horse.call.cross_map_unavailable": "Başka bir haritadan çağırma kullanılamıyor. Atın bulunduğu haritada çağırın.",
   "horse.call.withdrawal_unavailable": "At görüş alanından çıktı. Bu test sürümünde güvenlik için dünyada kalır."
 }

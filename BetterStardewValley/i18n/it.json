@@ -630,7 +630,7 @@
   "horse.skin.locked": "Il mantello di questo cavallo è già stato scelto.",
   "horse.skin.unavailable": "Non puoi scegliere il mantello di questo cavallo.",
   "config.horse-large": "Cavalli grandi",
-  "config.horse-large.help": "Impostazione dell'host. I cavalli appaiono più grandi del 30%; i cavalieri mantengono la loro taglia. Solo estetico.",
+  "config.horse-large.help": "Impostazione dell'host. I cavalli appaiono più grandi del 15%; i cavalieri mantengono la loro taglia. Solo estetico.",
   "horse.call.cross_map_unavailable": "Il richiamo da un’altra mappa non è disponibile. Raggiungi la mappa del cavallo.",
   "horse.call.withdrawal_unavailable": "Il cavallo è uscito dal campo visivo. In questa versione di prova rimane nel mondo per sicurezza."
 }

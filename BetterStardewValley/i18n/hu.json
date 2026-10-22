@@ -630,7 +630,7 @@
   "horse.skin.locked": "Ennek a lónak a színe már ki van választva.",
   "horse.skin.unavailable": "Ennek a lónak a színét nem választhatod ki.",
   "config.horse-large": "Nagy lovak",
-  "config.horse-large.help": "Házigazda-beállítás. A lovak 30%-kal nagyobbak; a lovasok mérete nem változik. Csak külső.",
+  "config.horse-large.help": "Házigazda-beállítás. A lovak 15%-kal nagyobbak; a lovasok mérete nem változik. Csak külső.",
   "horse.call.cross_map_unavailable": "Másik térképről nem hívható. Menj arra a térképre, ahol a lovad van.",
   "horse.call.withdrawal_unavailable": "A ló kikerült a látótérből. Ebben a tesztverzióban biztonsági okból a világban marad."
 }

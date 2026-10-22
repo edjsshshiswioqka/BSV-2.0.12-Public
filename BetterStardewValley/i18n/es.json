@@ -630,7 +630,7 @@
   "horse.skin.locked": "El pelaje de este caballo ya se eligió.",
   "horse.skin.unavailable": "No puedes elegir el pelaje de este caballo.",
   "config.horse-large": "Caballos grandes",
-  "config.horse-large.help": "Ajuste del anfitrión. Los caballos se dibujan un 30 % más grandes; los jinetes mantienen su tamaño. Solo visual.",
+  "config.horse-large.help": "Ajuste del anfitrión. Los caballos se dibujan un 15 % más grandes; los jinetes mantienen su tamaño. Solo visual.",
   "horse.call.cross_map_unavailable": "No se puede llamar desde otro mapa. Ve al mapa donde está tu caballo.",
   "horse.call.withdrawal_unavailable": "El caballo ha salido del campo de visión. En esta versión de prueba permanece en el mundo por seguridad."
 }

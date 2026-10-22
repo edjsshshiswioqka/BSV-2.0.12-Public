@@ -630,7 +630,7 @@
   "horse.skin.locked": "この馬の毛色はすでに決まっています。",
   "horse.skin.unavailable": "この馬の毛色は選べません。",
   "config.horse-large": "大きな馬",
-  "config.horse-large.help": "ホスト設定。馬を30%大きく表示します。乗り手の大きさは変わりません。見た目のみ。",
+  "config.horse-large.help": "ホスト設定。馬を15%大きく表示します。乗り手の大きさは変わりません。見た目のみ。",
   "horse.call.cross_map_unavailable": "別のマップからは呼べません。馬と同じマップで呼んでください。",
   "horse.call.withdrawal_unavailable": "馬は視界の外へ移動しました。このテスト版では安全のため、馬の実体はマップに残ります。"
 }

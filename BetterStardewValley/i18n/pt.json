@@ -630,7 +630,7 @@
   "horse.skin.locked": "A pelagem deste cavalo já foi escolhida.",
   "horse.skin.unavailable": "Você não pode escolher a pelagem deste cavalo.",
   "config.horse-large": "Cavalos grandes",
-  "config.horse-large.help": "Configuração do anfitrião. Os cavalos aparecem 30% maiores; os cavaleiros mantêm o tamanho. Apenas visual.",
+  "config.horse-large.help": "Configuração do anfitrião. Os cavalos aparecem 15% maiores; os cavaleiros mantêm o tamanho. Apenas visual.",
   "horse.call.cross_map_unavailable": "Não é possível chamar de outro mapa. Vá ao mapa onde está seu cavalo.",
   "horse.call.withdrawal_unavailable": "O cavalo saiu do campo de visão. Nesta versão de teste, ele permanece no mundo por segurança."
 }

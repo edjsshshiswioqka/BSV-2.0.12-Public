@@ -630,7 +630,7 @@
   "horse.skin.locked": "This horse's coat has already been chosen.",
   "horse.skin.unavailable": "You can't choose the coat for this horse.",
   "config.horse-large": "Large horses",
-  "config.horse-large.help": "Host setting. Horses are drawn 30% larger; riders keep their size. Visual only.",
+  "config.horse-large.help": "Host setting. Horses are drawn 15% larger; riders keep their size. Visual only.",
   "horse.call.cross_map_unavailable": "Cross-map recall is unavailable: approach your horse on the same map.",
   "horse.call.withdrawal_unavailable": "The horse has left the viewing area. It remains in the world; safe entity withdrawal is not available in this build."
 }
