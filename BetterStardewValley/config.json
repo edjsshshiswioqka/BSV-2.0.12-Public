@@ -3,7 +3,7 @@
   "SeedChance": 0.5,
   "EnableAnnualLegendaryFish": true,
   "CallHorseKey": "H",
-  "CallHorseCooldownSeconds": 5,
+  "CallHorseCooldownSeconds": 1,
   "HorseStopDistance": 3,
   "HorseSpawnOutsideViewportMinTiles": 2,
   "HorseSpawnOutsideViewportMaxTiles": 5,
