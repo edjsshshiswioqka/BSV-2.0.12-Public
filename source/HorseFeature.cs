@@ -26,12 +26,11 @@ internal sealed partial class HorseFeature
     private readonly HashSet<string> Warnings = new();
     private readonly PerScreen<LocalState> Local = new(() => new LocalState());
     private readonly Dictionary<Guid, Summon> Active = new();
-    private readonly HashSet<Guid> Arrived = new();
     private readonly Dictionary<long, (HorseViewport View, double Time)> Views = new();
     private readonly Dictionary<long, HorseReceipt> Replies = new();
     private readonly Dictionary<long, HorseRequest> Incoming = new();
     private readonly HorseRequestGate Calls = new(), Interactions = new();
-    private SoundEffect? Whistle;
+    private SoundEffect? Whistle, Dismiss;
     private bool Ready;
     internal bool Initialized => Ready;
     private static double Now => (double)Stopwatch.GetTimestamp() / Stopwatch.Frequency;
@@ -47,7 +46,8 @@ internal sealed partial class HorseFeature
     internal HorseFeature(IModHelper helper, IMonitor monitor, string modId, ModConfig config)
     {
         Helper = helper; Monitor = monitor; ModId = modId; Config = config; Instance = this;
-        Config.CallHorseCooldownSeconds = double.IsFinite(Config.CallHorseCooldownSeconds) ? Math.Clamp(Config.CallHorseCooldownSeconds, .5, 60) : 5;
+        // Cooldown between a horse leaving and the next fresh call. Turning a running horse around is never delayed.
+        Config.CallHorseCooldownSeconds = double.IsFinite(Config.CallHorseCooldownSeconds) ? Math.Clamp(Config.CallHorseCooldownSeconds, .25, 3) : 1;
         Config.HorseStopDistance = Math.Clamp(Config.HorseStopDistance, 1, 8);
         Config.HorseSpawnOutsideViewportMinTiles = Math.Clamp(Config.HorseSpawnOutsideViewportMinTiles, 2, 12);
         Config.HorseSpawnOutsideViewportMaxTiles = Math.Clamp(Config.HorseSpawnOutsideViewportMaxTiles, Config.HorseSpawnOutsideViewportMinTiles, 16);
@@ -150,7 +150,7 @@ internal sealed partial class HorseFeature
         if (Warnings.Add(key)) Monitor.Log("BSV horses [" + key + "]: " + ex.Message, LogLevel.Warn);
     }
     private void ResetLocal() => Local.Value = new LocalState();
-    private void ClearHost() { StopAll(); Arrived.Clear(); Views.Clear(); Replies.Clear(); Incoming.Clear(); Calls.Clear(); Interactions.Clear(); }
+    private void ClearHost() { StopAll(); Views.Clear(); Replies.Clear(); Incoming.Clear(); Calls.Clear(); Interactions.Clear(); }
     private void StopAll() { foreach (var s in Active.Values.ToArray()) Finish(s, ""); }
 
     private void OnButton(object? sender, ButtonPressedEventArgs e)
@@ -172,26 +172,27 @@ internal sealed partial class HorseFeature
         var local = Local.Value;
         double now = Now;
         if (now < local.NextCall) return;
-        local.NextCall = now + Config.CallHorseCooldownSeconds;
-        PlayWhistle(); // Immediate feedback, before map, rider, horse or route validation.
-        if (!Allowed(Game1.currentLocation)) { Message("horse.call.unavailable_location"); return; }
+        local.NextCall = now + .3; // debounce only; the host decides call / turn around / send away
+        if (!Allowed(Game1.currentLocation)) { PlayWhistle(false); Message("horse.call.unavailable_location"); return; }
         if (Game1.player.mount != null) { Message("horse.call.already_here"); return; }
         var horse = PickOwnedHorse(true, forceChoice);
         if (horse != null) SendAction(horse, "Call");
     }
 
-    private void PlayWhistle()
+    /// <summary>Call whistle (rising) or "go home" whistle (falling). Both are BSV's own synthesized sounds (MIT).</summary>
+    private void PlayWhistle(bool dismiss)
     {
         try
         {
-            if (Whistle is null)
+            ref SoundEffect? sound = ref dismiss ? ref Dismiss : ref Whistle;
+            if (sound is null)
             {
-                using var stream = File.OpenRead(Path.Combine(Helper.DirectoryPath, "assets", "horse-whistle.wav"));
-                Whistle = SoundEffect.FromStream(stream);
+                using var stream = File.OpenRead(Path.Combine(Helper.DirectoryPath, "assets", dismiss ? "horse-dismiss.wav" : "horse-whistle.wav"));
+                sound = SoundEffect.FromStream(stream);
             }
-            Whistle.Play(Math.Clamp(Game1.options.soundVolumeLevel * .65f, 0, 1), 0, 0);
+            sound.Play(Math.Clamp(Game1.options.soundVolumeLevel * .65f, 0, 1), 0, 0);
         }
-        catch (Exception ex) { WarnOnce("whistle", ex); }
+        catch (Exception ex) { WarnOnce(dismiss ? "dismiss-whistle" : "whistle", ex); }
     }
 
     private static bool Allowed(GameLocation? location)

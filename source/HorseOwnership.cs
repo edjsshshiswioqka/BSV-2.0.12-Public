@@ -14,9 +14,16 @@ internal sealed partial class HorseFeature
     // Official Tractor Mod Data/Buildings ID (ModEntry.GarageBuildingId/IsGarage).
     // Covers construction and the interval before Tractor Mod attaches its horse marker.
     private const string TractorGarageId = "Pathoschild.TractorMod_Stable";
-    private static bool IsTractorHorse(Horse? horse) => horse?.modData.ContainsKey(TractorMarker) == true;
+    // Tractor Mod reuses the Horse class. Recognize every known marker (current modData key and any key of
+    // that mod, the older "tractor/" name prefix, and garage building types), so BSV never calls, names,
+    // claims or speeds up a tractor.
+    private static bool IsTractorHorse(Horse? horse) => horse != null && (horse.modData.ContainsKey(TractorMarker)
+        || horse.modData.Keys.Any(k => k.StartsWith(TractorMarker, StringComparison.OrdinalIgnoreCase))
+        || horse.Name?.StartsWith("tractor/", StringComparison.OrdinalIgnoreCase) == true);
     private static bool IsRealManagedHorse(Horse? horse) => horse != null && !IsTractorHorse(horse);
     private static bool IsTractorStable(Stable stable) => stable.buildingType.Value == TractorGarageId
+        || stable.buildingType.Value?.Contains("Tractor", StringComparison.OrdinalIgnoreCase) == true
+        || stable.modData.Keys.Any(k => k.StartsWith(TractorMarker, StringComparison.OrdinalIgnoreCase))
         || IsTractorHorse(stable.getStableHorse());
 
     private static List<Stable> Stables()

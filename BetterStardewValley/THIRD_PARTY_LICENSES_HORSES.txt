@@ -9,6 +9,14 @@ Format: mono PCM16, 44100 Hz, 0.92 seconds.
 Modification: original synthesized asset; envelope, pitch bend and gain implemented in source.
 License: MIT (source script and generated audio).
 Attribution: retain this permission/copyright notice with redistributed copies.
+File: assets/horse-dismiss.wav
+Sound name: BSV Falling "Go Home" Horse Whistle (played when a horse is sent away)
+Author: BSV project contributors (procedurally generated for BSV 2.0.13)
+Source: source/tools/make_horse_dismiss_whistle.py in this release; deterministic synthesis.
+External recordings/samples: NONE. Not extracted from Stardew Valley or another game.
+Format: mono PCM16, 44100 Hz, 1.02 seconds.
+License: MIT (source script and generated audio).
+
 No third-party audio attribution is needed; no third-party audio was used.
 
 MIT License

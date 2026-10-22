@@ -59,9 +59,9 @@ internal sealed partial class HorseFeature
     }
     private static HorseRules.Bounds Bounds(HorseViewport v) => new(v.X, v.Y, v.Width, v.Height);
 
-    private void Reply(HorseRequest request, string key = "", bool running = false)
+    private void Reply(HorseRequest request, string key = "", bool running = false, string sound = "")
     {
-        var receipt = new HorseReceipt { Id = request.Id, Actor = request.Actor, Message = key, Running = running };
+        var receipt = new HorseReceipt { Id = request.Id, Actor = request.Actor, Message = key, Running = running, Sound = sound };
         Replies[request.Actor] = receipt;
         // The shared local inbox also handles split-screen players without changing Game1.player.
         if (Game1.GetPlayer(request.Actor, onlyOnline: true) is { IsLocalPlayer: false })
@@ -75,6 +75,7 @@ internal sealed partial class HorseFeature
         if (local.LastReceipt == signature) return;
         local.LastReceipt = signature; local.Busy = r.Running;
         if (r.Running) local.PendingSince = Now;
+        if (r.Sound.Length > 0) PlayWhistle(r.Sound == "dismiss");
         Message(r.Message);
     }
     private void OnTick(object? sender, UpdateTickedEventArgs e)
@@ -115,10 +116,12 @@ internal sealed partial class HorseFeature
         if (who?.currentLocation == null || who.currentLocation.NameOrUniqueName != r.Location) { Reply(r, "horse.call.unavailable_location"); return; }
         if (r.Action != "Call" && r.Action != "Name" && r.Action != "Claim" && r.Action != "Select") return;
         if (Replies.TryGetValue(r.Actor, out var previous) && previous.Id == r.Id)
-        { Reply(r, previous.Message, previous.Running); return; }
-        if (!(r.Action == "Call" ? Calls : Interactions).Accept(r.Actor, r.Id, Now, r.Action == "Call" ? Config.CallHorseCooldownSeconds : .5))
-        { Reply(r, "horse.call.cooldown"); return; }
+        { Reply(r, previous.Message, previous.Running, previous.Sound); return; }
         var id = Guid.Parse(r.Horse);
+        // Turning a running horse around (coming <-> leaving) is immediate: no cooldown.
+        bool turnaround = r.Action == "Call" && Active.TryGetValue(id, out var running) && running.Actor == r.Actor;
+        if (!turnaround && !(r.Action == "Call" ? Calls : Interactions).Accept(r.Actor, r.Id, Now, r.Action == "Call" ? Config.CallHorseCooldownSeconds : .5))
+        { Reply(r, "horse.call.cooldown"); return; }
         var stable = StableFor(id);
         var horse = stable?.getStableHorse();
         if (stable == null || stable.daysOfConstructionLeft.Value > 0 || !IsRealManagedHorse(horse) || horse!.HorseId != id)
@@ -146,10 +149,11 @@ internal sealed partial class HorseFeature
         {
             if (horse.rider != null || who.mount != null || horse.mounting.Value || horse.dismounting.Value)
             { Reply(r, "horse.call.already_here"); return; }
-            if (moving.Departing) { Reply(r, "horse.call.departing"); return; }
-            Finish(moving, "");
-            Active[id] = new Summon(r, horse, who.currentLocation, stable, Now) { Departing = true };
-            Reply(r, "horse.call.departing"); return;
+            // Press again while it runs: it turns around (coming -> leaving, leaving -> coming) from where it is.
+            moving.Departing = !moving.Departing;
+            moving.Started = false; moving.Route.Clear(); moving.BlockedSince = 0;
+            moving.Start = moving.LastTick = Now - 1; moving.DepartStart = Now;
+            Reply(r, "", sound: moving.Departing ? "dismiss" : "call"); return;
         }
         if (Active.ContainsKey(id) || Active.Values.Any(s => s.Actor == r.Actor)) { Reply(r, "horse.call.busy"); return; }
         if (r.Action == "Name")
@@ -163,12 +167,15 @@ internal sealed partial class HorseFeature
         { Reply(r, "horse.call.already_here"); return; }
         if (horse.currentLocation?.currentEvent != null || horse.controller != null || Frozen(horse))
         { Reply(r, "horse.call.busy"); return; }
-        if (horse.currentLocation != who.currentLocation) { Reply(r, "horse.call.cross_map_unavailable"); return; }
         RememberView(r.Actor, r.View);
         if (!Views.TryGetValue(r.Actor, out var view) || nowStale(view.Time) || view.View.Location != r.Location)
         { Reply(r, "horse.call.no_path"); return; }
-        Active[id] = new Summon(r, horse, who.currentLocation, stable, Now) { Departing = Arrived.Remove(id) };
-        Reply(r);
+        // Horse already with the player (on screen in the same place): send it away. Anywhere else, even on
+        // another map, it comes: it appears just outside the player's view and runs to them.
+        bool present = horse.currentLocation == who.currentLocation
+            && VisualBounds(horse.Position).Intersects(Bounds(view.View).Inflate(64));
+        Active[id] = new Summon(r, horse, who.currentLocation, stable, Now) { Departing = present, DepartStart = Now };
+        Reply(r, "", sound: present ? "dismiss" : "call");
         static bool nowStale(double time) => Now - time > 1;
     }
     private static bool InReach(Farmer who, Horse horse) => who.currentLocation == horse.currentLocation

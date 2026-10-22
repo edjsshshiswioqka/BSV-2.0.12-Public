@@ -34,7 +34,7 @@ internal sealed class GreenhouseFeature
             loggedMigrationError = false; loggedRetained = false; loggedMapError = false; retainedStamp = null;
             helper.GameContent.InvalidateCache("Maps/Greenhouse");
         };
-        helper.Events.Player.Warped += (_, e) => { if (e.IsLocalPlayer && e.NewLocation.NameOrUniqueName == "Greenhouse") MigrateIfNeeded(); };
+        helper.Events.Player.Warped += (_, e) => { if (e.IsLocalPlayer && e.NewLocation.NameOrUniqueName == "Greenhouse") { MigrateIfNeeded(); DiagnoseSoil(e.NewLocation); } };
     }
 
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
@@ -127,6 +127,37 @@ internal sealed class GreenhouseFeature
             monitor.Log(BsvI18n.Get(helper,"diag.map-error")+$"\nGreenhouse migration: {ex}", LogLevel.Error);
             }
         }
+    }
+
+    /// <summary>Logs, once per visit, how the game itself judges every tile of the planting bed: diggable,
+    /// passable, occupied, and whether seeds may be planted. Read-only; nothing is changed.</summary>
+    private void DiagnoseSoil(GameLocation location)
+    {
+        try
+        {
+            if (!location.Map.Properties.TryGetValue(GreenhouseMap.LayoutKey, out var stamp)) return;
+            var layout = GreenhouseLayout.Parse(stamp.ToString());
+            int diggable = 0, blocked = 0, occupied = 0, plantable = 0, total = 0;
+            var problems = new List<string>();
+            string? denied = null;
+            for (int y = layout.SoilY; y < layout.SoilY + 10 + GreenhouseLayout.AddedHeight; y++)
+                for (int x = layout.SoilX; x < layout.SoilX + 12 + GreenhouseLayout.AddedWidth; x++)
+                {
+                    total++;
+                    var tile = new Vector2(x, y);
+                    bool dig = location.doesTileHaveProperty(x, y, "Diggable", "Back") != null;
+                    bool pass = location.isTilePassable(tile);
+                    bool occ = location.IsTileOccupiedBy(tile);
+                    bool plant = location.CanPlantSeedsHere("(O)472", x, y, false, out string why);
+                    if (dig) diggable++; if (!pass) blocked++; if (occ) occupied++; if (plant) plantable++; else denied ??= why;
+                    if ((!dig || !pass || occ || !plant) && problems.Count < 12) problems.Add($"{x},{y}:{(dig ? "" : "notDiggable ")}{(pass ? "" : "blocked ")}{(occ ? "occupied " : "")}{(plant ? "" : "noPlant")}");
+                }
+            var back = location.Map.GetLayer("Back");
+            monitor.Log($"[BSV greenhouse soil] map {back.LayerWidth}x{back.LayerHeight}, bed {total} tiles: diggable {diggable}, blocked {blocked}, occupied {occupied}, plantable {plantable}"
+                + (denied != null ? $"; plant denied: {denied}" : "") + (problems.Count > 0 ? "; first problems: " + string.Join(" | ", problems) : "; all tiles OK"),
+                diggable == total && blocked == 0 && plantable == total ? LogLevel.Debug : LogLevel.Warn);
+        }
+        catch (Exception ex) { monitor.Log("[BSV greenhouse soil] check failed: " + ex.Message, LogLevel.Debug); }
     }
 
     private static Vector2 Move(Vector2 tile, GreenhouseLayout layout) =>

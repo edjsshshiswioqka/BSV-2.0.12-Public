@@ -17,7 +17,7 @@ internal sealed partial class HorseFeature
         internal readonly GameLocation Location;
         internal readonly Stable Stable;
         internal readonly bool WasFrozen;
-        internal double Start, LastTick, NextPlan, BlockedSince;
+        internal double Start, LastTick, NextPlan, BlockedSince, DepartStart;
         internal bool Started, Departing;
         internal Vector2 TargetPlayer;
         internal Queue<Vector2> Route = new();
@@ -148,13 +148,63 @@ internal sealed partial class HorseFeature
     private bool StartRoute(Summon s, Farmer who)
     {
         if (!IsRealManagedHorse(s.Horse) || IsTractorStable(s.Stable)) return false;
-        // No offscreen warp fallback: unsupported cross-map calls fail without moving the horse.
-        if (s.Horse.currentLocation != s.Location) return false;
-        var route = FindRoute(s, who, true);
+        var horse = s.Horse;
+        List<Tile>? route = null;
+        // Coming: a horse somebody can see runs from where it is. Otherwise (another map, or off-screen) it
+        // appears on the nearest walkable tile just outside every viewer's view and runs in from there.
+        bool visible = horse.currentLocation == s.Location && !HiddenFromEveryone(s.Location, VisualBounds(horse.Position));
+        if (s.Departing || visible) route = FindRoute(s, who, true);
+        if (route == null && !s.Departing && !visible)
+        {
+            route = SpawnRoute(s, who);
+            if (route == null) return false;
+            var entry = route[0];
+            if (horse.currentLocation != s.Location) Game1.warpCharacter(horse, s.Location, new Vector2(entry.X, entry.Y));
+            horse.Position = Pixel(entry);
+            horse.faceDirection(2);
+        }
         if (route == null) return false;
         s.Route = new Queue<Vector2>(route.Select(Pixel));
         s.TargetPlayer = who.Position; s.Started = true; s.NextPlan = Now + .6;
         return true;
+    }
+
+    /// <summary>Path from an off-screen tile (nearest to the player, hidden from every player in the location)
+    /// to a mounting spot next to the player. On a map smaller than the screen, the farthest reachable tile.</summary>
+    private List<Tile>? SpawnRoute(Summon state, Farmer who)
+    {
+        var location = state.Location; var horse = state.Horse;
+        var layer = location.Map.GetLayer("Back");
+        if (layer == null) return null;
+        Tile player = Grid(who.Position);
+        var cache = new Dictionary<Tile, bool>();
+        bool Clear(Tile t)
+        {
+            if (!cache.TryGetValue(t, out bool clear)) cache[t] = clear = Safe(location, horse, Pixel(t));
+            return clear;
+        }
+        bool Edge(Tile a, Tile b) => Safe(location, horse, (Pixel(a) + Pixel(b)) / 2);
+        var stops = new List<Tile>();
+        for (int x = player.X - 3; x <= player.X + 2; x++)
+        for (int y = player.Y - 2; y <= player.Y + 2; y++)
+        {
+            var t = new Tile(x, y);
+            if (Mountable(location, horse, who, Pixel(t))) stops.Add(t);
+        }
+        if (stops.Count == 0) return null;
+        return HorseRules.Route(stops, t => HiddenFromEveryone(location, VisualBounds(Pixel(t))), Clear, Edge, layer.LayerWidth, layer.LayerHeight, horse.HorseId.GetHashCode())
+            ?? HorseRules.RouteFromFarthest(stops, Clear, Edge, layer.LayerWidth, layer.LayerHeight);
+    }
+
+    /// <summary>The horse has left everyone's view: it goes home to its stable (native grabHorse), out of the world
+    /// the player is in, until it is called again.</summary>
+    private void ReturnHome(Summon s)
+    {
+        var stable = s.Stable;
+        Finish(s, "");
+        if (IsTractorStable(stable) || !IsRealManagedHorse(s.Horse) || s.Horse.rider != null) return;
+        try { stable.grabHorse(); }
+        catch (Exception ex) { WarnOnce("return-home", ex); }
     }
 
     private void Advance(Summon s, double now)
@@ -162,16 +212,21 @@ internal sealed partial class HorseFeature
         if (!Context.IsMainPlayer) return;
         if (!IsRealManagedHorse(s.Horse) || IsTractorStable(s.Stable)) { Finish(s, "horse.call.no_horse"); return; }
         var horse = s.Horse; var who = Game1.GetPlayer(s.Actor, onlyOnline: true);
-        if (who?.currentLocation != s.Location || !Allowed(s.Location)
-            || !HorseRules.Owns(s.Actor, s.Stable.owner.Value, horse.ownerId.Value)
-            || s.Stable.GetParentLocation()?.buildings.Contains(s.Stable) != true)
+        if (s.Stable.GetParentLocation()?.buildings.Contains(s.Stable) != true || !HorseRules.Owns(s.Actor, s.Stable.owner.Value, horse.ownerId.Value))
         { Finish(s, ""); return; }
+        // The caller left while the horse was leaving: it simply goes home.
+        if (who?.currentLocation != s.Location || !Allowed(s.Location))
+        { if (s.Departing && horse.currentLocation == s.Location) ReturnHome(s); else Finish(s, ""); return; }
         if (horse.rider != null || who.mount != null || horse.mounting.Value || horse.dismounting.Value || horse.mutex.IsLocked())
         { Finish(s, "horse.call.already_here"); return; }
         double elapsed = now - s.LastTick; s.LastTick = now;
         if (!Game1.IsMultiplayer && Game1.activeClickableMenu != null)
         { s.Start += elapsed; return; }
         if (!s.Departing && now - s.Start > 40) { Finish(s, "horse.call.no_path"); return; }
+        if (s.Departing && (horse.currentLocation != s.Location || HiddenFromEveryone(s.Location, VisualBounds(horse.Position))))
+        { ReturnHome(s); return; } // already out of everyone's view
+        // A horse that could not find a way out within 25 s is sent home anyway (never left hiding in a corner).
+        if (s.Departing && now - s.DepartStart > 25) { ReturnHome(s); return; }
         if (!s.Started)
         {
             if (now - s.Start < .45) return;
@@ -222,16 +277,12 @@ internal sealed partial class HorseFeature
             if (movedTarget && now < s.NextPlan) return;
             if (s.Departing)
             {
-                // Preserve the unique native persistent entity. Withdrawal is deliberately
-                // blocked until its save/reload lifecycle can be verified; no hidden teleport.
-                if (HiddenFromEveryone(s.Location, VisualBounds(horse.Position)))
-                { Arrived.Remove(horse.HorseId); Finish(s, "horse.call.withdrawal_unavailable"); }
-                else { s.Started = false; s.Start = now + 1.5; }
+                if (HiddenFromEveryone(s.Location, VisualBounds(horse.Position))) ReturnHome(s);
+                else { s.Started = false; s.Start = now; }
                 return;
             }
             if (!Mountable(s.Location, horse, who, horse.Position))
             { s.BlockedSince = now; s.NextPlan = now; return; }
-            Arrived.Add(horse.HorseId);
             Finish(s, "");
         }
     }

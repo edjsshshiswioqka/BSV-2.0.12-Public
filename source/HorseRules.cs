@@ -59,6 +59,32 @@ internal static class HorseRules
         if (text.Length > 0 && char.IsHighSurrogate(text[^1])) text = text[..^1];
         return text;
     }
+    /// <summary>Breadth-first search from the parking tiles; returns the path from the reachable tile farthest
+    /// from them (in steps) back to a parking tile. Used when no off-screen tile exists on a small map.</summary>
+    internal static List<Tile>? RouteFromFarthest(IEnumerable<Tile> stops, Func<Tile, bool> safe, Func<Tile, Tile, bool> safeEdge,
+        int width, int height, int limit = 12000)
+    {
+        var queue = new Queue<Tile>();
+        var parent = new Dictionary<Tile, Tile>();
+        foreach (var t in stops)
+            if (t.X >= 0 && t.Y >= 0 && t.X < width && t.Y < height && !parent.ContainsKey(t) && safe(t)) { parent[t] = t; queue.Enqueue(t); }
+        Tile? last = null; int visited = 0;
+        var dirs = new[] { new Tile(-1, 0), new Tile(1, 0), new Tile(0, -1), new Tile(0, 1) };
+        while (queue.Count > 0 && visited++ < limit)
+        {
+            Tile t = queue.Dequeue(); last = t;
+            foreach (var d in dirs)
+            {
+                Tile n = new(t.X + d.X, t.Y + d.Y);
+                if (n.X >= 0 && n.Y >= 0 && n.X < width && n.Y < height && !parent.ContainsKey(n) && safe(n) && safeEdge(t, n))
+                { parent[n] = t; queue.Enqueue(n); }
+            }
+        }
+        if (last is not { } end) return null;
+        var result = new List<Tile> { end };
+        while (parent[end] != end) { end = parent[end]; result.Add(end); }
+        return result;
+    }
     internal static int RunFrame(int facing, int phase) => (facing == 0 ? 15 : facing == 2 ? 1 : 8) + Math.Abs(phase % 6);
     internal static int IdleFrame(int facing) => facing == 0 ? 14 : facing == 2 ? 0 : 7;
 
