@@ -19,7 +19,7 @@ namespace BetterStardewValley.Professions;
 internal static class ProfessionSkillsPage
 {
     // Pitch is adaptive: vanilla leaves roughly 55 px per skill, a roomier page gets up to 68.
-    internal const int MaxPitch=76, MinPitch=52, HeaderHeight=18, MinWidth=336, SlotGap=2, GroupGap=12, NumberWidth=32, BeadSpan=101;
+    internal const int MaxPitch=68, MinPitch=52, HeaderHeight=18, MinWidth=336, SlotGap=2, GroupGap=12, NumberWidth=32, BeadSpan=101;
     internal const int RowHeight=MaxPitch;
     private static readonly FieldInfo Areas=AccessTools.Field(typeof(SkillsPage),"skillAreas"),Bars=AccessTools.Field(typeof(SkillsPage),"skillBars"),Avatar=AccessTools.Field(typeof(SkillsPage),"playerPanel");
     private static readonly ConditionalWeakTable<IClickableMenu,State> States=new();
@@ -47,7 +47,7 @@ internal static class ProfessionSkillsPage
     internal readonly record struct Metrics(int Slot,float BeadScale,int NameX,int NameWidth,int BarX,int PairX,int GridX,int NumberX);
     internal static int PitchFor(int height)=>Math.Clamp((height-HeaderHeight)/5,MinPitch,MaxPitch);
     /// <summary>Slot edge in pixels: the 16 px profession sprite at 1.5x to 2x, small enough that the 2x2 grid fits a row.</summary>
-    internal static int SlotFor(int pitch)=>Math.Clamp((pitch-SlotGap-1)/2,24,37); // as large as the row allows: the 2x2 grid fills the row height
+    internal static int SlotFor(int pitch)=>Math.Clamp((pitch-8)/2,24,30); // 2x2 grid + 6 px clear gap to the next row's grid
     /// <summary>Slot edge limited by the width too: the bar, both icon groups and the level number must all fit.</summary>
     internal static int SlotFor(int pitch,int width)=>Math.Max(24,Math.Min(SlotFor(pitch),(width-220)/4));
     internal static Metrics Measure(int width,int slot,int nameWidth)
@@ -161,7 +161,9 @@ internal static class ProfessionSkillsPage
         int top=Math.Max(viewport.Top+16,boxes.Min(b=>b.Top)-HeaderHeight);
         int right=Math.Min(page.Right-48,viewport.Right-24);
         // The band under the last native row is free down to the mastery strip; use it for taller rows (bigger icons).
-        int bottom=Math.Min(boxes.Max(b=>b.Bottom)+80,Math.Min(page.Bottom-32,viewport.Bottom-32));
+        // Native rows are 68 px apart (SkillsPage); the mastery bar starts 52 px under the last row. Never go past
+        // the native row band, so the mastery bar and the Community Center / Joja box are never covered.
+        int bottom=Math.Min(boxes.Max(b=>b.Bottom)+32,Math.Min(page.Bottom-32,viewport.Bottom-32));
         return right-left<MinWidth||bottom-top<HeaderHeight+MinPitch?Rectangle.Empty:new(left,top,right-left,Math.Min(HeaderHeight+MaxPitch*5,bottom-top));
     }
     private static State? Get(IClickableMenu page)

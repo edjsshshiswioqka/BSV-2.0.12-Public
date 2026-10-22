@@ -25,7 +25,6 @@ internal static class HorseSkins
     private static readonly Color Out = C(81, 32, 0), Mane = C(99, 40, 22), ManeLight = C(142, 75, 39);
     private static readonly Color[] Coat = { C(249, 201, 144), C(236, 173, 97), C(198, 133, 53), C(163, 99, 19), C(127, 71, 3) };
     private static readonly Color[] Strap = { C(112, 83, 31), C(142, 120, 39), C(153, 72, 5) };
-    private static readonly Color FaceLight = C(249, 201, 144);
 
     internal readonly struct Ctx
     {
@@ -41,7 +40,7 @@ internal static class HorseSkins
         internal Color? Outline;
         internal Func<Ctx, int>? Pattern;            // index into Alternates, or -1
         internal Color[][] Alternates = Array.Empty<Color[]>();
-        internal bool Rainbow, Horn;
+        internal bool Rainbow;
     }
 
     // ---- deterministic noise (identical to the approved sample generator) ----
@@ -123,15 +122,14 @@ internal static class HorseSkins
             new() { Id = "mint", Coat = R(C(236, 255, 246), C(196, 240, 220), C(150, 218, 190), C(110, 186, 160), C(80, 150, 130)), Mane = C(40, 150, 140), ManeLight = C(110, 210, 196), Outline = C(36, 90, 80) },
             new() { Id = "lavender", Coat = R(C(250, 240, 255), C(226, 206, 246), C(196, 170, 230), C(160, 132, 204), C(124, 98, 170)), Mane = C(110, 70, 170), ManeLight = C(186, 150, 236), Outline = C(70, 44, 110) },
             new() { Id = "ice", Coat = R(C(246, 252, 255), C(206, 232, 252), C(164, 206, 242), C(124, 170, 222), C(90, 132, 196)), Mane = C(236, 250, 255), ManeLight = C(255, 255, 255), Outline = C(50, 90, 140), Pattern = c => Hash(c.X, c.Y, c.Row + 77) > .9 ? 0 : -1, Alternates = new[] { R(C(255, 255, 255), C(255, 255, 255), C(236, 248, 255), C(214, 236, 255), C(190, 220, 250)) } },
-            new() { Id = "unicorn", Coat = R(C(255, 255, 255), C(250, 246, 255), C(238, 230, 250), C(214, 204, 240), C(186, 176, 224)), Outline = C(110, 96, 150), Rainbow = true, Horn = true },
+            new() { Id = "rainbow", Coat = R(C(255, 255, 255), C(250, 246, 255), C(238, 230, 250), C(214, 204, 240), C(186, 176, 224)), Outline = C(110, 96, 150), Rainbow = true },
         };
         return list;
     }
-    internal static Skin? Find(string? id) => All.FirstOrDefault(s => s.Id == id);
+    internal static Skin? Find(string? id) => All.FirstOrDefault(s => s.Id == (id == "unicorn" ? "rainbow" : id));
     internal static string AssetName(string id) => AssetPrefix + id;
 
     private static readonly Color[] RainbowBands = { C(232, 64, 72), C(250, 150, 50), C(250, 220, 70), C(90, 200, 110), C(80, 150, 240), C(160, 100, 220) };
-    private static readonly Color[] HornColors = { C(120, 84, 20), C(255, 236, 150), C(255, 214, 90) };
     private static Color Lighten(Color c, float f) => new((int)(c.R + (255 - c.R) * f), (int)(c.G + (255 - c.G) * f), (int)(c.B + (255 - c.B) * f), 255);
 
     /// <summary>Recolours a copy of the native horse sheet (224 x 128, 32 x 32 frames). Returns null when the
@@ -185,7 +183,6 @@ internal static class HorseSkins
                         }
                         else if (p == Out && skin.Outline is { } outline) output[i] = outline;
                     }
-                if (skin.Horn) DrawHorn(Px, output, width, fx, fy, row, column);
             }
         return output;
     }
@@ -204,33 +201,6 @@ internal static class HorseSkins
             for (int y = y0 - 2; y <= ys.Max(); y++) mask.Add((x, y));
         }
         return mask;
-    }
-
-    /// <summary>Unicorn horn, placed from the face highlight of each frame (follows the head when it lowers).</summary>
-    private static void DrawHorn(Func<int, int, Color> px, Color[] output, int width, int fx, int fy, int row, int column)
-    {
-        var face = new List<(int X, int Y)>();
-        int top = 99;
-        for (int x = 0; x < 32; x++)
-            for (int y = 0; y < 32; y++)
-            {
-                var c = px(fx + x, fy + y);
-                if (c.A == 255) top = Math.Min(top, y);
-                if (c == FaceLight) face.Add((x, y));
-            }
-        (int X, int Y)? eye = face.Count > 0 && !(row == 3 && column >= 5) ? face.OrderBy(p => p.Y).First() : null;
-        List<(int X, int Y)> core;
-        if (row is 1 or 3 && column < 4 && eye is { } e) { int bx = e.X - 2, by = e.Y - 4; core = new() { (bx, by), (bx, by - 1), (bx + 1, by - 2), (bx + 1, by - 3), (bx + 2, by - 4), (bx + 2, by - 5) }; }
-        else if (row == 0 && eye is { } f) { int by = f.Y - 9; core = new() { (15, by), (16, by), (15, by - 1), (16, by - 1), (15, by - 2), (16, by - 2), (15, by - 3), (16, by - 3), (15, by - 4) }; }
-        else if (row == 2 || row == 3 && column == 4) core = new() { (15, top + 2), (16, top + 2), (15, top + 1), (16, top + 1), (15, top), (15, top - 1) };
-        else return;
-        var set = new HashSet<(int, int)>(core);
-        void Put(int x, int y, Color c) { if (x >= 0 && y >= 0 && x < 32 && y < 32) output[(fy + y) * width + fx + x] = c; }
-        foreach (var (x, y) in core)
-            foreach (var (dx, dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1), (1, -1), (-1, -1) })
-                if (!set.Contains((x + dx, y + dy)) && x + dx is >= 0 and < 32 && y + dy is >= 0 and < 32 && output[(fy + y + dy) * width + fx + x + dx].A < 255)
-                    Put(x + dx, y + dy, HornColors[0]);
-        for (int i = 0; i < core.Count; i++) Put(core[i].X, core[i].Y, HornColors[i % 2 == 0 ? 1 : 2]);
     }
 
     // ---- assets ----

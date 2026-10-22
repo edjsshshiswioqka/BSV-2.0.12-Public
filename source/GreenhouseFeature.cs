@@ -6,6 +6,9 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Objects;
+using StardewValley.TerrainFeatures;
+using StardewValley.Tools;
+using HarmonyLib;
 
 namespace BetterStardewValley;
 
@@ -35,6 +38,15 @@ internal sealed class GreenhouseFeature
             helper.GameContent.InvalidateCache("Maps/Greenhouse");
         };
         helper.Events.Player.Warped += (_, e) => { if (e.IsLocalPlayer && e.NewLocation.NameOrUniqueName == "Greenhouse") { MigrateIfNeeded(); DiagnoseSoil(e.NewLocation); } };
+        // Diagnostic: what actually happens when a hoe or watering can is used in the greenhouse.
+        try
+        {
+            Diagnostics = monitor;
+            var h = new Harmony(helper.ModRegistry.ModID + ".GreenhouseTools");
+            foreach (var type in new[] { typeof(Hoe), typeof(WateringCan) })
+                h.Patch(AccessTools.Method(type, nameof(Tool.DoFunction)), postfix: new HarmonyMethod(typeof(GreenhouseFeature), nameof(AfterTool)));
+        }
+        catch (Exception ex) { monitor.Log("[BSV greenhouse soil] tool diagnostic unavailable: " + ex.Message, LogLevel.Trace); }
     }
 
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
@@ -158,6 +170,21 @@ internal sealed class GreenhouseFeature
                 diggable == total && blocked == 0 && plantable == total ? LogLevel.Debug : LogLevel.Warn);
         }
         catch (Exception ex) { monitor.Log("[BSV greenhouse soil] check failed: " + ex.Message, LogLevel.Debug); }
+    }
+
+    private static IMonitor? Diagnostics;
+    private static void AfterTool(Tool __instance, GameLocation location, int x, int y, int power, Farmer who)
+    {
+        try
+        {
+            if (location?.NameOrUniqueName != "Greenhouse" || Diagnostics == null) return;
+            var tile = new Vector2(x / 64, y / 64);
+            location.terrainFeatures.TryGetValue(tile, out var feature);
+            string state = feature is HoeDirt dirt ? $"tilled (watered={dirt.state.Value == 1}, crop={(dirt.crop != null)})" : feature?.GetType().Name ?? "untilled";
+            Diagnostics.Log($"[BSV greenhouse soil] {__instance.GetType().Name} at {tile.X},{tile.Y} power {power}: diggable={location.doesTileHaveProperty((int)tile.X, (int)tile.Y, "Diggable", "Back") != null}, passable={location.isTilePassable(tile)}, now {state}"
+                + (__instance is WateringCan can ? $", water left {can.WaterLeft}" : ""), LogLevel.Debug);
+        }
+        catch { }
     }
 
     private static Vector2 Move(Vector2 tile, GreenhouseLayout layout) =>

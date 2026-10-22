@@ -70,7 +70,7 @@ internal static class HorseScale
     private static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions)
     {
         var drawMethod = AccessTools.Method(typeof(SpriteBatch), nameof(SpriteBatch.Draw), new[] { typeof(Texture2D), typeof(Vector2), typeof(Rectangle?), typeof(Color), typeof(float), typeof(Vector2), typeof(float), typeof(SpriteEffects), typeof(float) });
-        var hatDraw = AccessTools.Method(typeof(Hat), nameof(Hat.draw), new[] { typeof(SpriteBatch), typeof(Vector2), typeof(float), typeof(float), typeof(float), typeof(int) });
+        var hatDraw = AccessTools.Method(typeof(Hat), nameof(Hat.draw), new[] { typeof(SpriteBatch), typeof(Vector2), typeof(float), typeof(float), typeof(float), typeof(int), typeof(bool) });
         int body = 0, sprites = 0, hats = 0;
         foreach (var code in instructions)
         {
@@ -84,11 +84,12 @@ internal static class HorseScale
             { code.opcode = OpCodes.Call; code.operand = AccessTools.Method(typeof(HorseScale), nameof(HatDraw)); hats++; }
             yield return code;
         }
-        if (body != 1 || sprites < 2 || hats < 1)
+        if (body != 1 || sprites < 2)
         {
             failed = true; // unknown Horse.draw: the helpers below pass everything through unchanged
             Monitor?.Log($"BSV horse size: Horse.draw differs from 1.6.15 (body {body}, draws {sprites}, hats {hats}); horses keep native size.", LogLevel.Warn);
         }
+        else Monitor?.Log($"BSV horse size: 1.3x active (body {body}, draws {sprites}, hats {hats}).", LogLevel.Trace);
     }
 
     /// <summary>NPC.draw (non-swimming branch) with the 1.3x scale around the hooves.</summary>
@@ -114,10 +115,10 @@ internal static class HorseScale
         if (current != null) { position = Map(position); scale *= Factor; }
         b.Draw(texture, position, source, color, rotation, origin, scale, effects, depth);
     }
-    private static void HatDraw(Hat hat, SpriteBatch b, Vector2 location, float scaleSize, float transparency, float depth, int direction)
+    private static void HatDraw(Hat hat, SpriteBatch b, Vector2 location, float scaleSize, float transparency, float depth, int direction, bool useAnimalTexture)
     {
         if (current != null) { location = Map(location); scaleSize *= Factor; }
-        hat.draw(b, location, scaleSize, transparency, depth, direction);
+        hat.draw(b, location, scaleSize, transparency, depth, direction, useAnimalTexture);
     }
 
     // ---- rider ----

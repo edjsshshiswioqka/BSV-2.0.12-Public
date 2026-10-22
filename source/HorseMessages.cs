@@ -29,4 +29,5 @@ public sealed class HorseReceipt
     public string Message { get; set; } = "";
     /// <summary>"call" or "dismiss": which whistle the caller plays (decided by the host).</summary>
     public string Sound { get; set; } = "";
+    public string HorseName { get; set; } = "";
 }

@@ -217,8 +217,9 @@ internal sealed partial class HorseFeature
         // The caller left while the horse was leaving: it simply goes home.
         if (who?.currentLocation != s.Location || !Allowed(s.Location))
         { if (s.Departing && horse.currentLocation == s.Location) ReturnHome(s); else Finish(s, ""); return; }
+        // Mounted (by the caller, or by anyone the host allows): the run just ends, no message.
         if (horse.rider != null || who.mount != null || horse.mounting.Value || horse.dismounting.Value || horse.mutex.IsLocked())
-        { Finish(s, "horse.call.already_here"); return; }
+        { Finish(s, ""); return; }
         double elapsed = now - s.LastTick; s.LastTick = now;
         if (!Game1.IsMultiplayer && Game1.activeClickableMenu != null)
         { s.Start += elapsed; return; }

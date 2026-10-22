@@ -60,7 +60,7 @@ internal sealed class ConfigMenu
         draft.EnableHarvestSeeds=false;draft.SeedChance=.50;draft.HarvestBonus.Enabled=true;
         draft.EnableBsvSpeedGro=true;draft.HarvestBonus.EnableFertilizerYieldBonus=true;draft.AutoRestartProduction=true;
         draft.EnableAllProfessions=true;draft.EnableAnnualLegendaryFish=true;draft.EnableHorseSpeedBonus=true;
-        draft.HorseSpeedBonus=.20;draft.EnableOrdersSystem=true;draft.EnableLargeHorses=true;
+        draft.HorseSpeedBonus=.20;draft.EnableOrdersSystem=true;draft.EnableLargeHorses=true;draft.OnlyOwnersRide=true;
         draft.EnableGreenhouseExpansion=true;draft.EnableCellarExpansion=true;draft.EnableCellarAppearance=true;
         if(MachineMod.Instance?.Ready==true){fish.CycleGameMinutes=2880;fish.LevelTwoCycleGameMinutes=4320;fish.LevelThreeCycleGameMinutes=5760;fish.LevelDurationVersion=1;crab.CycleGameMinutes=2880;crab.LevelTwoCycleGameMinutes=5760;crab.LevelDurationVersion=1;}
     }
@@ -82,7 +82,7 @@ internal sealed class ConfigMenu
                 next.AutoRestartProduction=draft.AutoRestartProduction;next.EnableAllProfessions=draft.EnableAllProfessions;
                 next.EnableAnnualLegendaryFish=draft.EnableAnnualLegendaryFish;
                 next.EnableHorseSpeedBonus=draft.EnableHorseSpeedBonus;next.HorseSpeedBonus=draft.HorseSpeedBonus;
-                next.EnableOrdersSystem=draft.EnableOrdersSystem;next.EnableLargeHorses=draft.EnableLargeHorses;
+                next.EnableOrdersSystem=draft.EnableOrdersSystem;next.EnableLargeHorses=draft.EnableLargeHorses;next.OnlyOwnersRide=draft.OnlyOwnersRide;
                 next.EnableGreenhouseExpansion=draft.EnableGreenhouseExpansion;next.EnableCellarExpansion=draft.EnableCellarExpansion;
                 next.EnableCellarAppearance=draft.EnableCellarAppearance;
             }
@@ -192,6 +192,7 @@ internal sealed class ConfigMenu
             Flag("horse-enabled",()=>draft.EnableHorseSpeedBonus,v=>draft.EnableHorseSpeedBonus=v);
             Step("horse-speed",()=>draft.HorseSpeedBonus,v=>draft.HorseSpeedBonus=v,0,50,5);
             Flag("horse-large",()=>draft.EnableLargeHorses,v=>draft.EnableLargeHorses=v);
+            Flag("horse-owner-only",()=>draft.OnlyOwnersRide,v=>draft.OnlyOwnersRide=v);
             Flag("orders-enabled",()=>draft.EnableOrdersSystem,v=>draft.EnableOrdersSystem=v);
         }
         catch(Exception ex)

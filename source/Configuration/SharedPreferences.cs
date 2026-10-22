@@ -28,6 +28,7 @@ internal static class SharedPreferences
         [JsonProperty(Required=Required.Always)] public int FishCycleMinutes=2880,CrabCycleMinutes=2880;
         [JsonProperty(Required=Required.Always)] public int FishLevelTwoMinutes=4320,FishLevelThreeMinutes=5760,CrabLevelTwoMinutes=5760;
         [JsonProperty(Required=Required.Always)] public bool EnableBsvSpeedGro;
+        [JsonProperty] public bool OnlyOwnersRide=true;
     }
     internal static ModConfig Current=>local==null?Waiting:Effective(local);
     internal static bool HasLocal=>local!=null;
@@ -72,7 +73,7 @@ internal static class SharedPreferences
             CrabCycleMinutes=Eddie.FishingMachine.ModEntry.Instance?.CrabConfig.MinutesForLevel(1)??2880,
             FishLevelTwoMinutes=Eddie.FishingMachine.ModEntry.Instance?.Config.MinutesForLevel(2)??4320,
             FishLevelThreeMinutes=Eddie.FishingMachine.ModEntry.Instance?.Config.MinutesForLevel(3)??5760,
-            CrabLevelTwoMinutes=Eddie.FishingMachine.ModEntry.Instance?.CrabConfig.MinutesForLevel(2)??5760};
+            CrabLevelTwoMinutes=Eddie.FishingMachine.ModEntry.Instance?.CrabConfig.MinutesForLevel(2)??5760,OnlyOwnersRide=c.OnlyOwnersRide};
         Game1.MasterPlayer.modData[Key]=JsonConvert.SerializeObject(snapshot);
     }
     private static ModConfig? Read()
@@ -91,7 +92,7 @@ internal static class SharedPreferences
             cached=new ModConfig{EnableHarvestSeeds=s.EnableHarvestSeeds,SeedChance=s.SeedChance,HarvestBonus=h,EnableBsvSpeedGro=s.EnableBsvSpeedGro,
                 AutoRestartProduction=s.AutoRestartProduction,EnableAllProfessions=s.EnableAllProfessions,
                 EnableAnnualLegendaryFish=s.EnableAnnualLegendaryFish,EnableHorseSpeedBonus=s.EnableHorseSpeedBonus,
-                HorseSpeedBonus=s.HorseSpeedBonus,EnableOrdersSystem=s.EnableOrdersSystem};
+                HorseSpeedBonus=s.HorseSpeedBonus,EnableOrdersSystem=s.EnableOrdersSystem,OnlyOwnersRide=s.OnlyOwnersRide};
             cachedPolicy=s;
         }
         catch(JsonException){return null;}

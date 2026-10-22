@@ -59,9 +59,9 @@ internal sealed partial class HorseFeature
     }
     private static HorseRules.Bounds Bounds(HorseViewport v) => new(v.X, v.Y, v.Width, v.Height);
 
-    private void Reply(HorseRequest request, string key = "", bool running = false, string sound = "")
+    private void Reply(HorseRequest request, string key = "", bool running = false, string sound = "", string horseName = "")
     {
-        var receipt = new HorseReceipt { Id = request.Id, Actor = request.Actor, Message = key, Running = running, Sound = sound };
+        var receipt = new HorseReceipt { Id = request.Id, Actor = request.Actor, Message = key, Running = running, Sound = sound, HorseName = horseName };
         Replies[request.Actor] = receipt;
         // The shared local inbox also handles split-screen players without changing Game1.player.
         if (Game1.GetPlayer(request.Actor, onlyOnline: true) is { IsLocalPlayer: false })
@@ -75,7 +75,14 @@ internal sealed partial class HorseFeature
         if (local.LastReceipt == signature) return;
         local.LastReceipt = signature; local.Busy = r.Running;
         if (r.Running) local.PendingSince = Now;
-        if (r.Sound.Length > 0) PlayWhistle(r.Sound == "dismiss");
+        if (r.Sound.Length > 0)
+        {
+            PlayWhistle(r.Sound == "dismiss");
+            // Bottom-left corner note: "Your horse / <name> is coming" or "... is leaving".
+            string name = r.HorseName.Trim();
+            string key = (r.Sound == "dismiss" ? "horse.hud.leaving" : "horse.hud.coming") + (name.Length > 0 ? "_named" : "");
+            Game1.addHUDMessage(HUDMessage.ForCornerTextbox(T(key, new { horseName = name })));
+        }
         Message(r.Message);
     }
     private void OnTick(object? sender, UpdateTickedEventArgs e)
@@ -117,7 +124,7 @@ internal sealed partial class HorseFeature
         if (who?.currentLocation == null || who.currentLocation.NameOrUniqueName != r.Location) { Reply(r, "horse.call.unavailable_location"); return; }
         if (r.Action != "Call" && r.Action != "Name" && r.Action != "Claim" && r.Action != "Select" && r.Action != "Builder" && r.Action != "Skin") return;
         if (Replies.TryGetValue(r.Actor, out var previous) && previous.Id == r.Id)
-        { Reply(r, previous.Message, previous.Running, previous.Sound); return; }
+        { Reply(r, previous.Message, previous.Running, previous.Sound, previous.HorseName); return; }
         var id = Guid.Parse(r.Horse);
         // Turning a running horse around (coming <-> leaving) is immediate: no cooldown.
         bool turnaround = r.Action == "Call" && Active.TryGetValue(id, out var running) && running.Actor == r.Actor;
@@ -155,7 +162,7 @@ internal sealed partial class HorseFeature
             moving.Departing = !moving.Departing;
             moving.Started = false; moving.Route.Clear(); moving.BlockedSince = 0;
             moving.Start = moving.LastTick = Now - 1; moving.DepartStart = Now;
-            Reply(r, "", sound: moving.Departing ? "dismiss" : "call"); return;
+            Reply(r, "", sound: moving.Departing ? "dismiss" : "call", horseName: moving.Horse.Name ?? ""); return;
         }
         if (Active.ContainsKey(id) || Active.Values.Any(s => s.Actor == r.Actor)) { Reply(r, "horse.call.busy"); return; }
         if (r.Action == "Name")
@@ -177,7 +184,7 @@ internal sealed partial class HorseFeature
         bool present = horse.currentLocation == who.currentLocation
             && VisualBounds(horse.Position).Intersects(Bounds(view.View).Inflate(64));
         Active[id] = new Summon(r, horse, who.currentLocation, stable, Now) { Departing = present, DepartStart = Now };
-        Reply(r, "", sound: present ? "dismiss" : "call");
+        Reply(r, "", sound: present ? "dismiss" : "call", horseName: horse.Name ?? "");
         static bool nowStale(double time) => Now - time > 1;
     }
     private static bool InReach(Farmer who, Horse horse) => who.currentLocation == horse.currentLocation

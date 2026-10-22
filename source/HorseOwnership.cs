@@ -144,7 +144,9 @@ internal sealed partial class HorseFeature
             if (who.IsLocalPlayer && who.CanMove) mod.OpenNaming(__instance, true);
             return false;
         }
-        if (!HorseRules.Owns(who.UniqueMultiplayerID, stable.owner.Value, __instance.ownerId.Value))
+        bool owns = HorseRules.Owns(who.UniqueMultiplayerID, stable.owner.Value, __instance.ownerId.Value);
+        // Host setting (GMCM): by default only the owner may ride; when off, anyone may ride (never call) it.
+        if (!owns && Configuration.SharedPreferences.Effective(mod.Config).OnlyOwnersRide)
         {
             if (who.IsLocalPlayer)
             {
@@ -154,11 +156,12 @@ internal sealed partial class HorseFeature
             }
             return false;
         }
-        if (__instance.modData.ContainsKey(RunKey) || mod.Active.ContainsKey(__instance.HorseId))
-        { if (who.IsLocalPlayer) mod.Message("horse.call.busy"); return false; }
+        // A horse running to or away from its caller can be mounted on the spot: the run simply ends
+        // (on a farmhand, the host ends it as soon as it sees the horse being mounted).
+        if (Context.IsMainPlayer && mod.Active.TryGetValue(__instance.HorseId, out var running)) mod.Finish(running, "");
         // Avoid vanilla's unnamed-horse branch, which can assign ownership and clear another stable.
         if (string.IsNullOrWhiteSpace(__instance.Name))
-        { if (who.IsLocalPlayer && who.CanMove) mod.OpenNaming(__instance, false); return false; }
+        { if (owns && who.IsLocalPlayer && who.CanMove) mod.OpenNaming(__instance, false); return false; } // never let vanilla name/claim someone else's horse
         return true; // native mutex, mounting, dismounting, hats, carrots and rider rendering
     }
 

@@ -29,5 +29,7 @@ public sealed class ModConfig
     public bool EnableHorseNameUI { get; set; } = true;
     /// <summary>Draw BSV horses 1.3x larger (riders keep their size). Visual only.</summary>
     public bool EnableLargeHorses { get; set; } = true;
+    /// <summary>Host setting: only a horse's owner may ride it. Off: anyone may ride any horse (calling stays owner-only).</summary>
+    public bool OnlyOwnersRide { get; set; } = true;
     public string[] HorseCallBlacklist { get; set; } = System.Array.Empty<string>();
 }
