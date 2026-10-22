@@ -155,8 +155,14 @@ internal static class HorseSkins
                     for (int y = 0; y < 32; y++)
                     {
                         var p = Px(fx + x, fy + y);
-                        if (p.A != 255 || saddle.Contains((x, y))) continue;
+                        if (p.A != 255) continue;
                         int i = (fy + y) * width + fx + x;
+                        if (saddle.Contains((x, y)))
+                        {
+                            // The saddle keeps its colours; only a unicorn's mane showing through stays rainbow.
+                            if (skin.Rainbow && (p == Mane || p == ManeLight)) { var band = RainbowBands[(x + y) / 2 % RainbowBands.Length]; output[i] = p == ManeLight ? Lighten(band, .35f) : band; }
+                            continue;
+                        }
                         int level = Array.IndexOf(Coat, p);
                         if (level >= 0)
                         {
