@@ -19,7 +19,7 @@ namespace BetterStardewValley.Professions;
 internal static class ProfessionSkillsPage
 {
     // Pitch is adaptive: vanilla leaves roughly 55 px per skill, a roomier page gets up to 68.
-    internal const int MaxPitch=68, MinPitch=52, HeaderHeight=20, MinWidth=336, SlotGap=3, GroupGap=16, NumberWidth=32, BeadSpan=101;
+    internal const int MaxPitch=76, MinPitch=52, HeaderHeight=18, MinWidth=336, SlotGap=2, GroupGap=12, NumberWidth=32, BeadSpan=101;
     internal const int RowHeight=MaxPitch;
     private static readonly FieldInfo Areas=AccessTools.Field(typeof(SkillsPage),"skillAreas"),Bars=AccessTools.Field(typeof(SkillsPage),"skillBars"),Avatar=AccessTools.Field(typeof(SkillsPage),"playerPanel");
     private static readonly ConditionalWeakTable<IClickableMenu,State> States=new();
@@ -44,21 +44,21 @@ internal static class ProfessionSkillsPage
         }
     }
     /// <summary>Horizontal arrangement of one row, relative to the left edge of the page area.</summary>
-    internal readonly record struct Metrics(int Slot,int BeadScale,int NameX,int NameWidth,int BarX,int PairX,int GridX,int NumberX);
+    internal readonly record struct Metrics(int Slot,float BeadScale,int NameX,int NameWidth,int BarX,int PairX,int GridX,int NumberX);
     internal static int PitchFor(int height)=>Math.Clamp((height-HeaderHeight)/5,MinPitch,MaxPitch);
     /// <summary>Slot edge in pixels: the 16 px profession sprite at 1.5x to 2x, small enough that the 2x2 grid fits a row.</summary>
-    internal static int SlotFor(int pitch)=>Math.Clamp((pitch-SlotGap-2)/2,24,32); // as large as the row allows, with a small gap between rows
+    internal static int SlotFor(int pitch)=>Math.Clamp((pitch-SlotGap-1)/2,24,37); // as large as the row allows: the 2x2 grid fills the row height
     /// <summary>Slot edge limited by the width too: the bar, both icon groups and the level number must all fit.</summary>
-    internal static int SlotFor(int pitch,int width)=>Math.Max(24,Math.Min(SlotFor(pitch),(width-223)/4));
+    internal static int SlotFor(int pitch,int width)=>Math.Max(24,Math.Min(SlotFor(pitch),(width-220)/4));
     internal static Metrics Measure(int width,int slot,int nameWidth)
     {
-        int group=2*slot+SlotGap,numberX=width-NumberWidth,gridX=numberX-16-group,pairX=gridX-GroupGap-group;
+        int group=2*slot+SlotGap,numberX=width-NumberWidth,gridX=numberX-10-group,pairX=gridX-GroupGap-group;
         const int nameX=0; // mockup: skill name first, no skill icon
         // The bar at its smallest scale always fits; a long skill name is truncated instead.
-        nameWidth=Math.Max(24,Math.Min(nameWidth,pairX-16-(nameX+8)-BeadSpan));
-        int barX=nameX+nameWidth+8,room=pairX-16-barX;
-        // At most 3x: the bar should not crowd out the profession slots (mockup proportions).
-        int scale=room>=BeadSpan*3?3:room>=BeadSpan*2?2:1;
+        nameWidth=Math.Max(24,Math.Min(nameWidth,pairX-12-(nameX+8)-BeadSpan));
+        int barX=nameX+nameWidth+8,room=pairX-12-barX;
+        // The bar stretches to fill the space up to the level-5 pair (no empty band between bar and icons), at most 3x.
+        float scale=Math.Clamp(room/(float)BeadSpan,1f,3f);
         return new(slot,scale,nameX,nameWidth,barX,pairX,gridX,numberX);
     }
     internal static bool Installed;
@@ -161,7 +161,7 @@ internal static class ProfessionSkillsPage
         int top=Math.Max(viewport.Top+16,boxes.Min(b=>b.Top)-HeaderHeight);
         int right=Math.Min(page.Right-48,viewport.Right-24);
         // The band under the last native row is free down to the mastery strip; use it for taller rows (bigger icons).
-        int bottom=Math.Min(boxes.Max(b=>b.Bottom)+72,Math.Min(page.Bottom-32,viewport.Bottom-32));
+        int bottom=Math.Min(boxes.Max(b=>b.Bottom)+80,Math.Min(page.Bottom-32,viewport.Bottom-32));
         return right-left<MinWidth||bottom-top<HeaderHeight+MinPitch?Rectangle.Empty:new(left,top,right-left,Math.Min(HeaderHeight+MaxPitch*5,bottom-top));
     }
     private static State? Get(IClickableMenu page)
@@ -230,17 +230,18 @@ internal static class ProfessionSkillsPage
         b.DrawString(Game1.smallFont,text,new Vector2(centerX-size.X/2f,y),c,0f,Vector2.Zero,scale,SpriteEffects.None,depth);
     }
     /// <summary>The native ten-bead level bar (8x9 beads, 14x9 at levels 5 and 10), scaled by an integer.</summary>
-    private static void Beads(SpriteBatch b,int x,int midY,int scale,int level)
+    private static void Beads(SpriteBatch b,int x,int midY,float scale,int level)
     {
-        int top=midY-9*scale/2,extra=0;
+        float top=midY-9*scale/2,extra=0;
         for(int n=0;n<10;n++)
         {
             bool red=level>n,big=(n+1)%5==0;
             var at=new Vector2(x+n*9*scale+extra,top);
             var shade=big?new Rectangle(145,338,14,9):new Rectangle(129,338,8,9);
             var bead=big?new Rectangle(145+(red?14:0),338,14,9):new Rectangle(129+(red?8:0),338,8,9);
-            b.Draw(Game1.mouseCursors,at+new Vector2(-scale,scale),shade,Color.Black*.35f,0f,Vector2.Zero,(float)scale,SpriteEffects.None,.85f);
-            b.Draw(Game1.mouseCursors,at,bead,Color.White,0f,Vector2.Zero,(float)scale,SpriteEffects.None,.87f);
+            at=new Vector2((int)at.X,(int)at.Y);
+            b.Draw(Game1.mouseCursors,at+new Vector2(-scale,scale),shade,Color.Black*.35f,0f,Vector2.Zero,scale,SpriteEffects.None,.85f);
+            b.Draw(Game1.mouseCursors,at,bead,Color.White,0f,Vector2.Zero,scale,SpriteEffects.None,.87f);
             if(big)extra+=6*scale;
         }
     }

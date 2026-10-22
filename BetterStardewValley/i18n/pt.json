@@ -544,6 +544,8 @@
   "panel.cycles-req": "Cycles {{count}}/{{needed}}",
   "panel.upgrade-button": "Upgrade to Lv {{level}} [T]",
   "panel.auto-upgrade": "Upgrades automatically when the cycles and materials are ready.",
+  "panel.auto-upgrade-button": "Melhoria automática para Nv {{level}}",
+  "panel.more-slots": "Nv {{level}}: {{count}} espaços",
   "panel.max-level": "Maximum level.",
   "panel.missing": "Missing: {{list}}",
   "panel.producing": "Producing",

@@ -544,6 +544,8 @@
   "panel.cycles-req": "Cycles {{count}}/{{needed}}",
   "panel.upgrade-button": "Upgrade to Lv {{level}} [T]",
   "panel.auto-upgrade": "Upgrades automatically when the cycles and materials are ready.",
+  "panel.auto-upgrade-button": "Sv {{level}} için otomatik yükseltme",
+  "panel.more-slots": "Sv {{level}}: {{count}} yuva",
   "panel.max-level": "Maximum level.",
   "panel.missing": "Missing: {{list}}",
   "panel.producing": "Producing",

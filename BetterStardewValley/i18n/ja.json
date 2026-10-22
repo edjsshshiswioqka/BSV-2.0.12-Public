@@ -544,6 +544,8 @@
   "panel.cycles-req": "Cycles {{count}}/{{needed}}",
   "panel.upgrade-button": "Upgrade to Lv {{level}} [T]",
   "panel.auto-upgrade": "Upgrades automatically when the cycles and materials are ready.",
+  "panel.auto-upgrade-button": "Lv {{level}} へ自動アップグレード",
+  "panel.more-slots": "Lv {{level}}：{{count}} マス",
   "panel.max-level": "Maximum level.",
   "panel.missing": "Missing: {{list}}",
   "panel.producing": "Producing",

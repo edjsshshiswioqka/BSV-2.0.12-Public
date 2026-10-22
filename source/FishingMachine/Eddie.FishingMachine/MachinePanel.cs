@@ -281,13 +281,21 @@ internal sealed partial class ProductionService
             {
                 int x=Game1.getMouseX(),y=Game1.getMouseY();
                 take=takeBox.Contains(x,y);
-                upgrade=crab&&buttonBox.Width>0&&buttonBox.Contains(x,y);
+                upgrade=buttonBox.Width>0&&buttonBox.Contains(x,y);
             }
             finally{Game1.PopUIMode();}
             if(!take&&!upgrade)return false;
         }
         if(take){try{TakeAll(c,s);}catch{Mod.Message("status.error");}return true;}
-        if(!crab||buttonBox.Width==0)return false;
+        if(buttonBox.Width==0)return false;
+        if(!crab)
+        {
+            // The fishing machine upgrades by itself; its bar (and T) only says what is still missing.
+            var lacking=Lacking(s,materials);
+            if(lacking.Count>0)Game1.showRedMessage(Mod.T("panel.missing",new{list=string.Join("; ",lacking)}));
+            else Game1.showGlobalMessage(Mod.T("panel.auto-upgrade"));
+            return true;
+        }
         if(!Upgradable(c,s,materials)){UpgradeFeedback(c,s,materials);return true;}
         Mod.Actions.Control(c,ActionKind.Upgrade);Mod.ReleaseChest(startCrab:false);Game1.exitActiveMenu();return true;
     }

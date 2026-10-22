@@ -33,7 +33,7 @@ internal sealed partial class ProductionService
 {
     internal sealed class FullLayout
     {
-        public Rectangle Window,BagWindow,Title,Badge,ColorButton,Status,Bar,Stats,Catch,Take,UpgradeTitle,Button,Note;
+        public Rectangle Window,BagWindow,Title,Badge,ColorButton,Status,Bar,Stats,Catch,Take,UpgradeTitle,Button,Note,Locked;
         public Rectangle[] Conditions=Array.Empty<Rectangle>();
         public int[] Dividers=Array.Empty<int>();
         public Point Grid,Bag;
@@ -94,7 +94,13 @@ internal sealed partial class ProductionService
         var grid=menu.ItemsToGrabMenu;var bag=menu.inventory;
         if(grid==null||bag==null)return null;
         int vw=Game1.uiViewport.Width,vh=Game1.uiViewport.Height;
-        int inner=Math.Max(grid.width,bag.width),width=inner+2*Pad;
+        // Both machines reserve the same catch area (the 70-slot, 14 x 5 grid of the crab catcher and a Lv 2+ fishing
+        // machine), so the two windows have identical size and structure. A smaller grid sits at the top of the area;
+        // the rest shows the slots the next level unlocks.
+        int columns0=Math.Max(1,grid.capacity/Math.Max(1,grid.rows));
+        int cellW=grid.width/columns0,cellH=grid.height/Math.Max(1,grid.rows);
+        int areaW=Math.Max(grid.width,cellW*14),areaH=Math.Max(grid.height,cellH*5);
+        int inner=Math.Max(areaW,bag.width),width=inner+2*Pad;
         // The native side buttons (fill stacks, organize, trash, OK) stay to the right of the windows.
         if(width+2*(64+24)>vw)return null;
         bool upgrade=crab?s.Level==1:s.Level<3;
@@ -103,8 +109,8 @@ internal sealed partial class ProductionService
         {
             bool labels=variant==0;int columns=variant==2?3:2;
             int rows=upgrade?(conditions+columns-1)/columns:0;
-            int upgradeHeight=upgrade?10+40+rows*RowStep+4+(crab?52:40):10+34;
-            int machine=Pad+44+10+50+30+10+(labels?44:0)+grid.height+Gap+upgradeHeight+Pad-4;
+            int upgradeHeight=upgrade?10+40+rows*RowStep+4+52:10+34;
+            int machine=Pad+44+10+50+30+10+(labels?44:0)+areaH+Gap+upgradeHeight+Pad-4;
             int backpack=18+(labels?32:0)+bag.height+Pad;
             int total=machine+Gap+backpack;
             if(total>vh-16)continue;
@@ -119,7 +125,9 @@ internal sealed partial class ProductionService
             g.Status=new(cx,cy,cw,28);g.Bar=new(cx,cy+30,cw,16);cy+=50;
             g.Stats=new(cx,cy,cw,28);cy+=30;dividers.Add(cy+2);cy+=10;
             if(labels){g.Catch=new(cx,cy,cw,44);g.Take=new(cx+cw-170,cy+2,170,40);cy+=44;}
-            g.Grid=new(x+(width-grid.width)/2,cy);cy+=grid.height+Gap;
+            g.Grid=new(x+(width-grid.width)/2,cy);
+            if(areaH-grid.height>=cellH)g.Locked=new(x+(width-areaW)/2,cy+grid.height+8,areaW,areaH-grid.height-8);
+            cy+=areaH+Gap;
             dividers.Add(cy);cy+=10;
             if(upgrade)
             {
@@ -128,7 +136,8 @@ internal sealed partial class ProductionService
                 // Column-major like the mockup: the first column is filled top to bottom before the next.
                 g.Conditions=Enumerable.Range(0,conditions).Select(n=>new Rectangle(cx+n/rows*(column+12),cy+n%rows*RowStep,column,BoxHeight)).ToArray();
                 cy+=rows*RowStep+4;
-                if(crab)g.Button=new(cx,cy,cw,44);else g.Note=new(cx,cy,cw,36);
+                // Same bar for both machines: the crab catcher's is a button, the fishing machine's explains its automatic upgrade.
+                g.Button=new(cx,cy,cw,44);
             }
             else g.Note=new(cx,cy,cw,34);
             g.Dividers=dividers.ToArray();
@@ -266,6 +275,14 @@ internal sealed partial class ProductionService
         if(g.Take.Contains(mx,my))tip=Mod.T("panel.take-help");
 
         menu.ItemsToGrabMenu.draw(b);
+        if(g.Locked.Width>0)
+        {
+            Box(b,g.Locked,Track,TrackEdge);
+            string more=Mod.T("panel.more-slots",new{level=s.Level+1,count=MachineUpgrade.Capacity(s.Level+1)});
+            var moreSize=Game1.smallFont.MeasureString(more);
+            b.DrawString(Game1.smallFont,more,new Vector2(g.Locked.Center.X-moreSize.X/2,g.Locked.Center.Y-moreSize.Y/2+2),Soft);
+            if(g.Locked.Contains(mx,my))tip=Mod.T("panel.auto-upgrade");
+        }
 
         // Upgrade section.
         if(g.UpgradeTitle.Width>0)
@@ -282,8 +299,12 @@ internal sealed partial class ProductionService
             }
             if(g.Button.Width>0)
             {
-                Button(b,g.Button,Mod.T("panel.upgrade-button",new{level=s.Level+1}),g.Button.Contains(mx,my),true,true);
-                if(g.Button.Contains(mx,my)&&!Upgradable(c,s,materials))tip=MissingText(s,materials);
+                Button(b,g.Button,Mod.T(crab?"panel.upgrade-button":"panel.auto-upgrade-button",new{level=s.Level+1}),g.Button.Contains(mx,my),true,true);
+                if(g.Button.Contains(mx,my))
+                {
+                    if(crab){if(!Upgradable(c,s,materials))tip=MissingText(s,materials);}
+                    else tip=Lacking(s,materials).Count>0?Mod.T("panel.missing",new{list=string.Join("; ",Lacking(s,materials))}):Mod.T("panel.auto-upgrade");
+                }
             }
             else
             {
@@ -322,6 +343,16 @@ internal sealed partial class ProductionService
         menu.heldItem?.drawInMenu(b,new Vector2(Game1.getOldMouseX()+8,Game1.getOldMouseY()+8),1f);
         menu.drawMouse(b);
         return true;
+    }
+
+    /// <summary>Cycles and materials still missing for the next level (no machine-state check).</summary>
+    internal List<string> Lacking(ProductionState s,(int Have,int Need,string Id)[] materials)
+    {
+        var lacking=new List<string>();
+        long progress=MachineUpgrade.Progress(s);int needed=MachineCycleRules.RequiredCycles(s);
+        if(progress<needed)lacking.Add(Mod.T("panel.cycles-req",new{count=progress,needed}));
+        foreach(var m in materials.Where(m=>m.Have<m.Need))lacking.Add(ItemRegistry.GetDataOrErrorItem(m.Id).DisplayName+" "+m.Have+"/"+m.Need);
+        return lacking;
     }
 
     private string MissingText(ProductionState s,(int Have,int Need,string Id)[] materials)

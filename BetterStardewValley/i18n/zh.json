@@ -544,6 +544,8 @@
   "panel.cycles-req": "轮数 {{count}}/{{needed}}",
   "panel.upgrade-button": "升级到 Lv {{level}} [T]",
   "panel.auto-upgrade": "轮数与材料满足后自动升级。",
+  "panel.auto-upgrade-button": "自动升级到 Lv {{level}}",
+  "panel.more-slots": "Lv {{level}} 解锁：{{count}} 格",
   "panel.max-level": "已达最高等级。",
   "panel.missing": "缺少：{{list}}",
   "panel.producing": "生产中",
