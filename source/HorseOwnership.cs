@@ -21,6 +21,7 @@ internal sealed partial class HorseFeature
         || horse.modData.Keys.Any(k => k.StartsWith(TractorMarker, StringComparison.OrdinalIgnoreCase))
         || horse.Name?.StartsWith("tractor/", StringComparison.OrdinalIgnoreCase) == true);
     private static bool IsRealManagedHorse(Horse? horse) => horse != null && !IsTractorHorse(horse);
+    internal static bool IsTractor(Horse horse) => IsTractorHorse(horse);
     private static bool IsTractorStable(Stable stable) => stable.buildingType.Value == TractorGarageId
         || stable.buildingType.Value?.Contains("Tractor", StringComparison.OrdinalIgnoreCase) == true
         || stable.modData.Keys.Any(k => k.StartsWith(TractorMarker, StringComparison.OrdinalIgnoreCase))
@@ -60,6 +61,8 @@ internal sealed partial class HorseFeature
         var horse = stable.getStableHorse();
         if (!IsRealManagedHorse(horse)) return;
         horse.ownerId.Value = stable.owner.Value;
+        // The coat lives on the stable (permanent) and is mirrored to its horse, which syncs it to every player.
+        if (stable.modData.TryGetValue(HorseSkins.SkinKey, out var coat)) horse!.modData[HorseSkins.SkinKey] = coat;
         if (stable.modData.TryGetValue(NameKey, out var name) && name.Length > 0)
         {
             name = NativeName(name);
@@ -157,6 +160,62 @@ internal sealed partial class HorseFeature
         if (string.IsNullOrWhiteSpace(__instance.Name))
         { if (who.IsLocalPlayer && who.CanMove) mod.OpenNaming(__instance, false); return false; }
         return true; // native mutex, mounting, dismounting, hats, carrots and rider rendering
+    }
+
+    private const string BuilderKey = Tag + "StableBuilder";
+    /// <summary>Records who placed a stable at Robin's (host writes it; a farmhand asks the host).</summary>
+    private void MarkBuilder(Stable stable)
+    {
+        if (Context.IsMainPlayer) { if (!stable.modData.ContainsKey(BuilderKey)) stable.modData[BuilderKey] = Game1.player.UniqueMultiplayerID.ToString(); }
+        else SendStableAction(stable, "Builder", "");
+    }
+    /// <summary>Whether the local player is the one who picks this stable's coat (once, permanently).</summary>
+    private static bool PicksCoat(Stable stable, long me)
+    {
+        if (stable.modData.ContainsKey(HorseSkins.SkinKey) || IsTractorStable(stable) || stable.daysOfConstructionLeft.Value > 0) return false;
+        if (stable.modData.TryGetValue(BuilderKey, out var builder)) return builder == me.ToString();
+        // Older stables: their owner; an unclaimed horse in single player belongs to the only player.
+        return stable.owner.Value == me || stable.owner.Value == 0 && (!Game1.IsMultiplayer || Context.IsMainPlayer);
+    }
+    private void OfferCoat()
+    {
+        var local = Local.Value; double now = Now;
+        if (Game1.activeClickableMenu is CarpenterMenu) local.CarpenterSeen = now;
+        if (now < local.NextCoatCheck || !Context.IsPlayerFree || Game1.activeClickableMenu != null || Game1.eventUp) return;
+        local.NextCoatCheck = now + 1;
+        foreach (var stable in Stables())
+        {
+            if (local.CoatOffered.Contains(stable.HorseId) || !PicksCoat(stable, Game1.player.UniqueMultiplayerID)) continue;
+            if (!IsRealManagedHorse(stable.getStableHorse())) continue;
+            local.CoatOffered.Add(stable.HorseId); // closed without choosing: offered again tomorrow
+            Game1.activeClickableMenu = new HorseSkinMenu(Helper, key => T(key), id => SendStableAction(stable, "Skin", id));
+            return;
+        }
+    }
+    private void SendStableAction(Stable stable, string action, string value)
+    {
+        if (!Context.IsWorldReady) return;
+        var r = new HorseRequest { Id = Guid.NewGuid().ToString("N"), Actor = Game1.player.UniqueMultiplayerID, Horse = stable.HorseId.ToString("N"),
+            Location = Game1.currentLocation.NameOrUniqueName, Action = action, Name = value, View = CurrentView() };
+        Local.Value.Pending = r.Id; Local.Value.PendingSince = Now;
+        if (Context.IsMainPlayer || Context.IsSplitScreen) Incoming[r.Actor] = r;
+        else Helper.Multiplayer.SendMessage(r, RequestType, new[] { ModId }, new[] { Game1.MasterPlayer.UniqueMultiplayerID });
+    }
+    /// <summary>Host: builder record and the permanent coat choice.</summary>
+    private void HandleStable(HorseRequest r, Guid id)
+    {
+        var stable = Stables().FirstOrDefault(s => s.HorseId == id);
+        if (stable == null) { Reply(r, "horse.call.no_horse"); return; }
+        if (r.Action == "Builder")
+        {
+            if (!stable.modData.ContainsKey(BuilderKey)) stable.modData[BuilderKey] = r.Actor.ToString(); // first placement report wins
+            Reply(r); return;
+        }
+        if (stable.modData.ContainsKey(HorseSkins.SkinKey)) { Reply(r, "horse.skin.locked"); return; }
+        if (HorseSkins.Find(r.Name) is not { } skin || !PicksCoat(stable, r.Actor)) { Reply(r, "horse.skin.unavailable"); return; }
+        stable.modData[HorseSkins.SkinKey] = skin.Id;
+        if (stable.getStableHorse() is { } horse && IsRealManagedHorse(horse)) horse.modData[HorseSkins.SkinKey] = skin.Id;
+        Reply(r, "horse.skin.saved");
     }
 
     private void OpenNaming(Horse horse, bool claim)

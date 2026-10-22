@@ -41,7 +41,11 @@ internal sealed partial class HorseFeature
         internal string LastReceipt = "";
         internal bool Busy;
         internal readonly Dictionary<Guid, (string Token, Vector2 Position, double Phase)> Animations = new();
+        internal readonly HashSet<Guid> CoatOffered = new();
+        internal double CarpenterSeen, NextCoatCheck;
     }
+
+    internal static bool ScaleEligible(Horse horse) => Instance is { Ready: true } mod && mod.Config.EnableLargeHorses && IsRealManagedHorse(horse);
 
     internal HorseFeature(IModHelper helper, IMonitor monitor, string modId, ModConfig config)
     {
@@ -67,6 +71,8 @@ internal sealed partial class HorseFeature
             Patch(typeof(Stable), nameof(Stable.updateHorseOwnership), nameof(BeforeOwnership), nameof(AfterOwnership));
             Patch(typeof(Stable), nameof(Stable.grabHorse), nameof(BeforeGrab), nameof(AfterOwnership));
             Patch(typeof(Stable), nameof(Stable.performActionOnDemolition), nameof(BeforeDemolition));
+            HorseSkins.Register(helper, monitor);
+            HorseScale.Install(harmony, monitor);
             Ready = true;
         }
         catch (Exception ex)
@@ -82,9 +88,12 @@ internal sealed partial class HorseFeature
         helper.Events.World.BuildingListChanged += (_, e) =>
         {
             if (Context.IsMainPlayer) foreach (var stable in e.Removed.OfType<Stable>()) CleanupStable(stable);
+            // The player placing a stable at Robin's is its builder: they choose the coat when it is finished.
+            if (Game1.activeClickableMenu is CarpenterMenu || Now - Local.Value.CarpenterSeen < 3)
+                foreach (var stable in e.Added.OfType<Stable>().Where(s => !IsTractorStable(s))) MarkBuilder(stable);
         };
         helper.Events.GameLoop.SaveLoaded += (_, _) => { ResetLocal(); if (Context.IsMainPlayer) RecoverAll(); };
-        helper.Events.GameLoop.DayStarted += (_, _) => { if (Context.IsMainPlayer) RecoverAll(); };
+        helper.Events.GameLoop.DayStarted += (_, _) => { if (Context.IsMainPlayer) RecoverAll(); Local.Value.CoatOffered.Clear(); };
         helper.Events.GameLoop.Saving += (_, _) => { if (Context.IsMainPlayer) StopAll(); };
         helper.Events.GameLoop.ReturnedToTitle += (_, _) => { ResetLocal(); if (Context.IsMainPlayer) ClearHost(); };
         helper.Events.Multiplayer.PeerDisconnected += (_, e) =>

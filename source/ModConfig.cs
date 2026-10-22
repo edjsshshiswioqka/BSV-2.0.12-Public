@@ -27,5 +27,7 @@ public sealed class ModConfig
     public int HorseSpawnOutsideViewportMinTiles { get; set; } = 2;
     public int HorseSpawnOutsideViewportMaxTiles { get; set; } = 5;
     public bool EnableHorseNameUI { get; set; } = true;
+    /// <summary>Draw BSV horses 1.3x larger (riders keep their size). Visual only.</summary>
+    public bool EnableLargeHorses { get; set; } = true;
     public string[] HorseCallBlacklist { get; set; } = System.Array.Empty<string>();
 }

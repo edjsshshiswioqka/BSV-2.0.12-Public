@@ -105,6 +105,7 @@ internal sealed partial class HorseFeature
             }
         }
         ApplyReceipt();
+        OfferCoat();
         if (local.Busy && now - local.PendingSince > 50)
         { local.Busy = false; local.Pending = ""; Message("horse.call.timeout"); }
     }
@@ -114,7 +115,7 @@ internal sealed partial class HorseFeature
         if (!Context.IsMainPlayer || !HorseRules.ValidEnvelope(r.Actor, r.Actor, r.Id, r.Horse, r.Location)) return;
         var who = Game1.GetPlayer(r.Actor, onlyOnline: true);
         if (who?.currentLocation == null || who.currentLocation.NameOrUniqueName != r.Location) { Reply(r, "horse.call.unavailable_location"); return; }
-        if (r.Action != "Call" && r.Action != "Name" && r.Action != "Claim" && r.Action != "Select") return;
+        if (r.Action != "Call" && r.Action != "Name" && r.Action != "Claim" && r.Action != "Select" && r.Action != "Builder" && r.Action != "Skin") return;
         if (Replies.TryGetValue(r.Actor, out var previous) && previous.Id == r.Id)
         { Reply(r, previous.Message, previous.Running, previous.Sound); return; }
         var id = Guid.Parse(r.Horse);
@@ -122,6 +123,7 @@ internal sealed partial class HorseFeature
         bool turnaround = r.Action == "Call" && Active.TryGetValue(id, out var running) && running.Actor == r.Actor;
         if (!turnaround && !(r.Action == "Call" ? Calls : Interactions).Accept(r.Actor, r.Id, Now, r.Action == "Call" ? Config.CallHorseCooldownSeconds : .5))
         { Reply(r, "horse.call.cooldown"); return; }
+        if (r.Action is "Builder" or "Skin") { HandleStable(r, id); return; }
         var stable = StableFor(id);
         var horse = stable?.getStableHorse();
         if (stable == null || stable.daysOfConstructionLeft.Value > 0 || !IsRealManagedHorse(horse) || horse!.HorseId != id)

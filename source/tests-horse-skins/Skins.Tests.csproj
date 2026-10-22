@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net6.0</TargetFramework><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../GlobalUsings.cs" Link="GlobalUsings.cs" />
+    <Compile Include="../HorseSkins.cs" Link="HorseSkins.cs" />
+    <Reference Include="MonoGame.Framework"><HintPath>$(GamePath)/MonoGame.Framework.dll</HintPath></Reference>
+    <Reference Include="Stardew Valley"><HintPath>$(GamePath)/Stardew Valley.dll</HintPath></Reference>
+    <Reference Include="StardewModdingAPI"><HintPath>$(GamePath)/StardewModdingAPI.dll</HintPath></Reference>
+    <Reference Include="xTile"><HintPath>$(GamePath)/xTile.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>
