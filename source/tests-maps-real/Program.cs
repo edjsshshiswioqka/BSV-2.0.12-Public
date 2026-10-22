@@ -43,8 +43,8 @@ internal static class Program
     }
     private static int Main(string[] args)
     {
-        string dir = args.Length > 0 ? args[0] : Environment.GetEnvironmentVariable("BSV_REAL_MAPS") ?? "";
-        string output = args.Length > 1 ? args[1] : dir;
+        string dir = Environment.GetEnvironmentVariable("BSV_REAL_MAPS") ?? (args.Length > 0 ? args[0] : "");
+        string output = dir;
         if (!File.Exists(Path.Combine(dir, "Greenhouse.tbin"))) { Console.WriteLine("SKIP: real maps not found in " + dir); return 0; }
 
         // Greenhouse.
