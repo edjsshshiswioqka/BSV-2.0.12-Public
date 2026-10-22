@@ -39,6 +39,11 @@ internal sealed class CellarFeature
                         catch(Exception ex){Error("appearance","BSV cellar appearance edit skipped; expanded geometry and placed contents were not changed by the visual pass.",ex);}
                     }
                 }
+                catch (MapConflictException ex) when (this.enabled())
+                {
+                    // Another mod's cellar: left exactly as that mod made it. Expected with map replacement mods.
+                    if (errors.Add("foreign")) monitor.Log(BsvI18n.Get(helper,"diag.cellar-foreign")+" ("+ex.Message+")", LogLevel.Warn);
+                }
                 catch (Exception ex) { Error("map", "BSV cellar expansion skipped; the original map was retained.", ex); }
             }, AssetEditPriority.Late);
         };
@@ -68,6 +73,7 @@ internal sealed class CellarFeature
     private void CheckCellars()
     {
         if (!Context.IsWorldReady) return;
+        bool backedUp = false;
         try
         {
             Utility.ForEachLocation(location =>
@@ -108,8 +114,14 @@ internal sealed class CellarFeature
                     if (saved != stamp) Error(location.NameOrUniqueName, "The cellar base map changed after expansion. Check other map mods before saving; no items have been moved.", null);
                     return true;
                 }
-                string? backup = GreenhouseBackup.Create(Constants.CurrentSavePath, backupRoot);
-                if (backup != null) monitor.Log("BSV saved a pre-cellar-expansion backup to: " + backup, LogLevel.Debug);
+                // One save backup per check covers every cellar (farmhouse and each cabin); 2.0.12 copied the
+                // whole save once per cellar.
+                if (!backedUp)
+                {
+                    backedUp = true;
+                    string? backup = GreenhouseBackup.Create(Constants.CurrentSavePath, backupRoot);
+                    if (backup != null) monitor.Log("BSV saved a pre-cellar-expansion backup to: " + backup, LogLevel.Debug);
+                }
                 // Native floors and entrance coordinates stay in place. Never recreate objects,
                 // furniture or casks: existing held items, quality and timers remain untouched.
                 location.modData[CellarMap.LayoutKey] = stamp;

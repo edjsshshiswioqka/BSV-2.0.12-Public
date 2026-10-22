@@ -1,11 +1,16 @@
 using xTile;
+using xTile.Layers;
 using xTile.Tiles;
 
 namespace BetterStardewValley;
 
-// Local visual retile of BSV's INSERTED cellar band. Uses the installed game's own
-// tile sheet, not bundled vanilla pixels. Entrance, stairs, native floor, warps,
-// collision layer and placed objects are outside this edit.
+// Visual retile of BSV's INSERTED cellar band only. Uses the installed game's own tile sheet,
+// not bundled pixels. Entrance, stairs, native floor, warps, collision and placed objects are
+// outside this edit: every replaced tile behaves exactly like the tile it replaces.
+//
+// Before (2.0.12): the band alternated two source rows, so the same crack pattern repeated every
+// second row. Now each inserted row takes a clean native floor row (no pillar shadows, no dirt
+// patch or barrel fragments) and a different horizontal offset, so cracks are scattered naturally.
 internal static class CellarAppearance
 {
     internal const string Key=WineRules.Prefix+"/CellarAppearance";
@@ -18,58 +23,55 @@ internal static class CellarAppearance
             ||!int.TryParse(fields[3],out int cut)||!int.TryParse(fields[4],out int added)||added<1)return false;
         var back=map.GetLayer("Back");var buildings=map.GetLayer("Buildings");
         if(back==null||buildings==null||back.LayerHeight!=18+added)return false;
-        var floors=CellarMap.FloorTiles(map);int width=floors.GroupBy(p=>p.Y).Max(g=>g.Count());
-        var rows=floors.Where(p=>p.Y>=7&&p.Y<cut).GroupBy(p=>p.Y).Where(g=>g.Count()==width).Select(g=>g.Key).OrderBy(y=>y).Where(y=>CellarMap.SafeRow(map,y)).ToArray();
-        if(rows.Length<2)return false;
-        var lights=Records(map,"Light",3);var day=Records(map,"DayTiles",4);var night=Records(map,"NightTiles",4);
-        // Use a consecutive, undecorated pair, not unrelated strips containing sconce
-        // tops/bottoms. Lamps are reintroduced as complete original native rows below.
-        bool LampRow(int y)=>lights.Any(r=>int.TryParse(r[1],out int py)&&Math.Abs(py-y)<=1)
-            || day.Concat(night).Any(r=>int.TryParse(r[2],out int py)&&py==y);
-        int pair=rows.FirstOrDefault(y=>rows.Contains(y+1)&&!LampRow(y)&&!LampRow(y+1),-1);
-        if(pair<0)return false; // unfamiliar wall composition: leave the original intact
-        var lampRows=lights.Where(r=>int.TryParse(r[1],out int y)&&y>=7&&y<cut)
-            .Select(r=>int.Parse(r[1])).Distinct().Where(y=>rows.Contains(y)&&rows.Contains(y-1)&&rows.Contains(y+1)).ToArray();
-        int Source(int y)
+        int width=back.LayerWidth,last=cut+added-1;
+        // Light sources inside the band belong to a map edit BSV does not know: leave the band untouched.
+        foreach(var (key,stride,index) in new[]{("Light",3,1),("DayTiles",4,2),("NightTiles",4,2)})
+            if(Records(map,key,stride).Any(r=>int.TryParse(r[index],out int y)&&y>=cut&&y<=last))return false;
+        var floors=CellarMap.FloorTiles(map);
+        var rows=floors.Where(p=>p.Y<cut).GroupBy(p=>p.Y).ToDictionary(g=>g.Key,g=>g.Count());
+        if(rows.Count==0)return false;
+        int rowWidth=rows.Values.Max();
+        var candidates=rows.Where(p=>p.Value==rowWidth&&p.Key>=7).Select(p=>p.Key).OrderBy(y=>y).Where(y=>CellarMap.SafeRow(map,y)).ToArray();
+        if(candidates.Length<2)return false;
+        var drawing=map.Layers.Where(l=>l.Id is "Front" or "AlwaysFront").ToArray();
+        // Clean rows: full floor rows between full floor rows (no wall shadow above, no decoration below)
+        // with nothing drawn over the interior.
+        var clean=candidates.Where(y=>rows.GetValueOrDefault(y-1)==rowWidth&&rows.GetValueOrDefault(y+1)==rowWidth
+            &&drawing.All(l=>Enumerable.Range(1,width-2).All(x=>l.Tiles[x,y]==null))).ToArray();
+        if(clean.Length<2)return false;
+        // Another mod edited the band after BSV expanded it: keep its edit.
+        for(int y=cut;y<=last;y++)
         {
-            int rel=y-cut;
-            if(lampRows.Length>0&&rel%6 is >=1 and <=3)return lampRows[0]+rel%6-2;
-            return pair+rel%2;
+            int source=candidates[(y-cut)%candidates.Length];
+            for(int x=0;x<width;x++)
+                if(!Same(back.Tiles[x,y],back.Tiles[x,source]))return false;
+            if(y!=last)foreach(var layer in drawing)
+                for(int x=0;x<width;x++)
+                    if(!Same(layer.Tiles[x,y],layer.Tiles[x,source]))return false;
         }
-        var edits=new List<(xTile.Layers.Layer Layer,int X,int Y,Tile? Tile)>();
-        foreach(var layer in map.Layers.Where(l=>l.Id is "Back" or "Front" or "AlwaysFront"))
-        for(int y=cut;y<cut+added;y++)for(int x=0;x<back.LayerWidth;x++)
+        var edits=new List<(Layer Layer,int X,int Y,Tile? Tile)>();
+        for(int i=0;i<added;i++)
         {
-            var current=layer.Tiles[x,y];var old=layer.Tiles[x,rows[(y-cut)%rows.Length]];
-            if(!Same(current,old))return false; // another mod edited the band: retain all of it
-            var source=layer.Tiles[x,Source(y)];
-            if(layer.Id=="Back"&&!SameProperties(current,source))continue;
-            edits.Add((layer,x,y,CellarMap.Clone(source,layer)));
-        }
-        foreach(var (records,index) in new[]{(lights,1),(day,2),(night,2)})
-        foreach(var record in records.Where(r=>int.TryParse(r[index],out int y)&&y>=cut&&y<cut+added))
-        {
-            int y=int.Parse(record[index]);var expected=(string[])record.Clone();expected[index]=rows[(y-cut)%rows.Length].ToString();
-            if(!records.Any(r=>r.SequenceEqual(expected)))return false;
-        }
-        // Keep the non-BSV/original light records and align ONLY the generated copies
-        // with the retiled native sconces. No additional map-wide ambient tint.
-        string Rewrite(List<string[]> records,int yIndex)
-        {
-            var result=records.Where(r=>!int.TryParse(r[yIndex],out int y)||y<cut||y>=cut+added).Select(r=>(string[])r.Clone()).ToList();
-            for(int y=cut;y<cut+added;y++)foreach(var r in records.Where(r=>int.TryParse(r[yIndex],out int py)&&py==Source(y)))
+            int y=cut+i,source=clean[i%clean.Length],shift=i*7%(width-2);
+            for(int x=1;x<width-1;x++)
             {
-                var copy=(string[])r.Clone();copy[yIndex]=y.ToString(System.Globalization.CultureInfo.InvariantCulture);result.Add(copy);
+                int sx=1+(x-1+shift)%(width-2);
+                Tile? current=back.Tiles[x,y],floor=back.Tiles[sx,source];
+                if(current==null||floor==null||buildings.Tiles[x,y]!=null||buildings.Tiles[sx,source]!=null)continue;
+                if(!GreenhouseMap.SameBehaviour(current,floor))continue;
+                edits.Add((back,x,y,CellarMap.Clone(floor,back)));
             }
-            return string.Join(' ',result.SelectMany(r=>r));
+            // Fragments of decorations copied into the band (barrel tops, dirt-patch edges) are removed.
+            // The last band row keeps its drawing: it is the cellar's bottom wall.
+            if(y==last)continue;
+            foreach(var layer in drawing)
+                for(int x=1;x<width-1;x++)
+                    if(layer.Tiles[x,y]!=null&&!Interactive(layer.Tiles[x,y]))edits.Add((layer,x,y,null));
         }
-        var newLights=Rewrite(lights,1);var newDay=Rewrite(day,2);var newNight=Rewrite(night,2);
         foreach(var e in edits)e.Layer.Tiles[e.X,e.Y]=e.Tile;
-        if(map.Properties.ContainsKey("Light"))map.Properties["Light"]=newLights;
-        if(map.Properties.ContainsKey("DayTiles"))map.Properties["DayTiles"]=newDay;
-        if(map.Properties.ContainsKey("NightTiles"))map.Properties["NightTiles"]=newNight;
-        map.Properties[Key]="1";return true;
+        map.Properties[Key]="2";return true;
     }
+    private static bool Interactive(Tile tile)=>new[]{"Action","TouchAction","Water","WaterSource","Seat"}.Any(k=>GreenhouseMap.Property(tile,k)!=null);
     private static List<string[]> Records(Map map,string key,int stride)
     {
         if(!map.Properties.TryGetValue(key,out var value))return new();

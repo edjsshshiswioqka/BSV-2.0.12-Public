@@ -9,9 +9,17 @@ using xTile.Tiles;
 
 namespace BetterStardewValley;
 
+/// <summary>The map is not the native greenhouse/cellar shape (usually another mod replaced it). Nothing was changed.</summary>
+internal sealed class MapConflictException : InvalidOperationException
+{
+    internal MapConflictException(string message) : base(message) { }
+}
+
 internal static class GreenhouseMap
 {
     internal const string LayoutKey = "Eddie.BetterStardewValley/GreenhouseLayout";
+    /// <summary>Test hook: false reproduces the 2.0.12 tile choice (same geometry, no visual pass).</summary>
+    internal static bool VisualPass = true;
 
     internal static string? Property(Tile? tile, string key)
     {
@@ -39,22 +47,37 @@ internal static class GreenhouseMap
                     soil.Add((x, y));
 
         // Refuse to double an unrelated custom greenhouse or another expansion mod.
-        if (soil.Count != 120) throw new InvalidOperationException($"Expected 120 tillable tiles, found {soil.Count}. Another greenhouse map may be installed.");
+        if (soil.Count != 120) throw new MapConflictException($"Expected 120 tillable tiles, found {soil.Count}. Another greenhouse map may be installed.");
         int left = soil.Min(p => p.X), top = soil.Min(p => p.Y);
         if (soil.Max(p => p.X) - left != 11 || soil.Max(p => p.Y) - top != 9)
-            throw new InvalidOperationException("Expected a single 12 by 10 soil rectangle.");
+            throw new MapConflictException("Expected a single 12 by 10 soil rectangle.");
         var layout = new GreenhouseLayout(left, top);
         if (requiredStamp != null && requiredStamp != layout.Stamp)
             throw new InvalidOperationException("Cannot restore the saved greenhouse onto a different base layout; nothing changed.");
         var layers = map.Layers.ToArray();
         if (layers.Any(l => l.LayerWidth != width || l.LayerHeight != height))
-            throw new InvalidOperationException("Greenhouse layers have different dimensions.");
+            throw new MapConflictException("Greenhouse layers have different dimensions.");
         foreach (var p in soil)
             if (buildings.Tiles[p.X, p.Y] is not null && Property(buildings.Tiles[p.X, p.Y], "Passable") is null)
-                throw new InvalidOperationException("A custom collision tile occupies the planting bed.");
+                throw new MapConflictException("A custom collision tile occupies the planting bed.");
 
         int fillColumn = PickStrip(map, layout, horizontal: true);
         int fillRow = PickStrip(map, layout, horizontal: false);
+        // Visual pass (geometry unchanged): the inserted band alternates two neighbouring source strips, so window
+        // mullions keep the native two-tile rhythm instead of one column repeated twelve times, and the soil is
+        // stretched with its own edges, so the old right/bottom soil edge no longer leaves a seam in the middle.
+        // The two strips just before the cut continue the rhythm on both sides of the inserted band.
+        (int A, int B) columns = (layout.CutX - 2, layout.CutX - 1), rows = (layout.CutY - 2, layout.CutY - 1);
+        int VisualX(int x) => x < layout.CutX || x >= layout.CutX + GreenhouseLayout.AddedWidth ? layout.SourceX(x, fillColumn) : (x - layout.CutX) % 2 == 0 ? columns.A : columns.B;
+        int VisualY(int y) => y < layout.CutY || y >= layout.CutY + GreenhouseLayout.AddedHeight ? layout.SourceY(y, fillRow) : (y - layout.CutY) % 2 == 0 ? rows.A : rows.B;
+        (int X, int Y)? SoilSource(int x, int y)
+        {
+            int rx = x - layout.SoilX, ry = y - layout.SoilY;
+            if (rx < 0 || ry < 0 || rx >= 12 + GreenhouseLayout.AddedWidth || ry >= 10 + GreenhouseLayout.AddedHeight) return null;
+            int sx = rx == 0 ? 0 : rx == 12 + GreenhouseLayout.AddedWidth - 1 ? 11 : 1 + (rx - 1) % 10;
+            int sy = ry == 0 ? 0 : ry == 10 + GreenhouseLayout.AddedHeight - 1 ? 9 : 1 + (ry - 1) % 8;
+            return (layout.SoilX + sx, layout.SoilY + sy);
+        }
         var properties = map.Properties.ToDictionary(p => p.Key, p => p.Value);
         foreach (string key in new[] { "Warp", "NPCWarp" })
             MoveProperty(properties, layout, key, 5, 0, 1);
@@ -82,7 +105,19 @@ internal static class GreenhouseMap
                 {
                     if (old.Id == "Paths" && layout.IsInserted(x, y)) continue;
                     int sx = layout.SourceX(x, fillColumn);
-                    layer.Tiles[x, y] = CloneTile(old.Tiles[sx, sy], layer);
+                    Tile? source = old.Tiles[sx, sy];
+                    // A visual source is used only when it behaves exactly like the original source tile
+                    // (same emptiness, collision, soil and interaction properties), so gameplay never changes.
+                    if (VisualPass && old.Id != "Paths")
+                    {
+                        var soilSource = old.Id == "Back" ? SoilSource(x, y) : null;
+                        foreach (var (vx, vy) in soilSource is { } s ? new[] { s, (VisualX(x), VisualY(y)) } : new[] { (VisualX(x), VisualY(y)) })
+                        {
+                            Tile? visual = old.Tiles[vx, vy];
+                            if (SameBehaviour(visual, source)) { source = visual; break; }
+                        }
+                    }
+                    layer.Tiles[x, y] = CloneTile(source, layer);
                 }
             }
             replacements.Add(layer);
@@ -104,6 +139,24 @@ internal static class GreenhouseMap
         foreach (var layer in replacements) map.AddLayer(layer);
         foreach (var p in properties) map.Properties[p.Key] = p.Value;
         return layout;
+    }
+
+    private static readonly string[] BehaviourKeys = { "Diggable", "Passable", "Water", "WaterSource", "NoFurniture", "Action", "TouchAction", "Seat", "Shadow", "Placeable", "Buildable", "NoSpawn", "TreeSpot", "Type" };
+    /// <summary>True when two tiles are interchangeable for gameplay: both empty, or both present with the same
+    /// behaviour-relevant properties (instance properties must match exactly). Only the picture may differ.</summary>
+    internal static bool SameBehaviour(Tile? a, Tile? b)
+    {
+        if (a is null || b is null) return a is null && b is null;
+        foreach (string key in BehaviourKeys)
+        {
+            string? va = Property(a, key), vb = Property(b, key);
+            if ((va is null) != (vb is null)) return false;
+            if (key == "Type" && va != vb) return false;
+        }
+        if (a.Properties.Count != b.Properties.Count) return false;
+        foreach (var p in a.Properties)
+            if (!b.Properties.TryGetValue(p.Key, out var v) || v.ToString() != p.Value.ToString()) return false;
+        return true;
     }
 
     private static Tile? CloneTile(Tile? source, Layer layer)
@@ -160,7 +213,7 @@ internal static class GreenhouseMap
             if (score < bestScore) { best = candidate; bestScore = score; }
         }
         if (best < 0 || bestScore >= 100000)
-            throw new InvalidOperationException("No safe wall/floor strip was available for greenhouse expansion.");
+            throw new MapConflictException("No safe wall/floor strip was available for greenhouse expansion.");
         return best;
     }
 }

@@ -61,6 +61,7 @@ internal sealed class ConfigMenu
         draft.EnableBsvSpeedGro=true;draft.HarvestBonus.EnableFertilizerYieldBonus=true;draft.AutoRestartProduction=true;
         draft.EnableAllProfessions=true;draft.EnableAnnualLegendaryFish=true;draft.EnableHorseSpeedBonus=true;
         draft.HorseSpeedBonus=.20;draft.EnableOrdersSystem=true;
+        draft.EnableGreenhouseExpansion=true;draft.EnableCellarExpansion=true;draft.EnableCellarAppearance=true;
         if(MachineMod.Instance?.Ready==true){fish.CycleGameMinutes=2880;fish.LevelTwoCycleGameMinutes=4320;fish.LevelThreeCycleGameMinutes=5760;fish.LevelDurationVersion=1;crab.CycleGameMinutes=2880;crab.LevelTwoCycleGameMinutes=5760;crab.LevelDurationVersion=1;}
     }
     private void Save()
@@ -82,6 +83,8 @@ internal sealed class ConfigMenu
                 next.EnableAnnualLegendaryFish=draft.EnableAnnualLegendaryFish;
                 next.EnableHorseSpeedBonus=draft.EnableHorseSpeedBonus;next.HorseSpeedBonus=draft.HorseSpeedBonus;
                 next.EnableOrdersSystem=draft.EnableOrdersSystem;
+                next.EnableGreenhouseExpansion=draft.EnableGreenhouseExpansion;next.EnableCellarExpansion=draft.EnableCellarExpansion;
+                next.EnableCellarAppearance=draft.EnableCellarAppearance;
             }
             if(!double.IsFinite(next.SeedChance)||next.SeedChance is <0 or >1
                 ||!double.IsFinite(next.HorseSpeedBonus)||next.HorseSpeedBonus is <0 or >1
@@ -97,7 +100,12 @@ internal sealed class ConfigMenu
             if(Context.IsWorldReady)
             {
                 next.EnableAnnualLegendaryFish=live.EnableAnnualLegendaryFish;
+                // Maps are built while a save loads: map switches apply from the next save load, never mid-session.
+                PendingMaps=(next.EnableGreenhouseExpansion,next.EnableCellarExpansion,next.EnableCellarAppearance);
+                next.EnableGreenhouseExpansion=live.EnableGreenhouseExpansion;next.EnableCellarExpansion=live.EnableCellarExpansion;
+                next.EnableCellarAppearance=live.EnableCellarAppearance;
             }
+            else PendingMaps=null;
             if(machines)
             {
                 // Existing batches have captured DueAt/plan. Only the next Begin reads these.
@@ -109,8 +117,16 @@ internal sealed class ConfigMenu
         }
         catch(Exception ex){monitor.Log(T("save-error")+"\n"+ex,LogLevel.Error);}
     }
+    private static (bool Greenhouse,bool Cellar,bool Appearance)? PendingMaps;
     private void Install()
     {
+        helper.Events.GameLoop.ReturnedToTitle+=(_,_)=>
+        {
+            if(PendingMaps is not {} maps)return;
+            live.EnableGreenhouseExpansion=maps.Greenhouse;live.EnableCellarExpansion=maps.Cellar;live.EnableCellarAppearance=maps.Appearance;
+            PendingMaps=null;
+            helper.GameContent.InvalidateCache("Maps/Greenhouse");helper.GameContent.InvalidateCache("Maps/Cellar");
+        };
         if(!helper.ModRegistry.IsLoaded("spacechase0.GenericModConfigMenu"))return;
         IGenericModConfigMenuApi? api=null;
         try
@@ -140,7 +156,7 @@ internal sealed class ConfigMenu
             api.AddParagraph(manifest,()=>T("intro2"));
             api.AddParagraph(manifest,()=>!Context.IsWorldReady?T("title-preset"):Context.IsMainPlayer?T("host"):
                 T("guest")+"\n"+HostSummary());
-            foreach(string p in new[]{"farming","machines","afk","skills","other"})api.AddPageLink(manifest,p,()=>T("page."+p));
+            foreach(string p in new[]{"farming","machines","afk","skills","maps","other"})api.AddPageLink(manifest,p,()=>T("page."+p));
             Page("farming");
             Flag("seed-enabled",()=>draft.EnableHarvestSeeds,v=>draft.EnableHarvestSeeds=v);
             Step("seed-chance",()=>draft.SeedChance,v=>draft.SeedChance=v,0,100,5);
@@ -167,6 +183,11 @@ internal sealed class ConfigMenu
             Page("skills");
             Flag("professions",()=>draft.EnableAllProfessions,v=>draft.EnableAllProfessions=v);
             Flag("annual-fish",()=>draft.EnableAnnualLegendaryFish,v=>draft.EnableAnnualLegendaryFish=v);
+            Page("maps");
+            api.AddParagraph(manifest,()=>T("maps-note"));
+            Flag("greenhouse-expansion",()=>draft.EnableGreenhouseExpansion,v=>draft.EnableGreenhouseExpansion=v);
+            Flag("cellar-expansion",()=>draft.EnableCellarExpansion,v=>draft.EnableCellarExpansion=v);
+            Flag("cellar-appearance",()=>draft.EnableCellarAppearance,v=>draft.EnableCellarAppearance=v);
             Page("other");
             Flag("horse-enabled",()=>draft.EnableHorseSpeedBonus,v=>draft.EnableHorseSpeedBonus=v);
             Step("horse-speed",()=>draft.HorseSpeedBonus,v=>draft.HorseSpeedBonus=v,0,50,5);

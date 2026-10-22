@@ -49,22 +49,26 @@ class Program {
   Check(!CellarMap.FloorTiles(blocked).Contains((10,10)),"native Back Passable marker blocks the tile");
   var shadow=Fixture();shadow.GetLayer("Buildings").Tiles[10,10]=new StaticTile(shadow.GetLayer("Buildings"),shadow.TileSheets[0],BlendMode.Alpha,3);
   Check(CellarMap.FloorTiles(shadow).Contains((10,10)),"native Buildings Shadow marker remains passable");
-  var polished=Fixture();
+  // 2.0.13: the polish varies the floor of the added band; maps with light sources inside the band are left untouched.
+  static void NoLights(Map map){foreach(var k in new[]{"Light","DayTiles","NightTiles"})map.Properties.Remove(k);}
+  var lit=Fixture();CellarMap.Expand(lit);var litBack=lit.GetLayer("Back").Tiles[5,20];
+  Check(!CellarAppearance.Apply(lit)&&ReferenceEquals(lit.GetLayer("Back").Tiles[5,20],litBack),"band with wall lamps is left untouched");
+  var polished=Fixture();NoLights(polished);
   for(int y=7;y<16;y++)for(int x=2;x<=18;x++)polished.GetLayer("Back").Tiles[x,y]=new StaticTile(polished.GetLayer("Back"),polished.TileSheets[0],BlendMode.Alpha,5+y%3);
   CellarMap.Expand(polished);var bounds=CellarMap.FloorTiles(polished);var wall=polished.GetLayer("Buildings");
   var collisions=Enumerable.Range(0,29).SelectMany(y=>Enumerable.Range(0,20).Select(x=>wall.Tiles[x,y])).ToArray();
   var nativeBack=Enumerable.Range(0,16).SelectMany(y=>Enumerable.Range(0,20).Select(x=>polished.GetLayer("Back").Tiles[x,y])).ToArray();
-  object Snapshot(Map map)=>new{width=20,height=29,cut=16,added=11,back=Enumerable.Range(0,29).Select(y=>Enumerable.Range(0,20).Select(x=>map.GetLayer("Back").Tiles[x,y]?.TileIndex??-1).ToArray()).ToArray(),blocked=Enumerable.Range(0,29).Select(y=>Enumerable.Range(0,20).Select(x=>!CellarMap.FloorTiles(map).Contains((x,y))).ToArray()).ToArray(),lights=map.Properties["Light"].ToString()};
+  object Snapshot(Map map)=>new{width=20,height=29,cut=16,added=11,back=Enumerable.Range(0,29).Select(y=>Enumerable.Range(0,20).Select(x=>map.GetLayer("Back").Tiles[x,y]?.TileIndex??-1).ToArray()).ToArray(),blocked=Enumerable.Range(0,29).Select(y=>Enumerable.Range(0,20).Select(x=>!CellarMap.FloorTiles(map).Contains((x,y))).ToArray()).ToArray(),lights=map.Properties.TryGetValue("Light",out var l)?l.ToString():""};
   var artBefore=Snapshot(polished);
   Check(CellarAppearance.Apply(polished),"visual polish recognizes only BSV expanded native-shaped fixture");
   Check(CellarMap.FloorTiles(polished).SetEquals(bounds),"visual polish changes no cask placement/collision tile");
   Check(Enumerable.Range(0,29).SelectMany(y=>Enumerable.Range(0,20).Select(x=>wall.Tiles[x,y])).SequenceEqual(collisions),"Buildings layer and collision references untouched");
   Check(Enumerable.Range(0,16).SelectMany(y=>Enumerable.Range(0,20).Select(x=>polished.GetLayer("Back").Tiles[x,y])).SequenceEqual(nativeBack),"entrance, stairs and all original floor art untouched");
   Check(polished.Properties["Warp"].ToString()==warp&&polished.Properties["AmbientLight"].ToString()=="100 100 100","exits and ambient balance unchanged");
-  Check(polished.Properties["Light"].ToString()=="1 9 4 1 18 4 1 24 4","generated sconce rows spaced six tiles and native light source retained");
+  Check(!polished.Properties.ContainsKey("Light"),"no light sources invented");
   Check(CellarAppearance.Apply(polished)&&CellarMap.FloorTiles(polished).SetEquals(bounds),"appearance reload idempotent");
-  var foreign=Fixture();CellarMap.Expand(foreign);foreign.GetLayer("Front").Tiles[5,20]=new StaticTile(foreign.GetLayer("Front"),foreign.TileSheets[0],BlendMode.Alpha,44);
-  string foreignLights=foreign.Properties["Light"].ToString();Check(!CellarAppearance.Apply(foreign)&&foreign.GetLayer("Front").Tiles[5,20].TileIndex==44&&foreign.Properties["Light"].ToString()==foreignLights,"foreign band edits cause conservative opt-out, no overwritten decor/lights");
+  var foreign=Fixture();NoLights(foreign);CellarMap.Expand(foreign);foreign.GetLayer("Front").Tiles[5,20]=new StaticTile(foreign.GetLayer("Front"),foreign.TileSheets[0],BlendMode.Alpha,44);
+  Check(!CellarAppearance.Apply(foreign)&&foreign.GetLayer("Front").Tiles[5,20].TileIndex==44,"foreign band edits cause conservative opt-out, no overwritten decor");
   var foreignLight=Fixture();CellarMap.Expand(foreignLight);foreignLight.Properties["Light"]+=" 7 21 4";
   Check(!CellarAppearance.Apply(foreignLight)&&!foreignLight.Properties.ContainsKey(CellarAppearance.Key),"foreign light record is not deleted or relocated");
   string? evidence=Environment.GetEnvironmentVariable("BSV_CELLAR_EVIDENCE");

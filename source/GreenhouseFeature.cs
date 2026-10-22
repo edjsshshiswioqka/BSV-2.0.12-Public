@@ -31,7 +31,7 @@ internal sealed class GreenhouseFeature
         helper.Events.GameLoop.DayStarted += (_, _) => MigrateIfNeeded();
         helper.Events.GameLoop.ReturnedToTitle += (_, _) =>
         {
-            loggedMigrationError = false; loggedRetained = false; retainedStamp = null;
+            loggedMigrationError = false; loggedRetained = false; loggedMapError = false; retainedStamp = null;
             helper.GameContent.InvalidateCache("Maps/Greenhouse");
         };
         helper.Events.Player.Warped += (_, e) => { if (e.IsLocalPlayer && e.NewLocation.NameOrUniqueName == "Greenhouse") MigrateIfNeeded(); };
@@ -46,6 +46,16 @@ internal sealed class GreenhouseFeature
             {
                 GreenhouseMap.Expand(asset.AsMap().Data, enabled() ? null : retainedStamp);
                 monitor.Log("BSV greenhouse: 24 x 20 = 480 planting tiles.", LogLevel.Trace);
+            }
+            catch (MapConflictException ex) when (enabled())
+            {
+                // Another mod's greenhouse: BSV leaves it exactly as that mod made it. This is expected with
+                // map replacement mods, so it is a one-line warning, not an error (players can switch it off).
+                if (!loggedMapError)
+                {
+                    loggedMapError = true;
+                    monitor.Log(BsvI18n.Get(helper,"diag.greenhouse-foreign")+" ("+ex.Message+")", LogLevel.Warn);
+                }
             }
             catch (Exception ex)
             {

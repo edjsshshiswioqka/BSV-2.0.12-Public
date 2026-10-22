@@ -9,6 +9,8 @@ namespace BetterStardewValley;
 internal static class CellarMap
 {
     internal const string LayoutKey = WineRules.Prefix + "/CellarLayout";
+    /// <summary>Test hook: false reproduces the 2.0.12 map (no bottom-edge relocation).</summary>
+    internal static bool VisualPass = true;
     private static readonly string[] Interactive = { "Action", "TouchAction", "Water", "WaterSource", "Seat" };
 
     internal static string Expand(Map map, string? requiredStamp = null)
@@ -24,10 +26,10 @@ internal static class CellarMap
         int width = back.LayerWidth, height = back.LayerHeight;
         // Refuse unrelated cellar replacements. Never reshape an unknown mod's interior.
         if (width != 20 || height != 18 || map.Layers.Any(l => l.LayerWidth != width || l.LayerHeight != height))
-            throw new InvalidOperationException($"Expected the native 20x18 cellar, found {width}x{height}. Other cellar map replacements must be disabled.");
+            throw new MapConflictException($"Expected the native 20x18 cellar, found {width}x{height}. Another mod may replace the cellar map.");
         var floors = FloorTiles(map);
         if (floors.Count < 170 || floors.Count > 220)
-            throw new InvalidOperationException($"Unrecognized cellar floor/collision layout ({floors.Count} tiles).");
+            throw new MapConflictException($"Unrecognized cellar floor/collision layout ({floors.Count} tiles).");
         var rows = floors.GroupBy(p => p.Y).ToDictionary(g => g.Key, g => g.Count());
         int rowWidth = rows.Values.Max();
         // Extend below every original usable tile. Existing objects, furniture, players, and
@@ -36,7 +38,7 @@ internal static class CellarMap
         var candidates = rows.Where(p => p.Value == rowWidth && p.Key >= 7 && p.Key < cut)
             .Select(p => p.Key).OrderBy(y => y).Where(y => SafeRow(map, y)).ToArray();
         if (candidates.Length < 2 || cut >= height || rowWidth < 14)
-            throw new InvalidOperationException("No safe cellar wall/floor bands were found.");
+            throw new MapConflictException("No safe cellar wall/floor bands were found.");
         int addedRows = (int)Math.Round(floors.Count * (WineRules.CellarCapacityMultiplier - 1) / rowWidth);
         if (addedRows < 1) throw new InvalidOperationException("Invalid cellar expansion.");
         int SourceY(int y) => y < cut ? y : y < cut + addedRows ? candidates[(y - cut) % candidates.Length] : y - addedRows;
@@ -66,6 +68,7 @@ internal static class CellarMap
                 }
             replacements.Add(layer);
         }
+        if (VisualPass) MoveBottomEdge(map, replacements, cut, addedRows);
         var expandedBack = replacements.Single(l => l.Id == "Back");
         var expandedBuildings = replacements.Single(l => l.Id == "Buildings");
         foreach (var p in floors)
@@ -83,6 +86,32 @@ internal static class CellarMap
         foreach (var layer in replacements) map.AddLayer(layer);
         foreach (var p in properties) map.Properties[p.Key] = p.Value;
         return stamp;
+    }
+
+    /// <summary>
+    /// The native cellar draws its bottom wall over the last floor row (Front layer, plus corner pieces). The rows
+    /// are inserted below that row, so without this the old wall line would cross the middle of the room and the
+    /// new bottom edge would have no wall. The drawing is swapped with the last inserted row. Only tiles that behave
+    /// identically are swapped (Front/AlwaysFront are drawing-only; Buildings only with the same collision), so
+    /// floor, collision, placed objects and the layout stamp are unchanged.
+    /// </summary>
+    private static void MoveBottomEdge(Map original, List<Layer> layers, int cut, int addedRows)
+    {
+        var front = original.GetLayer("Front");
+        int edge = cut - 1, last = cut + addedRows - 1, width = front?.LayerWidth ?? 0;
+        // Recognize the native edge: a continuous Front row over the last floor row, nothing walkable below it.
+        if (front == null || edge < 1 || Enumerable.Range(0, width).Any(x => front.Tiles[x, edge] == null)) return;
+        foreach (var layer in layers)
+        {
+            if (layer.Id is not ("Front" or "AlwaysFront" or "Buildings")) continue;
+            for (int x = 0; x < layer.LayerWidth; x++)
+            {
+                Tile? a = layer.Tiles[x, edge], b = layer.Tiles[x, last];
+                if (Interactive.Any(k => GreenhouseMap.Property(a, k) != null || GreenhouseMap.Property(b, k) != null)) continue;
+                if (layer.Id == "Buildings" && !GreenhouseMap.SameBehaviour(a, b)) continue;
+                layer.Tiles[x, edge] = b; layer.Tiles[x, last] = a;
+            }
+        }
     }
 
     internal static HashSet<(int X, int Y)> FloorTiles(Map map)
