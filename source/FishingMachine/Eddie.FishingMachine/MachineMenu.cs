@@ -237,7 +237,6 @@ internal sealed partial class ProductionService
         b.DrawString(Game1.smallFont,badge,new Vector2(g.Badge.X+14,g.Badge.Y+(g.Badge.Height-badgeSize.Y)/2+2),ButtonInk);
         if(!crab&&g.Badge.Contains(mx,my))tip=FishingBalanceTip(s);
         int titleRight=g.Badge.X-12;
-        if(!crab)
         {
             // On / off switch: green while on, red while off.
             bool off=PoweredOff(c);
@@ -249,7 +248,7 @@ internal sealed partial class ProductionService
             var dot=new Rectangle(g.Power.X+10,g.Power.Center.Y-5,10,10);
             b.Draw(Game1.staminaRect,dot,off?new Color(90,20,20):new Color(214,255,170));
             b.DrawString(Game1.smallFont,label,new Vector2(dot.Right+6,g.Power.Y+(g.Power.Height-labelSize.Y)/2+2),Color.White);
-            if(hover)tip=Mod.T(off?"panel.power-off-help":"panel.power-on-help");
+            if(hover)tip=Mod.T((crab?"crab.":"panel.")+(off?"power-off-help":"power-on-help"));
             titleRight=g.Power.X-12;
         }
         if(!g.Labels){g.Take=new Rectangle(titleRight-g.Take.Width,colorButton.Y,g.Take.Width,colorButton.Height);titleRight=g.Take.X-12;}
@@ -268,7 +267,7 @@ internal sealed partial class ProductionService
             if(!paused)timeLeft=Mod.T("panel.time-left",new{hours=remaining/60,minutes=remaining%60});
         }
         else if(s.Phase=="ready"){fraction=1;phase=s.Pending.Count>0?Mod.T("status.full"):Mod.T("panel.ready");}
-        else phase=Mod.T(!crab&&PoweredOff(c)?"panel.off":"panel.idle");
+        else phase=Mod.T(PoweredOff(c)?"panel.off":"panel.idle");
         float timeWidth=timeLeft.Length>0?Game1.smallFont.MeasureString(timeLeft).X:0;
         PanelText(b,phase,new Vector2(g.Status.X,g.Status.Y),paused?Bad:Ink,g.Status.Width-timeWidth-16,1f);
         if(timeLeft.Length>0)b.DrawString(Game1.smallFont,timeLeft,new Vector2(g.Status.Right-timeWidth,g.Status.Y),Ink);

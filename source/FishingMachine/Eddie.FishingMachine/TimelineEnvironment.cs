@@ -133,6 +133,14 @@ internal static class TimelineEnvironment
         if(profile.MachineId.Length>0)foreach(string token in journal.Cycles.Where(p=>p.Key!=s.CycleToken&&p.Value.LastOrDefault()?.Profile.MachineId==profile.MachineId).Select(p=>p.Key).ToArray())journal.Cycles.Remove(token);
         journal.Record(s.CycleToken,ProductionService.Now,profile,false);Save(journal);
     }
+    /// <summary>Drop the saved observations of a cycle (used when the calendar moved backwards).</summary>
+    internal static void Forget(params string?[] tokens)
+    {
+        if(!Game1.IsMasterGame)return;
+        var journal=JsonSerializer.Deserialize<MachineEnvironmentJournal>(JsonSerializer.Serialize(Read()))!;
+        bool changed=false;foreach(var t in tokens)if(!string.IsNullOrEmpty(t))changed|=journal.Cycles.Remove(t);
+        if(changed)Save(journal);
+    }
     internal static void Ensure(Chest c,ProductionState s)
     {if(s.Timeline!=null&&!Read().Cycles.ContainsKey(s.CycleToken))Start(c,s);}
     private static long LastClock=long.MinValue;

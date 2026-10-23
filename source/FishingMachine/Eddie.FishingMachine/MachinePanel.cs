@@ -280,7 +280,7 @@ internal sealed partial class ProductionService
             try
             {
                 int x=Game1.getMouseX(),y=Game1.getMouseY();
-                if(!crab&&ReferenceEquals(FullMenu,menu)&&FullGeometry is {} power&&power.Power.Contains(x,y))
+                if(ReferenceEquals(FullMenu,menu)&&FullGeometry is {} power&&power.Power.Contains(x,y))
                 {try{TogglePower(c);}catch{Mod.Message("status.error");}return true;}
                 take=takeBox.Contains(x,y);
                 upgrade=buttonBox.Width>0&&buttonBox.Contains(x,y);

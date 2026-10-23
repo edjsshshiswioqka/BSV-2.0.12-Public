@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Eddie.FishingMachine.Core;
 using StardewValley.Tools;
 using Microsoft.Xna.Framework;
@@ -102,10 +103,11 @@ internal sealed partial class ProductionService
             Mod.Monitor.Log($"Machine stage history cannot be verified at {c.Location?.NameOrUniqueName}:{c.TileLocation}; level and lifetime count {state.CompletedCycles} retained. Production remains available; 20 newly verified Lv2 completions establish eligibility without crediting unknown lifetime history.",LogLevel.Warn);
         if (c.Items.Any(i => i != null && i.Stack <= 0)) return true;
         if (MachineStateMigration.Needed(state)) return true;
+        if (MachineRewind.Needed(state, Now)) return true;
         if(state.Phase!="working" && state.Continuity is {Stopped:false} history && history.NextAt<=Now)return true;
         if(ModEntry.IsCrab(c))return CrabNeedsWork(c,state);
 
-        if(state.Phase=="working"&&state.Timeline!=null&&PoweredOff(c))return true;
+        if(state.Phase=="working"&&state.Timeline!=null&&PoweredOff(c)&&StopWouldCut(state))return true;
         if(state.Phase=="working"&&state.Timeline!=null)return state.Timeline.Cursor<state.Timeline.Plan.Count?state.Timeline.Plan[state.Timeline.Cursor].At<Now:Now>=state.DueAt
             || state.Pending.Count>0 && DeliverableNow(state).Count>0 && c.Items.Count(i=>i!=null)<c.GetActualCapacity();
         if (PreparingRecovery(c)) return state.Phase == "working" ? Now >= state.DueAt : state.Pending.Count > 0;
@@ -173,8 +175,9 @@ internal sealed partial class ProductionService
     private void Process(Chest c, bool deferDelivery = false,bool manualStart=false)
     {
         MigrateCycle(c);
+        HandleRewind(c);
         // Machines from before the switch: a running machine is on, an idle one waits for ON.
-        if(!ModEntry.IsCrab(c)&&!c.modData.ContainsKey(PowerKey))c.modData[PowerKey]=Read(c).Phase=="working"?"on":"off";
+        if(!c.modData.ContainsKey(PowerKey))c.modData[PowerKey]=Read(c).Phase=="working"?"on":"off";
         if(!Scheduling)ObserveContinuity(c);
         RemoveEmptyStacks(c);
         if(ModEntry.IsCrab(c)){ProcessCrab(c, deferDelivery);return;}
@@ -461,6 +464,7 @@ internal sealed partial class ProductionService
     internal (long Have, int Need) BaitForNextCycle(Chest c)
     {
         var s = Read(c);
+        if (ModEntry.IsCrab(c)) return (StoredBait(c), RequiredBait(c));
         int level = s.Phase != "working" && UpgradePlan(c, s) != null ? s.Level + 1 : s.Level;
         int need = MachineUpgrade.RequiredBait(new ProductionState { Level = level }, Mod.Config.ForNewCycle());
         long have = c.Items.Select((i, n) => (long)(Bait(i, n, level)?.Count ?? 0)).Sum();
@@ -474,46 +478,51 @@ internal sealed partial class ProductionService
         if (Read(c).Phase != "working" && have < need) { Game1.showRedMessage(Mod.T("panel.power-need-bait", new { count = have, needed = need })); return; }
         SetPower(c, true); Game1.playSound("powerup"); Game1.showGlobalMessage(Mod.T("panel.power-now-on"));
     }
-    /// <summary>Switched off while fishing: the casts already made stay, the cycle ends now and every
-    /// bait that has not been cast yet goes back into the machine.</summary>
+    private static bool StopWouldCut(ProductionState s)=>MachineStop.WouldCut(s);
+    /// <summary>Switched off while working: what was already done stays, unused bait goes back into the machine.</summary>
     private void StopNow(Chest c)
     {
-        var s = Read(c).Snapshot(); var t = s.Timeline;
-        if (s.Phase != "working" || t == null || s.Kind != MachineKinds.Fishing) return;
-        int done = t.Cursor;
-        var refund = t.Plan.Skip(done).GroupBy(o => o.Bait).Select(g => (Bait: t.FishingBait[g.Key], Count: g.Count())).ToList();
-        if (done == 0 || Now <= s.StartedAt)
+        var s = Read(c);
+        var cut = MachineStop.Cut(s, Now);
+        if (cut == null) return;
+        var t = s.Timeline!; bool crab = s.Kind == MachineKinds.Crab;
+        var fishBait = t.FishingBait.ToList(); var crabBait = t.CrabBait.ToList();
+        Commit(c, null, cut.Value.State);
+        foreach (var (index, count) in cut.Value.Refund)
         {
-            if (s.Pending.Count > 0) return; // nothing cast yet, so nothing can be pending; never lose output
-            Commit(c, null, s.IdleCopy());
-        }
-        else
-        {
-            var kept = t.Plan.Take(done).ToList();
-            var ordinal = kept.Select((o, i) => (o.Ordinal, i)).ToDictionary(p => p.Ordinal, p => p.i);
-            var baitIndex = kept.Select(o => o.Bait).Distinct().OrderBy(b => b).Select((b, i) => (b, i)).ToDictionary(p => p.b, p => p.i);
-            t.FishingBait = baitIndex.OrderBy(p => p.Value).Select(p => t.FishingBait[p.Key] with { Count = kept.Count(o => o.Bait == p.Key) }).ToList();
-            t.Plan = kept.Select(o => o with { Ordinal = ordinal[o.Ordinal], Bait = baitIndex[o.Bait] }).ToList();
-            t.LegendaryOpportunities = t.LegendaryOpportunities.Where(o => ordinal.ContainsKey(o.Ordinal)).Select(o => o with { Ordinal = ordinal[o.Ordinal] }).ToList();
-            t.Prepared = null; t.PausedReason = null;
-            s.BaitUsed = done; s.DueAt = Math.Max(s.StartedAt + 1, Math.Max(Now, kept[^1].At + 1));
-            if (!MachineTimeline.Valid(s)) throw new InvalidOperationException("Switch-off would break the saved cycle; it keeps running.");
-            Commit(c, null, s);
-        }
-        foreach (var (bait, count) in refund)
-        {
-            Item item = bait.Kind switch
-            {
-                BaitKind.Deluxe => ItemRegistry.Create("(O)DeluxeBait", count),
-                BaitKind.Challenge => ItemRegistry.Create("(O)ChallengeBait", count),
-                BaitKind.GiantLobster => ItemRegistry.Create(GiantLobsterRules.Bait, count),
-                BaitKind.Targeted when bait.Target != null => FlavoredBait(bait.Target, count),
-                _ => ItemRegistry.Create("(O)685", count)
-            };
+            Item item = crab ? CrabRefund(crabBait[index], count) : FishRefund(fishBait[index], count);
             var left = c.addItem(item);
             if (left != null) Game1.createItemDebris(left, c.TileLocation * 64f + new Vector2(32f, 32f), -1, c.Location);
         }
-        Mod.Monitor.Log($"[BSV fishing machine] switched off at {c.Location?.NameOrUniqueName}:{c.TileLocation}; {done} casts kept, {refund.Sum(r => r.Count)} bait returned.", LogLevel.Info);
+        Mod.Monitor.Log($"[BSV {(crab ? "crab" : "fishing")} machine] switched off at {c.Location?.NameOrUniqueName}:{c.TileLocation}; {cut.Value.State.Timeline?.Plan.Count ?? 0} {(crab ? "trap checks" : "casts")} kept, {cut.Value.Refund.Sum(r => r.Count)} bait returned.", LogLevel.Info);
+    }
+    private static Item FishRefund(BaitSpend bait, int count) => bait.Kind switch
+    {
+        BaitKind.Deluxe => ItemRegistry.Create("(O)DeluxeBait", count),
+        BaitKind.Challenge => ItemRegistry.Create("(O)ChallengeBait", count),
+        BaitKind.GiantLobster => ItemRegistry.Create(GiantLobsterRules.Bait, count),
+        BaitKind.Targeted when bait.Target != null => FlavoredBait(bait.Target, count),
+        _ => ItemRegistry.Create("(O)685", count)
+    };
+    /// <summary>The exact bait that went into the traps: same item, quality, flavour and data.</summary>
+    private static Item CrabRefund(CrabBait bait, int count)
+    {
+        string? parent = null; Dictionary<string, string>? data = null;
+        try
+        {
+            using var doc = JsonDocument.Parse(string.IsNullOrEmpty(bait.Metadata) ? "{}" : bait.Metadata);
+            if (doc.RootElement.TryGetProperty("Parent", out var p) && p.ValueKind == JsonValueKind.String) parent = p.GetString();
+            if (doc.RootElement.TryGetProperty("Data", out var d) && d.ValueKind == JsonValueKind.Object)
+                data = d.EnumerateObject().ToDictionary(x => x.Name, x => x.Value.GetString() ?? "");
+        }
+        catch (JsonException) { }
+        var item = !string.IsNullOrEmpty(parent) && ItemRegistry.Create(parent) is StardewValley.Object fish && bait.Id == "(O)SpecificBait"
+            ? (StardewValley.Object)FlavoredBait(fish.QualifiedItemId, count)
+            : (StardewValley.Object)ItemRegistry.Create(bait.Id, count, bait.Quality);
+        item.Quality = bait.Quality;
+        if (parent != null) item.preservedParentSheetIndex.Value = parent;
+        if (data != null) foreach (var (k, v) in data) item.modData[k] = v;
+        return item;
     }
     private static Item FlavoredBait(string fishId, int count)
     {

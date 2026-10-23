@@ -140,5 +140,51 @@ foreach (int lv in levels) Near(MachineLevelRules.QualityShares(lv).Sum(), 1, 1e
     }
 }
 
+// ---- 7. Date moved backwards (cheat menu): a running Lv3 cycle and an idle machine carry on from today ----
+{
+    long then = CycleClock.ToAbsoluteMinutes(5263, 600) + 130, now = CycleClock.ToAbsoluteMinutes(5177, 600) + 60;
+    var lv3 = MachineTimeline.StartFish(new ProductionState { Level = 3, CompletedCycles = 36 }, cfg, new[] { new BaitSpend(0, 300, BaitKind.Normal, null), new BaitSpend(4, 100, BaitKind.Deluxe, null) }, 1, then, 21);
+    lv3.Continuity = new MachineContinuity { ObservedAt = then, NextAt = lv3.DueAt, Stopped = false, Fuel = new() { new("bait", then - 30, 50) }, Policies = new() { new MachinePolicy { At = then - 30, Auto = true } } };
+    Check(MachineRewind.Needed(lv3, now), "a cycle that started 86 days in the future is noticed");
+    long d = MachineRewind.Delta(lv3, now); var moved = lv3.Snapshot(); MachineRewind.Shift(moved, d);
+    Check(d % 1440 == 0 && moved.StartedAt <= now && moved.StartedAt > now - 1440 && !MachineRewind.Needed(moved, now), "times move back by whole days to today");
+    Check(MachineTimeline.Valid(moved) && moved.Continuity!.Valid(), "the moved cycle is still a valid paid cycle");
+    Check(moved.Timeline!.Plan.Select(o => MachineTimeline.Time(o.At)).SequenceEqual(lv3.Timeline!.Plan.Select(o => MachineTimeline.Time(o.At))), "every cast keeps its time of day");
+    Check(moved.Timeline.Plan.Count == 400 && moved.DueAt - moved.StartedAt == 5760, "still 400 bait over 4 days");
+    Check(moved.Timeline.Plan.Any(o => o.At <= now + 1440), "casts happen again from today, not in 86 days");
+    var idle = new ProductionState { Continuity = new MachineContinuity { ObservedAt = then, NextAt = then, Fuel = new() { new("bait", then, 200) }, Policies = new() { new MachinePolicy { At = then } } } };
+    MachineRewind.Shift(idle, MachineRewind.Delta(idle, now));
+    Check(idle.Continuity!.Valid() && idle.Continuity.Fuel.All(f => f.At <= now) && idle.Continuity.NextAt <= now, "an idle machine's bait counts again today");
+    Check(!MachineRewind.Needed(moved, moved.StartedAt + 10) && MachineRewind.Delta(new ProductionState(), now) == 0, "normal play never triggers it");
+}
+
+// ---- 8. Switching off mid-cycle: fishing and crab (with and without Luremaster) ----
+{
+    void Cast(ProductionState st, int n) { st.Timeline!.Cursor = n; st.FishCount = n; st.Pending = new() { new("(O)129", n) }; }
+    var fish = MachineTimeline.StartFish(new(), cfg, new[] { new BaitSpend(0, 150, BaitKind.Normal, null), new BaitSpend(2, 50, BaitKind.Deluxe, null) }, 1, start, 31);
+    Cast(fish, 120);
+    var cut = MachineStop.Cut(fish, fish.Timeline!.Plan[119].At + 1);
+    Check(cut != null && MachineTimeline.Valid(cut.Value.State) && cut.Value.Refund.Sum(r => r.Count) == 80 && cut.Value.State.BaitUsed == 120, "fishing: 120 cast, 80 bait back");
+    Check(cut != null && !MachineStop.WouldCut(cut.Value.State), "fishing: nothing more to cut after switching off");
+    var crabCfg = new CrabBalanceConfig();
+    foreach (bool lure in new[] { false, true })
+    {
+        int need = crabCfg.Required(1, lure);
+        var crab = MachineTimeline.StartCrab(new ProductionState { Kind = MachineKinds.Crab }, crabCfg, new[] { new CrabBait(0, "(O)685", need - 20, false), new CrabBait(3, "(O)DeluxeBait", 20, true) }, 1, lure, false, start, 41);
+        int rolls = crab.Timeline!.Plan.Count; int done = rolls / 2 + 1;
+        crab.Timeline.Cursor = done; crab.FishCount = done; crab.Pending = new() { new("(O)717", done) };
+        var c2 = MachineStop.Cut(crab, crab.Timeline.Plan[done - 1].At + 1);
+        int per = lure ? 2 : 1;
+        Check(c2 != null && MachineTimeline.Valid(c2.Value.State), $"crab{(lure ? " (Luremaster)" : "")}: cut cycle stays valid");
+        if (c2 == null) continue;
+        int kept = c2.Value.State.Timeline!.Plan.Count;
+        Check(kept >= done && kept - done < 3 && c2.Value.State.BaitUsed * per == kept, $"crab{(lure ? " (Luremaster)" : "")}: keeps the {done} checks done{(lure ? " plus the second check of half-used bait" : "")}");
+        Check(c2.Value.State.BaitUsed + c2.Value.Refund.Sum(r => r.Count) == need, $"crab{(lure ? " (Luremaster)" : "")}: used + returned bait = {need}, nothing lost or duplicated");
+    }
+    var fresh = MachineTimeline.StartFish(new(), cfg, new[] { new BaitSpend(0, 200, BaitKind.Normal, null) }, 1, start, 51);
+    var none = MachineStop.Cut(fresh, start);
+    Check(none != null && none.Value.State.Phase == "idle" && none.Value.Refund.Sum(r => r.Count) == 200, "switched off before the first cast: all 200 bait back, machine idle");
+}
+
 Console.WriteLine($"{{\"suite\":\"fishing-machine\",\"passed\":{passed},\"failed\":{failed},\"status\":\"{(failed == 0 ? "PASS" : "FAIL")}\"}}");
 return failed == 0 ? 0 : 1;

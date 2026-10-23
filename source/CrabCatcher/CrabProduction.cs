@@ -40,14 +40,17 @@ internal sealed partial class ProductionService
         if(ModEntry.IsCrab(c))return c.Items.Where(CrabBaitItem).Sum(i=>(long)i.Stack);
         int level=Level(c);return c.Items.Select((i,n)=>(long)(Bait(i,n,level)?.Count??0)).Sum();
     }
-    private bool CrabNeedsWork(Chest c,ProductionState s)=>s.Phase=="working"?s.Timeline!=null&&s.Timeline.Cursor<s.Timeline.Plan.Count?s.Timeline.Plan[s.Timeline.Cursor].At<Now:Now>=s.DueAt
+    private bool CrabNeedsWork(Chest c,ProductionState s)=>s.Phase=="working"?PoweredOff(c)&&StopWouldCut(s)||(s.Timeline!=null&&s.Timeline.Cursor<s.Timeline.Plan.Count?s.Timeline.Plan[s.Timeline.Cursor].At<Now:Now>=s.DueAt)
         :s.Phase=="ready"
-        || !PreparingRecovery(c) && !c.modData.ContainsKey(CrabCommandKey) && StoredBait(c)>=RequiredBait(c);
+        || !PoweredOff(c) && !PreparingRecovery(c) && !c.modData.ContainsKey(CrabCommandKey) && StoredBait(c)>=RequiredBait(c);
     private void ProcessCrab(Chest c, bool deferDelivery = false)
     {
         MigrateCycle(c);
+        HandleRewind(c);
         RemoveEmptyStacks(c);
         AdvanceTimeline(c);
+        // Switched off while the traps are out: unused bait comes back, the checks already made stay.
+        if(PoweredOff(c))StopNow(c);
         var s=Read(c).Snapshot();
         if(s.Phase=="working")
         {
@@ -82,13 +85,15 @@ internal sealed partial class ProductionService
         ProcessCrab(c);var previous=Read(c);
         if(previous.Phase=="ready" && previous.Pending.Count==0)previous=previous.IdleCopy();
         if(previous.Phase!="idle")return false;
+        if(PoweredOff(c)){StopContinuity(c,"switched off");return false;}
         long at=StartAt(previous,manualStart);if(at>Now)return false;
         var policy=previous.Continuity!.PolicyAt(at);
-        if(!manualStart&&!policy.Auto){StopContinuity(c,"automatic restart disabled");return false;}
+        if(!manualStart&&!policy.Auto){SetPower(c,false);StopContinuity(c,"automatic restart disabled");return false;}
         bool luremaster=policy.Lure,book=policy.Book;
         var config=policy.Crab;var budget=FuelBudget(previous,at);
         var bait=c.Items.Select((i,n)=>CrabSlot(i,n) is {} b?b with{Count=FuelLimit(i,budget)}:null).Where(b=>b!=null&&b.Count>0).Cast<CrabBait>();
-        var plan=CrabRules.PlanBait(bait,config.Required(previous.Level,luremaster));if(plan==null){StopContinuity(c,"insufficient historically available bait");return false;}
+        // A full load is needed; not enough left: switch off and wait for the player to add bait and press ON.
+        var plan=CrabRules.PlanBait(bait,config.Required(previous.Level,luremaster));if(plan==null){SetPower(c,false);StopContinuity(c,"insufficient historically available bait");return false;}
         var pool=CrabPool(c);if(pool.Count==0){StopContinuity(c,"unsupported trap ecology");return false;}
         var next=MachineTimeline.StartCrab(previous,config,plan,owner.UniqueMultiplayerID,luremaster,book,at,
             previous.CompletedCycles==0?Game1.random.Next():MachineTimeline.SeedFor(previous.Seed,(int)(previous.CompletedCycles%int.MaxValue),0x51710));
@@ -128,6 +133,7 @@ internal sealed partial class ProductionService
         if (PreparingRecovery(c)) return Mod.T(s.Phase == "working" ? "remove.status-finishing" : "remove.status-empty");
         if(s.Phase=="working"){if(s.Timeline?.PausedReason!=null)return Mod.T("status.timeline-paused",new{reason=Mod.T(MachinePauseText.KeyFor(s.Timeline.PausedReason))});long left=Math.Max(0,s.DueAt-Now);return Mod.T("status.working",new{hours=left/60,minutes=left%60});}
         if(s.Phase=="ready" && s.Pending.Count>0)return Mod.T("status.full");
+        if(PoweredOff(c))return Mod.T("status.off",new{count=StoredBait(c),needed=RequiredBait(c)});
         if(!BetterStardewValley.Configuration.SharedPreferences.Current.AutoRestartProduction)return Mod.T("status.auto-off");
         int required=RequiredBait(c);
         return Mod.T("crab.status",new{count=StoredBait(c),needed=required,rolls=Mod.CrabConfig.Required(s.Level,false)});
