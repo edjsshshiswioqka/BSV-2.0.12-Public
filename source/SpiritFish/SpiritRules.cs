@@ -14,7 +14,8 @@ internal static class SpiritRules
     internal const int Price = 6000;
     internal static bool IsFish(string? id) => id is Id or Fish;
     internal static bool Eligible(int level, int time, string? location) => level >= 10 && time >= 1800 && time < 2600 && location == "Mountain";
-    internal static int Quantity(int value) => Math.Clamp(value, 1, 3);
+    /// <summary>A Spirit Fish catch is always exactly one fish (double/triple catch never applies).</summary>
+    internal static int Quantity(int value) => 1;
     internal const string Truffle = "430", Morel = "257";
     internal const string LegendFish = "163";
     internal const int LegendEdibilityFallback = 200;   // vanilla Legend: 500 energy / 225 health

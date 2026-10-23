@@ -186,5 +186,23 @@ foreach (int lv in levels) Near(MachineLevelRules.QualityShares(lv).Sum(), 1, 1e
     Check(none != null && none.Value.State.Phase == "idle" && none.Value.Refund.Sum(r => r.Count) == 200, "switched off before the first cast: all 200 bait back, machine idle");
 }
 
+// ---- 9. Spirit Fish: exactly one fish per catch, even at Lv3 with double/triple catches ----
+{
+    var pool = new List<FishChoice>(fishes) { new(Production.SpiritId, 1, true, 6000) };
+    int spirits = 0, wrong = 0;
+    foreach (int lv in new[] { 2, 3 })
+        for (int i = 0; i < 40000; i++)
+        {
+            var u = Production.Begin(cfg, new[] { new BaitSpend(0, 1, BaitKind.GiantLobster, null) }, pool, other, start, 77 + i * 7919, new ProductionState { Level = lv }, "(O)SeaJelly", true);
+            foreach (var p in u.Pending.Where(p => p.Id == Production.SpiritId)) { spirits++; if (p.Count != 1) wrong++; }
+        }
+    Check(spirits > 0, $"Spirit Fish can be caught with Giant Lobster Bait ({spirits} catches in 80000 casts)");
+    Check(wrong == 0, "every Spirit Fish catch is exactly 1 fish (no double/triple)");
+    int other_bait = 0;
+    for (int i = 0; i < 40000; i++)
+        other_bait += Production.Begin(cfg, new[] { new BaitSpend(0, 1, BaitKind.Deluxe, null) }, pool, other, start, 99 + i * 7919, new ProductionState { Level = 3 }, "(O)SeaJelly", true).Pending.Count(p => p.Id == Production.SpiritId);
+    Check(other_bait == 0, "no Spirit Fish without Giant Lobster Bait");
+}
+
 Console.WriteLine($"{{\"suite\":\"fishing-machine\",\"passed\":{passed},\"failed\":{failed},\"status\":\"{(failed == 0 ? "PASS" : "FAIL")}\"}}");
 return failed == 0 ? 0 : 1;
