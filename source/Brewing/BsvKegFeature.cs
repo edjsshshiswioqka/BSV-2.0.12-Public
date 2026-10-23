@@ -74,27 +74,37 @@ internal sealed class BsvKegFeature
         own.Description = translate("bsv-keg.description"); own.Texture = TextureAsset; own.SpriteIndex = 0;
         data[WineRules.BsvKegId] = own;
     }
-    internal static Color DarkWood(Color c)
+    // BSV keg look: warm tan-brown wood and polished copper hoops/tap, recoloured from the installed game's keg at
+    // runtime (no Stardew texture is distributed). Wood = saturated orange pixels; metal = the greyish ones;
+    // the blue ground shadow is kept. Light comes from the left, so the left side of the metal gets a glint.
+    private static readonly Color[] Wood={new(40,20,10),new(80,44,22),new(128,78,40),new(172,118,64),new(208,158,96),new(234,196,136)};
+    private static readonly float[] WoodStops={0,48,96,144,208,255};
+    private static readonly Color[] Copper={new(34,14,8),new(104,44,20),new(180,94,48),new(250,176,120)};
+    private static readonly float[] MetalStops={0,40,80,140};
+    private static Color Ramp(Color[] ramp,float[] stops,float light)
     {
-        // Recolor only warm wood. The previous ramp compressed the native middle/high
-        // tones into shadows (luma 144 -> RGB 112/68/37), hiding grain and the tap.
-        // Keep deep outlines and neutral/cool metal unchanged; restore wood contrast
-        // in the texture once, not by tinting each menu/held/world rendering path.
-        if(c.A==0 || c.R<=c.B*1.15f || c.R<=c.G*1.02f)return c;
-        float alpha=c.A/255f;
-        float light=Math.Clamp((.2126f*c.R+.7152f*c.G+.0722f*c.B)/alpha,0,255);
-        Color wood;
-        if(light<48)wood=Color.Lerp(new Color(24,13,9),new Color(56,32,21),light/48);
-        else if(light<96)wood=Color.Lerp(new Color(56,32,21),new Color(100,55,28),(light-48)/48);
-        else if(light<144)wood=Color.Lerp(new Color(100,55,28),new Color(154,89,43),(light-96)/48);
-        else if(light<208)wood=Color.Lerp(new Color(154,89,43),new Color(200,139,77),(light-144)/64);
-        else wood=Color.Lerp(new Color(200,139,77),new Color(225,177,116),(light-208)/47);
-        return new Color((byte)(wood.R*alpha),(byte)(wood.G*alpha),(byte)(wood.B*alpha),c.A);
+        for(int i=0;i<ramp.Length-1;i++)
+            if(light<stops[i+1]||i==ramp.Length-2)
+                return Color.Lerp(ramp[i],ramp[i+1],Math.Clamp((light-stops[i])/(stops[i+1]-stops[i]),0,1));
+        return ramp[^1];
     }
-    internal static Color[] RecolorFrames(Color[] pixels)
+    internal static Color Recolor(Color c,int x,int width)
+    {
+        if(c.A==0)return c;
+        float alpha=c.A/255f;
+        float r=c.R/alpha,g=c.G/alpha,b=c.B/alpha;   // the texture is premultiplied
+        if(b>r*1.6f)return c;                            // ground shadow
+        float max=Math.Max(r,Math.Max(g,b)),min=Math.Min(r,Math.Min(g,b));
+        float light=Math.Clamp(.2126f*r+.7152f*g+.0722f*b,0,255);
+        Color result;
+        if(max>0&&(max-min)/max>.4f)result=Ramp(Wood,WoodStops,light);
+        else result=Ramp(Copper,MetalStops,light+(x<=width*5/16?30:x>=width*11/16?-10:0));
+        return new Color((byte)(result.R*alpha),(byte)(result.G*alpha),(byte)(result.B*alpha),c.A);
+    }
+    internal static Color[] RecolorFrames(Color[] pixels,int width)
     {
         var frames=new Color[pixels.Length*2];
-        for(int i=0;i<pixels.Length;i++)frames[i]=frames[i+pixels.Length]=DarkWood(pixels[i]);
+        for(int i=0;i<pixels.Length;i++)frames[i]=frames[i+pixels.Length]=Recolor(pixels[i],i%width,width);
         return frames;
     }
     private static Texture2D CreateTexture()
@@ -104,7 +114,7 @@ internal sealed class BsvKegFeature
         var source = native.GetTexture(); var rect = native.GetSourceRect();
         // No Stardew texture is distributed. Read the installed game's sprite at runtime.
         var pixels = new Color[rect.Width * rect.Height]; source.GetData(0, rect, pixels, 0, pixels.Length);
-        var frames = RecolorFrames(pixels);
+        var frames = RecolorFrames(pixels, rect.Width);
         var texture = new Texture2D(Game1.graphics.GraphicsDevice, rect.Width, rect.Height * 2);
         texture.SetData(frames); return texture;
     }
