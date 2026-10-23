@@ -55,7 +55,12 @@ internal static class WineData
         if (objects.TryGetValue(WineRules.GrapeSeedId, out var starter))
             starter.Description = translate("grape-starter.description");
         Add(WineRules.GrapeWineId, "Farmhouse Special Grape Wine", "grape-wine", WineRules.GrapeWinePrice, grapeTexture);
+        objects[WineRules.GrapeWineId].Edibility = WineRules.GrapeWineEdibility;   // native wine buffs (Tipsy) kept
         Add(WineRules.BloodOfJesusId, "Blood of Jesus", "blood-of-jesus", WineRules.BloodOfJesusPrice, bloodTexture);
+        var blood = objects[WineRules.BloodOfJesusId];
+        blood.Edibility = WineRules.BloodOfJesusEdibility;
+        blood.Buffs = new() { new() { Id = WineRules.BloodOfJesusId, Duration = WineRules.BloodBuffMinutes,
+            CustomAttributes = new() { LuckLevel = WineRules.BloodLuck } } };
         void Add(string id, string name, string key, int price, string texture)
         {
             var data = Copy(wine);

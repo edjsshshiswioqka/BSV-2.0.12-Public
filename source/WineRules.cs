@@ -15,7 +15,10 @@ internal static class WineRules
     internal const string KegRuleId = Prefix + "/GrapeWine";
     internal const int GrapeSeedPrice = 1200;
     internal const int GrapeDaysToMature = 15, GrapeRegrowDays = 7;
-    internal const int GrapeWinePrice = 990, BloodOfJesusPrice = 30000;
+    internal const int GrapeWinePrice = 880, BloodOfJesusPrice = 30000;
+    // Drinking: Farmhouse wine 75 energy / 33 health and keeps the native Tipsy effect;
+    // Blood of Jesus 200 / 90, no Tipsy, Luck +2 for about 10 in-game hours.
+    internal const int GrapeWineEdibility = 30, BloodOfJesusEdibility = 80, BloodLuck = 2, BloodBuffMinutes = 600;
     internal const int BloodOfJesusDenominator = 120;
     internal const double BloodOfJesusChance = 1.0 / BloodOfJesusDenominator;
     internal const double CellarCapacityMultiplier = 2.0;
