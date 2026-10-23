@@ -12,7 +12,7 @@ internal static class LobsterMigration
         int price=o.QualifiedItemId switch
         {
             "(O)"+GiantLobsterRules.Id=>LobsterBalance.FishPrice(LobsterBalance.VanillaLobsterPrice()),
-            GiantLobsterRules.Bait=>LobsterBalance.BaitPrice,
+            GiantLobsterRules.Bait=>LobsterBalance.BaitPrice(LobsterBalance.VanillaLobsterPrice()),
             "(O)"+GiantLobsterRules.DinnerId=>LobsterBalance.DinnerPrice,
             _=>0
         };
@@ -20,6 +20,7 @@ internal static class LobsterMigration
         if(o.Price==0)o.Price=price;
         // Giant Lobsters made before the price change keep the old 450g in the item itself.
         if(o.QualifiedItemId=="(O)"+GiantLobsterRules.Id&&o.Price==LobsterBalance.OldFishPrice)o.Price=price;
+        if(o.QualifiedItemId==GiantLobsterRules.Bait&&o.Price==LobsterBalance.OldBaitPrice)o.Price=price;
         if(o.QualifiedItemId=="(O)"+GiantLobsterRules.DinnerId&&o.Edibility==0)o.Edibility=LobsterBalance.FoodEdibility;
         return true;
     }

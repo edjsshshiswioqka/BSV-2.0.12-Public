@@ -6,11 +6,13 @@ namespace BetterStardewValley.GiantLobster;
 internal static class LobsterBalance
 {
     internal const string Potato="192", Kale="250";
-    internal const int OldFishPrice=450,BaitPrice=60,DinnerPrice=700,FoodEdibility=64;
+    internal const int OldFishPrice=450,OldBaitPrice=60,DinnerPrice=700,FoodEdibility=64;
     internal const double PriceFactor=1.5;   // Giant Lobster sells for 1.5x a vanilla Lobster (120g -> 180g)
     internal const int BaitLevel=8,DinnerLevel=7;
     internal static int VanillaLobsterPrice()=>Game1.objectData!=null&&Game1.objectData.TryGetValue("715",out var o)&&o.Price>0?o.Price:120;
     internal static int FishPrice(int vanillaLobster)=>(int)(vanillaLobster*PriceFactor);
+    /// <summary>5 bait from one Giant Lobster must sell for less than the lobster itself (180 / 6 = 30g each).</summary>
+    internal static int BaitPrice(int vanillaLobster)=>FishPrice(vanillaLobster)/6;
     // 1.6.15 food data Duration uses 700 ms units, not seconds. Native food/seasoning
     // modifiers and paused buff ticking remain native; base duration = 420,000 ms.
     internal const double EdibleFactor=1.5;
@@ -33,7 +35,7 @@ internal static class LobsterData
         // follows the native x1.5 rule (81 = 203 / 91).
         int lobsterPrice=data.TryGetValue("715",out var vanilla)&&vanilla.Price>0?vanilla.Price:120;
         Add(GiantLobsterRules.Id,"Giant Lobster","fish","Fish",-4,LobsterBalance.FishPrice(lobsterPrice),(int)(lobsterPrice*.3*LobsterBalance.EdibleFactor));
-        Add(GiantLobsterRules.BaitId,"Giant Lobster Bait","bait","Basic",-21,LobsterBalance.BaitPrice,-300);
+        Add(GiantLobsterRules.BaitId,"Giant Lobster Bait","bait","Basic",-21,LobsterBalance.BaitPrice(lobsterPrice),-300);
         data[GiantLobsterRules.BaitId].CanBeGivenAsGift=false;
         Add(GiantLobsterRules.DinnerId,"Lobster Dinner","dinner","Cooking",-7,LobsterBalance.DinnerPrice,LobsterBalance.FoodEdibility);
         data[GiantLobsterRules.DinnerId].Buffs=new(){new(){Id=GiantLobsterRules.DinnerId,Duration=LobsterBalance.DurationGameMinutes,
