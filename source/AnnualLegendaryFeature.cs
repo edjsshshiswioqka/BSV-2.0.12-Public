@@ -90,8 +90,22 @@ internal sealed class AnnualLegendaryFeature
         string? id=AnnualLegendaryRules.NormalizeId(qualifiedId);
         if(id==null)return false;
         var record=ReadPlayerRecord(player,id);
+        if(id==SpiritId&&!SpiritFreeForFarm(player,year))return false;
         return Instance?.active==true && (committed||Instance.Handles(id)
             ? historical&&year<Game1.year||record.Year<year : record.Year==0&&record.LifetimeCount==0);
+    }
+    private const string SpiritId="Eddie.BetterStardewValley_SpiritFish";
+    /// <summary>Spirit Fish is one per year for the whole farm: nobody else may have caught one in that year.
+    /// Other players' records are only read (each player's own client keeps its record up to date).</summary>
+    private static bool SpiritFreeForFarm(Farmer player,int year)
+    {
+        foreach(var other in Game1.getAllFarmers())
+        {
+            if(other==null||other.UniqueMultiplayerID==player.UniqueMultiplayerID)continue;
+            other.modData.TryGetValue(AnnualLegendaryRules.KeyPrefix+SpiritId,out string? stored);
+            if(AnnualLegendaryRules.ReadRecord(stored,LifetimeCount(other,SpiritId),Game1.year).Year>=year)return false;
+        }
+        return true;
     }
     internal static void MarkMachineCatch(Farmer player,string qualifiedId,int year)
     {

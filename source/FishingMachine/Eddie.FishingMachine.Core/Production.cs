@@ -239,7 +239,7 @@ public static class Production
                         id=Pick(ordinary,fallbackRandom.NextDouble());
                     int baseCount = isFish && s.Kind == BaitKind.Challenge ? 3 : 1;
                     int bonus = isFish ? baseCount * MachineLevelRules.ExtraMultiplier(config,state.Level,criticalRandom.NextDouble()) : 0;
-                    if(id==SpiritId){bonus=0;baseCount=1;} // exactly one Spirit Fish per catch
+                    if(id==SpiritId)bonus=Math.Min(bonus,3-baseCount); // the machine's crits still apply (max 3); the rod lands exactly one
                     if (isFish) state.ChallengeExtraFish += baseCount - 1;
                     state.CriticalFishCount += bonus;
                     int quality = isFish ? MachineLevelRules.Quality(state.Level,qualityRandom.NextDouble(),config.FishingBalanceVersion,s.Kind) : 0;

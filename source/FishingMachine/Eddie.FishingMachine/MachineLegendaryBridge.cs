@@ -10,7 +10,9 @@ namespace Eddie.FishingMachine;
 internal static class MachineLegendaryBridge
 {
     private const string LedgerKey=ModEntry.Tag+"LegendaryReservations";
-    private static string Key(long owner,string id,int year)=>$"{owner}/{year}/{id}";
+    // Spirit Fish: one per year for the whole farm, so every player shares one reservation slot (owner 0).
+    private static bool FarmWide(string id)=>AnnualLegendaryRules.NormalizeId(id)=="Eddie.BetterStardewValley_SpiritFish";
+    private static string Key(long owner,string id,int year)=>$"{(FarmWide(id)?0:owner)}/{year}/{id}";
     internal static bool IsLegendary(string id)=>AnnualLegendaryRules.NormalizeId(id)!=null;
     internal static int CompletionYear(long minute)=>(int)(Math.Max(0,minute-360)/1440/112)+1;
     private static Dictionary<string,string> Read()=>Game1.MasterPlayer.modData.TryGetValue(LedgerKey,out var raw)

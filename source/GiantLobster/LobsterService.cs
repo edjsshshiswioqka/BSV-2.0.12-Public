@@ -55,6 +55,13 @@ internal sealed class LobsterService
         string key=name+"/"+size;if(Textures.TryGetValue(key,out var value))return value;
         var source=Helper.ModContent.Load<Texture2D>("assets/giant-lobster/"+name+".png");
         if(size!=16)throw new ArgumentOutOfRangeException(nameof(size),"Native logical handle must be 16px.");
+        // Native 16x16 pixel art (vanilla style) is used as-is; no HD adapter.
+        if(source.Width==16&&source.Height==16)
+        {
+            var data=new Color[256];source.GetData(data);
+            var native=new Texture2D(Game1.graphics.GraphicsDevice,16,16);native.SetData(data);
+            Textures[key]=native;return native;
+        }
         var texture=HdSprites.CreateSourceResolution(source,out var full);
         Textures[key]=texture;Textures[name+"/source"]=full;
         return texture;

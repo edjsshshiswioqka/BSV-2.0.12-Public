@@ -9,6 +9,7 @@ internal static class LobsterBalance
     internal const int FishPrice=450,BaitPrice=60,DinnerPrice=700,FoodEdibility=64;
     // 1.6.15 food data Duration uses 700 ms units, not seconds. Native food/seasoning
     // modifiers and paused buff ticking remain native; base duration = 420,000 ms.
+    internal const double EdibleFactor=1.5;
     internal const int FishingBuff=3,DurationGameMinutes=600,DinnerCount=1;
 }
 internal static class LobsterData
@@ -23,7 +24,11 @@ internal static class LobsterData
                 Price=price,Edibility=edibility,Texture=TextureRoot+kind,SpriteIndex=0,ExcludeFromRandomSale=true,
                 ContextTags=kind=="bait"?new(){"bsv_giant_lobster_bait"}:new(){"bsv_seafood"}};
         }
-        Add(GiantLobsterRules.Id,"Giant Lobster","fish","Fish",-4,LobsterBalance.FishPrice,-300);
+        // Edible at 1.5x a vanilla Lobster. Vanilla Lobster is inedible raw; eaten smoked it counts as price x0.3
+        // (120g -> 36 = 90 energy / 40 health), so the Giant Lobster gets 54 (135 / 60). Smoking it then
+        // follows the native x1.5 rule (81 = 203 / 91).
+        int lobsterPrice=data.TryGetValue("715",out var vanilla)&&vanilla.Price>0?vanilla.Price:120;
+        Add(GiantLobsterRules.Id,"Giant Lobster","fish","Fish",-4,LobsterBalance.FishPrice,(int)(lobsterPrice*.3*LobsterBalance.EdibleFactor));
         Add(GiantLobsterRules.BaitId,"Giant Lobster Bait","bait","Basic",-21,LobsterBalance.BaitPrice,-300);
         data[GiantLobsterRules.BaitId].CanBeGivenAsGift=false;
         Add(GiantLobsterRules.DinnerId,"Lobster Dinner","dinner","Cooking",-7,LobsterBalance.DinnerPrice,LobsterBalance.FoodEdibility);
