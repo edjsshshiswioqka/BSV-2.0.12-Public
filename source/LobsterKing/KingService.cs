@@ -138,6 +138,12 @@ internal sealed class KingService
         string key=name+"/"+size;if(Textures.TryGetValue(key,out var tex))return tex;
         var source=Helper.ModContent.Load<Texture2D>("assets/lobster-king/"+name+".png");
         if(size!=16)throw new ArgumentOutOfRangeException(nameof(size),"Native logical handle must be 16px.");
+        if(source.Width==16&&source.Height==16)
+        {
+            var data=new Microsoft.Xna.Framework.Color[256];source.GetData(data);
+            var native=new Texture2D(Game1.graphics.GraphicsDevice,16,16);native.SetData(data);
+            Textures[key]=native;return native;
+        }
         tex=HdSprites.CreateSourceResolution(source,out var full);
         Textures[key]=tex;Textures[name+"/source"]=full;return tex;
     }

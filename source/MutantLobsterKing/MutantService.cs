@@ -63,6 +63,12 @@ internal sealed class MutantService
         if(Textures.TryGetValue(size,out var tex))return tex;
         var source=Helper.ModContent.Load<Texture2D>("assets/mutant-lobster-king/collectible.png");
         if(size!=16)throw new ArgumentOutOfRangeException(nameof(size),"Native logical handle must be 16px.");
+        if(source.Width==16&&source.Height==16)
+        {
+            var data=new Microsoft.Xna.Framework.Color[256];source.GetData(data);
+            var native=new Texture2D(Game1.graphics.GraphicsDevice,16,16);native.SetData(data);
+            Textures[size]=native;return native;
+        }
         tex=HdSprites.CreateSourceResolution(source,out var full);
         Textures[size]=tex;Textures[0]=full;return tex;
     }
