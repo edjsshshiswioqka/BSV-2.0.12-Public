@@ -47,20 +47,23 @@ long start = CycleClock.ToAbsoluteMinutes(10, 600);
         s = run.IdleCopy(); t = run.DueAt;
     }
     Check(s.CompletedCycles == 15 && MachineUpgrade.Plan(s, Mats(1)) != null, "15 full Lv1 cycles unlock the Lv2 upgrade");
-    var credit = new ProductionState(); t = start;
-    for (int k = 0; k < 8; k++)
+    // A cycle needs a full load: 199 bait cannot start a Lv1 cycle, 200 can.
+    foreach (int n in new[] { 1, 199, 201 })
     {
-        var run = MachineTimeline.StartFish(credit, cfg, new[] { new BaitSpend(0, 50, BaitKind.Normal, null) }, 1, t, 7 + k);
-        run.Timeline!.Cursor = run.Timeline.Plan.Count; run.FishCount = run.BaitUsed;
-        run.Complete(run.DueAt); credit = run.IdleCopy(); t = run.DueAt;
+        bool refused = false;
+        try { MachineTimeline.StartFish(new(), cfg, new[] { new BaitSpend(0, n, BaitKind.Normal, null) }, 1, start, 9); } catch (ArgumentException) { refused = true; }
+        Check(refused, $"Lv1 refuses to start with {n} bait");
     }
-    Check(credit.CompletedCycles == 2 && credit.BaitCredit == 0, "8 loads of 50 bait = 2 full Lv1 cycles");
-    foreach (int n in new[] { 1, 7, 50, 199, 200 })
-    {
-        var run = MachineTimeline.StartFish(new(), cfg, new[] { new BaitSpend(0, n, BaitKind.Normal, null) }, 1, start, 9);
-        Check(MachineTimeline.Valid(run) && run.BaitUsed == n && run.Timeline!.Plan.Count == n, $"{n} bait = {n} casts");
-        Check(run.Timeline!.Plan.All(o => MachineTimeline.Time(o.At) is >= 600 and < 2600), $"{n} bait casts only between 06:00 and 02:00");
-    }
+    var full = MachineTimeline.StartFish(new(), cfg, new[] { new BaitSpend(0, 200, BaitKind.Normal, null) }, 1, start, 9);
+    Check(MachineTimeline.Valid(full) && full.Timeline!.Plan.Count == 200 && full.DueAt == start + 2880, "Lv1 starts with exactly 200 bait for 2 days");
+    Check(full.Timeline!.Plan.All(o => MachineTimeline.Time(o.At) is >= 600 and < 2600), "casts only between 06:00 and 02:00");
+    var lv2 = MachineTimeline.StartFish(new ProductionState { Level = 2, CompletedCycles = 15 }, cfg, new[] { new BaitSpend(0, 300, BaitKind.Normal, null) }, 1, start, 9);
+    Check(MachineTimeline.Valid(lv2) && lv2.DueAt == start + 4320, "Lv2 starts with 300 bait for 3 days");
+    // Switched off half way: the bait already fished counts towards the next full cycle.
+    var half = MachineTimeline.StartFish(new(), cfg, new[] { new BaitSpend(0, 200, BaitKind.Normal, null) }, 1, start, 9);
+    half.Timeline!.Cursor = 100; half.FishCount = 100; half.BaitUsed = 100; half.Timeline.Plan = half.Timeline.Plan.Take(100).ToList();
+    half.Complete(half.DueAt);
+    Check(half.CompletedCycles == 0 && half.BaitCredit == 100, "a cycle cut short at 100 bait is half a cycle, not a whole one");
 }
 
 // ---- 4. Rates per level (one cast at a time, like the running machine) ----

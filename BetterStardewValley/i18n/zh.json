@@ -51,7 +51,7 @@
   "remove.full": "请先腾出背包空间。",
   "remove.damaged": "机器占地结构不完整，已保留机器。请查看SMAPI日志。",
   "remove.working": "机器仍在工作或保留着待入库的鱼获，暂时不能回收。",
-  "status.idle": "等待鱼饵。放多少都可以开工：每个鱼饵钓一次，满一轮是 {{needed}} 个。",
+  "status.idle": "等待鱼饵：{{count}} / {{needed}}。",
   "status.waiting": "等待启动：请关闭机器界面，并确保有可用鱼饵及符合条件的捕获对象。",
   "status.working": "生产中：剩余{{hours}}小时{{minutes}}分钟（游戏时间）。",
   "status.timeline-paused": "生产暂停，已付费机会已保留：{{reason}}",
@@ -635,10 +635,11 @@
   "horse.call.withdrawal_unavailable": "马匹已走出视野。本测试版暂不撤除持久马匹实体，马仍留在地图中。",
   "panel.power-on": "开机",
   "panel.power-off": "关机",
-  "panel.power-on-help": "机器正在运行。点一下关机：马上停止钓鱼，已经钓到的鱼留着，没用掉的鱼饵全部退回机器里。",
-  "panel.power-off-help": "机器已关机。点一下开机：用机器里的鱼饵继续钓鱼。",
+  "panel.power-on-help": "开机中：鱼饵够一整轮就会自动一轮接一轮地钓。每轮开始前会先检查能不能升级，能就先升级。点一下关机：马上停止，已钓到的鱼留着，没用掉的鱼饵退回机器。",
+  "panel.power-off-help": "已关机：机器不会运行。放够一整轮的鱼饵（Lv1 200 个、Lv2 300 个、Lv3 400 个）后点一下开机。",
   "panel.power-now-on": "钓鱼机已开机。",
-  "panel.power-now-off": "钓鱼机已关机，没用掉的鱼饵已退回机器。",
+  "panel.power-now-off": "钓鱼机已关机。",
   "panel.off": "已关机",
-  "status.off": "已关机。点「开机」继续钓鱼。"
+  "status.off": "已关机。放够 {{needed}} 个鱼饵（现在 {{count}} 个）后点「开机」。",
+  "panel.power-need-bait": "鱼饵不够，无法开机：{{count}} / {{needed}}。"
 }

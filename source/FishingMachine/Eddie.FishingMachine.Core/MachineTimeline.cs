@@ -94,13 +94,9 @@ public sealed class MachineTimeline
     {
         config.Validate();int required=MachineUpgrade.RequiredBait(previous,config);
         long used=bait.Sum(p=>(long)p.Count);
-        if(previous.Phase!="idle"||previous.BlocksRemoval||used<1||used>required)throw new ArgumentException("Invalid paid fish plan.");
+        if(previous.Phase!="idle"||previous.BlocksRemoval||used!=required)throw new ArgumentException("Invalid paid fish plan: a cycle needs a full load of bait.");
         var s=previous.IdleCopy();s.Schema=8;s.CycleRulesVersion=1;s.OwnerId=owner;s.Phase="working";s.StartedAt=now;s.Seed=seed;s.BaitUsed=(int)used;s.CycleToken=Guid.NewGuid().ToString("N");
-        s.CycleBait=required;
-        // A full load keeps the level's cycle length. A partial load fishes for the same time per bait,
-        // counted in legal fishing hours (6:00-2:00), so each bait is one cast at its own time of day.
-        s.DueAt=used==required?now+config.MinutesForLevel(previous.Level)
-            :DueAfterLegal(now,Math.Max(10,(long)Math.Ceiling(config.MinutesForLevel(previous.Level)*20.0/24.0*used/required)));
+        s.CycleBait=required;s.DueAt=now+config.MinutesForLevel(previous.Level);
         s.FishingBalanceVersion=config.FishingBalanceVersion;
         var t=s.Timeline=new(){Version=2,OriginalDue=s.DueAt,FishingConfig=JsonSerializer.Deserialize<BalanceConfig>(JsonSerializer.Serialize(config)),FishingBait=bait.ToList()};
         t.Plan=Schedule(now,s.DueAt,seed,bait.SelectMany((b,i)=>Enumerable.Repeat(i,b.Count)).ToArray());return s;

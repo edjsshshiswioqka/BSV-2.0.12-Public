@@ -51,7 +51,7 @@
   "remove.full": "Make room in your backpack first.",
   "remove.damaged": "The footprint is damaged. The machine was kept in place; check the SMAPI log.",
   "remove.working": "Finish the cycle and collect pending catches before retrieving this machine.",
-  "status.idle": "Waiting for bait. Any amount works: each bait is one cast; a full cycle is {{needed}}.",
+  "status.idle": "Waiting for bait: {{count}} / {{needed}}.",
   "status.waiting": "Waiting to start: release the machine menu; bait and eligible catches must be available.",
   "status.working": "Producing: {{hours}} h {{minutes}} min remaining (game time).",
   "status.timeline-paused": "Production paused; paid opportunities preserved: {{reason}}",
@@ -635,10 +635,11 @@
   "horse.call.withdrawal_unavailable": "The horse has left the viewing area. It remains in the world; safe entity withdrawal is not available in this build.",
   "panel.power-on": "ON",
   "panel.power-off": "OFF",
-  "panel.power-on-help": "The machine is on. Click to switch it off: it stops fishing now, keeps what it already caught and gives back every bait it has not used.",
-  "panel.power-off-help": "The machine is off. Click to switch it on: it starts fishing again with the bait inside.",
+  "panel.power-on-help": "On: fishes and starts the next cycle by itself while there is a full load of bait. Before each new cycle it upgrades first if it can. Click to switch off: it stops now, keeps what it caught and gives back unused bait.",
+  "panel.power-off-help": "Off: the machine does nothing. Put in a full load of bait (Lv1 200, Lv2 300, Lv3 400) and click to start.",
   "panel.power-now-on": "Fishing machine switched on.",
-  "panel.power-now-off": "Fishing machine switched off. Unused bait is back in the machine.",
+  "panel.power-now-off": "Fishing machine switched off.",
   "panel.off": "Switched off",
-  "status.off": "Switched off. Click ON to fish again."
+  "status.off": "Switched off. Put in {{needed}} bait (now {{count}}) and press ON.",
+  "panel.power-need-bait": "Not enough bait to start: {{count}} / {{needed}}."
 }

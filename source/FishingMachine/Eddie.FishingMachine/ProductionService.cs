@@ -109,7 +109,7 @@ internal sealed partial class ProductionService
         if(state.Phase=="working"&&state.Timeline!=null)return state.Timeline.Cursor<state.Timeline.Plan.Count?state.Timeline.Plan[state.Timeline.Cursor].At<Now:Now>=state.DueAt
             || state.Pending.Count>0 && DeliverableNow(state).Count>0 && c.Items.Count(i=>i!=null)<c.GetActualCapacity();
         if (PreparingRecovery(c)) return state.Phase == "working" ? Now >= state.DueAt : state.Pending.Count > 0;
-        if (state.Phase != "working" && UpgradePlan(c,state) != null) return true;
+        if (state.Phase != "working" && !PoweredOff(c) && UpgradePlan(c,state) != null) return true;
         int required=MachineUpgrade.RequiredBait(state,Mod.Config);
         if (state.Phase == "working") return ProductionSchedule.NeedsWork(state, Now, 0, required, false);
         if(PoweredOff(c))return state.Phase=="ready";
@@ -120,7 +120,7 @@ internal sealed partial class ProductionService
             var slot=Bait(item,0,state.Level);
             if(slot!=null)bait+=slot.Count; else if(!UpgradeMaterial(item,state))other=true;
         }
-        return ProductionSchedule.NeedsWork(state,Now,bait,required,other) || state.Phase=="ready" && bait>=1;
+        return ProductionSchedule.NeedsWork(state,Now,bait,required,other) || state.Phase=="ready" && bait>=required;
     }
 
     internal int Level(Item? item)
@@ -173,6 +173,8 @@ internal sealed partial class ProductionService
     private void Process(Chest c, bool deferDelivery = false,bool manualStart=false)
     {
         MigrateCycle(c);
+        // Machines from before the switch: a running machine is on, an idle one waits for ON.
+        if(!ModEntry.IsCrab(c)&&!c.modData.ContainsKey(PowerKey))c.modData[PowerKey]=Read(c).Phase=="working"?"on":"off";
         if(!Scheduling)ObserveContinuity(c);
         RemoveEmptyStacks(c);
         if(ModEntry.IsCrab(c)){ProcessCrab(c, deferDelivery);return;}
@@ -193,7 +195,8 @@ internal sealed partial class ProductionService
         }
         // Upgrade between cycles whenever progress and materials are there. The old gate only allowed it when
         // the machine was not catching up, so a machine that restarts by itself after every cycle never upgraded.
-        if (!PreparingRecovery(c)) Upgrade(c,state);
+        // Before the next cycle: upgrade first if progress and materials allow (only while switched on).
+        if (!PreparingRecovery(c) && !PoweredOff(c)) Upgrade(c,state);
         if (state.Phase == "ready")
         {
             if (deferDelivery) return;
@@ -208,23 +211,21 @@ internal sealed partial class ProductionService
         if(PoweredOff(c)){StopContinuity(c,"switched off");return;}
         long at=StartAt(state,manualStart);if(at>Now)return;
         var policy=state.Continuity!.PolicyAt(at);
-        if(!manualStart&&!policy.Auto){StopContinuity(c,"automatic restart disabled");return;}
+        if(!manualStart&&!policy.Auto){SetPower(c,false);StopContinuity(c,"automatic restart disabled");return;}
         var config=policy.Fish.ForNewCycle();
         int required=MachineUpgrade.RequiredBait(state,config);
         var budget=FuelBudget(state,at);
         var slots=c.Items.Select((item,index)=>Bait(item,index,state.Level) is {} b?b with{Count=FuelLimit(item,budget)}:null)
             .Where(b=>b!=null&&b.Count>0).Cast<BaitSlot>().ToArray();
-        if(slots.Sum(s=>(long)s.Count)<1){StopContinuity(c,"insufficient historically available bait");return;}
+        // A cycle needs a full load for the machine's (possibly just upgraded) level. Not enough: switch off
+        // and wait for the player to add bait and press ON again.
+        if(slots.Sum(s=>(long)s.Count)<required){SetPower(c,false);StopContinuity(c,"insufficient historically available bait");return;}
         Farmer owner=Game1.GetPlayer(c.owner.Value,onlyOnline:false)
             ??throw new InvalidOperationException($"Machine owner {c.owner.Value} unavailable; bait and cycle preserved.");
         var fish=TimelineEnvironment.CandidatesAt(c,state,owner,at);
         if(!fish.Any(f=>!f.IsLegendary)&&!TimelineEnvironment.HasLegalOtherAt(c,state,at)){StopContinuity(c,"no known eligible ecology");return;}
-        // Any amount of bait starts the machine: each bait is one cast at its own time of day, up to a full cycle.
-        var eligible=fish.Select(f=>f.Id).ToHashSet();
-        long usable=slots.Where(b=>b.Kind!=BaitKind.Targeted||b.Target!=null&&eligible.Contains(b.Target)).Sum(b=>(long)b.Count);
-        if(usable<1){StopContinuity(c,"no eligible bait plan");return;}
-        var plan=Production.PlanBait(slots,(int)Math.Min(required,usable),eligible);
-        if(plan==null){StopContinuity(c,"no eligible bait plan");return;}
+        var plan=Production.PlanBait(slots,required,fish.Select(f=>f.Id).ToHashSet());
+        if(plan==null){SetPower(c,false);StopContinuity(c,"no eligible bait plan");return;}
         var next=MachineTimeline.StartFish(state,config,plan,owner.UniqueMultiplayerID,at,
             state.CompletedCycles==0?Game1.random.Next():MachineTimeline.SeedFor(state.Seed,(int)(state.CompletedCycles%int.MaxValue),0x51710));
         PayEvidence(c,next,plan.Select(p=>(p.Index,p.Count)),at);
@@ -382,11 +383,11 @@ internal sealed partial class ProductionService
                 return Mod.T("status.working", new { hours = left / 60, minutes = left % 60 });
             }
             if (s.Phase == "ready" && s.Pending.Count > 0) return Mod.T("status.full");
-            if (PoweredOff(c)) return Mod.T("status.off");
+            if (PoweredOff(c)) { var (have, need) = BaitForNextCycle(c); return Mod.T("status.off", new { count = have, needed = need }); }
             if (!BetterStardewValley.Configuration.SharedPreferences.Current.AutoRestartProduction) return Mod.T("status.auto-off");
             long bait = c.Items.Select((i, n) => (long)(Bait(i, n,s.Level)?.Count ?? 0)).Sum();
             int required=MachineUpgrade.RequiredBait(s,Mod.Config);
-            return Mod.T(bait >= 1 ? "status.waiting" : "status.idle", new { count = bait, needed = required });
+            return Mod.T(bait >= required ? "status.waiting" : "status.idle", new { count = bait, needed = required });
         }
         catch { return Mod.T("status.error"); }
     }
@@ -451,14 +452,27 @@ internal sealed partial class ProductionService
     }
 
     // ---------------- On / off switch (fishing machine) ----------------
-    internal const string PowerKey = ModEntry.Tag + "PowerOff";
-    internal static bool PoweredOff(Chest c) => c.modData.ContainsKey(PowerKey);
+    internal const string PowerKey = ModEntry.Tag + "Power";
+    /// <summary>ON = fish and keep starting cycles while there is a full load of bait. A machine without the
+    /// setting is on only while it is already fishing.</summary>
+    internal bool PoweredOff(Chest c) => c.modData.TryGetValue(PowerKey, out var v) ? v != "on" : GetCached(c).State?.Phase != "working";
+    private void SetPower(Chest c, bool on) { c.modData[PowerKey] = on ? "on" : "off"; BaitCache.Remove(c); }
+    /// <summary>Bait a new cycle needs right now (the next level's amount when an upgrade is due first).</summary>
+    internal (long Have, int Need) BaitForNextCycle(Chest c)
+    {
+        var s = Read(c);
+        int level = s.Phase != "working" && UpgradePlan(c, s) != null ? s.Level + 1 : s.Level;
+        int need = MachineUpgrade.RequiredBait(new ProductionState { Level = level }, Mod.Config.ForNewCycle());
+        long have = c.Items.Select((i, n) => (long)(Bait(i, n, level)?.Count ?? 0)).Sum();
+        return (have, need);
+    }
     /// <summary>Flip the switch. Any player who has the machine open may do it; the host applies it.</summary>
     internal void TogglePower(Chest c)
     {
-        if (PoweredOff(c)) { c.modData.Remove(PowerKey); Game1.playSound("powerup"); Game1.showGlobalMessage(Mod.T("panel.power-now-on")); }
-        else { c.modData[PowerKey] = "1"; Game1.playSound("trashcanlid"); Game1.showGlobalMessage(Mod.T("panel.power-now-off")); }
-        BaitCache.Remove(c);
+        if (!PoweredOff(c)) { SetPower(c, false); Game1.playSound("trashcanlid"); Game1.showGlobalMessage(Mod.T("panel.power-now-off")); return; }
+        var (have, need) = BaitForNextCycle(c);
+        if (Read(c).Phase != "working" && have < need) { Game1.showRedMessage(Mod.T("panel.power-need-bait", new { count = have, needed = need })); return; }
+        SetPower(c, true); Game1.playSound("powerup"); Game1.showGlobalMessage(Mod.T("panel.power-now-on"));
     }
     /// <summary>Switched off while fishing: the casts already made stay, the cycle ends now and every
     /// bait that has not been cast yet goes back into the machine.</summary>

@@ -635,10 +635,11 @@
   "horse.call.withdrawal_unavailable": "말이 시야 밖으로 이동했습니다. 이 테스트 버전에서는 안전을 위해 말을 지도에 그대로 둡니다.",
   "panel.power-on": "ON",
   "panel.power-off": "OFF",
-  "panel.power-on-help": "The machine is on. Click to switch it off: it stops fishing now, keeps what it already caught and gives back every bait it has not used.",
-  "panel.power-off-help": "The machine is off. Click to switch it on: it starts fishing again with the bait inside.",
+  "panel.power-on-help": "On: fishes and starts the next cycle by itself while there is a full load of bait. Before each new cycle it upgrades first if it can. Click to switch off: it stops now, keeps what it caught and gives back unused bait.",
+  "panel.power-off-help": "Off: the machine does nothing. Put in a full load of bait (Lv1 200, Lv2 300, Lv3 400) and click to start.",
   "panel.power-now-on": "Fishing machine switched on.",
-  "panel.power-now-off": "Fishing machine switched off. Unused bait is back in the machine.",
+  "panel.power-now-off": "Fishing machine switched off.",
   "panel.off": "Switched off",
-  "status.off": "Switched off. Click ON to fish again."
+  "status.off": "Switched off. Put in {{needed}} bait (now {{count}}) and press ON.",
+  "panel.power-need-bait": "Not enough bait to start: {{count}} / {{needed}}."
 }

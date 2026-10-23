@@ -8,7 +8,7 @@ public static class ProductionSchedule
         {
             "working" => now >= state.DueAt,
             "ready" => true, // normalize the completed task independently of accumulated inventory
-            "idle" => baitCount >= Math.Min(1, requiredBait),
+            "idle" => baitCount >= requiredBait,
             _ => false
         };
 }
