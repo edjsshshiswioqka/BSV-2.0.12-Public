@@ -428,6 +428,8 @@
   "remove.empty-first": "Chuẩn bị thu hồi: lấy hết mồi, nguyên liệu và sản phẩm, rồi dùng rìu/cuốc chim từ bờ. R / Y trên tay cầm trong menu máy tiếp tục sản xuất.",
   "remove.resumed": "Đã hủy chuẩn bị thu hồi; sản xuất tự động có thể tiếp tục.",
   "rescue.reviving": "Đang cứu trợ",
+  "rescue.interrupted": "Cứu bị gián đoạn",
+  "rescue.not-started": "Chưa bắt đầu cứu: hãy đứng sát người bạn bị ngã và đừng di chuyển.",
   "rescue.waiting": "Gục ngã — {{seconds}} giây",
   "rescue.downed": "Bạn đã gục ngã. Bỏ cuộc: nhấp, K hoặc Back trên tay cầm.",
   "rescue.give-up": "Bỏ cuộc",

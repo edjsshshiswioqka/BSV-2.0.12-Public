@@ -27,13 +27,19 @@ Check(m.ConfirmRevived(1,ev,attempt,106),"target acknowledges exact authorizatio
 long revision=m.Revision;m.Tick(200,Lookup,false);Check(m.Revision==revision,"terminal state never settles twice");
 Check(!m.GiveUp(1,ev,200),"late give-up cannot reverse actually acknowledged revive");
 Check(RescueModel.RestoredHealth(101)==11 && RescueModel.RestoredHealth(100)==10 && RescueModel.RestoredHealth(1)==1,"ceil(maxHP*10%), minimum one");
+{ // a replicated position that settles a few pixels after the hit, and a key held by the downed player, must not block rescue
+ var t0=Actor(1);var r0=Actor(2,32);actors[1]=t0;actors[2]=r0;var m0=new RescueModel();var e0=Id();
+ m0.Down(t0,e0,0);t0.X+=6;t0.Available=false;var now0=new RescueActor{Id=1,Location=t0.Location,X=t0.X,Y=t0.Y};
+ Check(m0.Begin(r0,1,e0,Id(),1,now0),"rescue measured from the downed player's current position");
+ r0.X+=3;m0.Tick(6.5,Lookup,false);Check(m0.Find(1)!.Outcome==RescueOutcome.ReviveAuthorized,"small drift and a held key do not cancel the rescue");
+}
 foreach (string mode in new[]{"move","creep","damage","menu","warp","disconnect","target-warp","target-move"})
 {
  target=Actor(1);a=Actor(2,32);actors[1]=target;actors[2]=a;m=new();ev=Id();attempt=Id();
  m.Down(target,ev,0);m.Begin(a,1,ev,attempt,1);
- switch(mode){case "move":a.X+=4;break;case "creep":for(int n=0;n<12;n++)a.X+=.1;break;case "damage":a.DamageSerial++;break;
+ switch(mode){case "move":a.X+=20;break;case "creep":for(int n=0;n<25;n++)a.X+=1;break;case "damage":a.DamageSerial++;break;
  case "menu":a.Available=false;break;case "warp":a.Location="Farm";break;case "disconnect":actors.Remove(2);break;
- case "target-warp":target.Location="Farm";break;case "target-move":target.X+=4;break;}
+ case "target-warp":target.Location="Farm";break;case "target-move":target.X+=20;break;}
  m.Tick(5.5,Lookup,false);
  Check(m.Find(1)!.Rescuer==0 || m.Find(1)!.Outcome==RescueOutcome.VanillaDeath,mode+" interrupts");
  Check(m.Find(1)!.Deadline==60,mode+" cannot extend deadline");

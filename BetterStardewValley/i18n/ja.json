@@ -428,6 +428,8 @@
   "remove.empty-first": "回収準備：エサ、材料、産物をすべて取り出し、岸から斧かツルハシを使ってください。マシンのメニューで R / コントローラー Y を押すと生産を再開します。",
   "remove.resumed": "回収準備を取り消しました。自動生産を再開できます。",
   "rescue.reviving": "救助中",
+  "rescue.interrupted": "救助中断",
+  "rescue.not-started": "救助を始められませんでした：倒れた仲間のすぐ隣に立ち、動かないでください。",
   "rescue.waiting": "倒れています ― {{seconds}} 秒",
   "rescue.downed": "倒れています。救助をあきらめる：クリック、K、またはコントローラー Back。",
   "rescue.give-up": "救助をあきらめる",

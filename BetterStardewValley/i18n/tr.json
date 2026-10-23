@@ -428,6 +428,8 @@
   "remove.empty-first": "Geri almaya hazırlık: yem, malzeme ve ürünleri boşaltıp kıyıdan balta/kazma kullanın. Makine menüsünde R / kontrolcü Y üretimi sürdürür.",
   "remove.resumed": "Geri alma hazırlığı iptal edildi; otomatik üretim sürebilir.",
   "rescue.reviving": "Canlandırılıyor",
+  "rescue.interrupted": "Kurtarma kesildi",
+  "rescue.not-started": "Kurtarma başlamadı: Yere düşen arkadaşının hemen yanında dur ve kıpırdama.",
   "rescue.waiting": "Yerde — {{seconds}} sn",
   "rescue.downed": "Yere düştünüz. Vazgeç: tıklama, K veya kontrolcü Back.",
   "rescue.give-up": "Vazgeç",

@@ -428,6 +428,8 @@
   "remove.empty-first": "Preparazione recupero: svuota esche, materiali e prodotti, poi usa ascia/piccone dalla riva. R / Y sul controller nel menu macchina riprende la produzione.",
   "remove.resumed": "Preparazione recupero annullata; la produzione automatica può riprendere.",
   "rescue.reviving": "Rianimazione",
+  "rescue.interrupted": "Soccorso interrotto",
+  "rescue.not-started": "Il soccorso non è iniziato: mettiti proprio accanto al compagno a terra e non muoverti.",
   "rescue.waiting": "A terra — {{seconds}} s",
   "rescue.downed": "Sei a terra. Per arrenderti: clicca, premi K o Back sul controller.",
   "rescue.give-up": "Arrenditi",

@@ -428,6 +428,8 @@
   "remove.empty-first": "회수 준비: 미끼, 재료, 생산물을 모두 비운 뒤 물가에서 도끼/곡괭이를 사용하세요. 기계 메뉴의 R / 컨트롤러 Y로 생산을 재개합니다.",
   "remove.resumed": "회수 준비가 취소되었습니다. 자동 생산을 재개할 수 있습니다.",
   "rescue.reviving": "구조 중",
+  "rescue.interrupted": "구조 중단",
+  "rescue.not-started": "구조가 시작되지 않았습니다: 쓰러진 동료 바로 옆에 서서 움직이지 마세요.",
   "rescue.waiting": "쓰러짐 — {{seconds}}초",
   "rescue.downed": "쓰러졌습니다. 포기: 클릭, K 또는 컨트롤러 Back.",
   "rescue.give-up": "구조 대기 포기",

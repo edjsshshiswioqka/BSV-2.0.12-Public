@@ -428,6 +428,8 @@
   "remove.empty-first": "Abholung vorbereitet: Entferne alle Köder, Materialien und Erträge, nutze dann Axt/Spitzhacke vom Ufer. R / Controller Y im Maschinenmenü setzt die Produktion fort.",
   "remove.resumed": "Abholungsvorbereitung abgebrochen; automatische Produktion darf fortfahren.",
   "rescue.reviving": "Wiederbelebung",
+  "rescue.interrupted": "Rettung unterbrochen",
+  "rescue.not-started": "Die Rettung hat nicht begonnen: Stell dich direkt neben deinen gestürzten Mitspieler und beweg dich nicht.",
   "rescue.waiting": "Am Boden — {{seconds}} s",
   "rescue.downed": "Du bist am Boden. Aufgeben: klicken, K oder Controller Back.",
   "rescue.give-up": "Aufgeben",

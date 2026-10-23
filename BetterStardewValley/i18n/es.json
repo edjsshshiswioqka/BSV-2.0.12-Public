@@ -428,6 +428,8 @@
   "remove.empty-first": "Preparando retirada: vacía cebo, materiales y producción; luego usa hacha/pico desde la orilla. R / Y del mando en el menú reanuda producción.",
   "remove.resumed": "Preparación de retirada cancelada; puede reanudarse la producción automática.",
   "rescue.reviving": "Reanimando",
+  "rescue.interrupted": "Rescate interrumpido",
+  "rescue.not-started": "El rescate no empezó: ponte justo al lado de tu compañero caído y no te muevas.",
   "rescue.waiting": "En el suelo — {{seconds}} s",
   "rescue.downed": "Estás en el suelo. Rendirse: clic, K o Back del mando.",
   "rescue.give-up": "Rendirse",

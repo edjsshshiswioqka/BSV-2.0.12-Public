@@ -5,7 +5,7 @@ namespace BetterStardewValley.MultiplayerRescue;
 
 internal sealed partial class RescueService
 {
-    private bool CanGiveUp => World && ActiveEvent.Length>0 && !Released && AppliedEvent!=ActiveEvent
+    private bool CanGiveUp => World && !Game1.eventUp && ActiveEvent.Length>0 && !Released && AppliedEvent!=ActiveEvent
         && !(Game1.player.modData.TryGetValue(ReceiptKey,out var done)&&done==ActiveEvent);
 
     private void GiveUpLocal()

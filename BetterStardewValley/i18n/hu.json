@@ -428,6 +428,8 @@
   "remove.empty-first": "Felvétel előkészítése: üríts ki minden csalit, anyagot és terméket, majd a partról használj baltát/csákányt. A gépmenüben R / kontroller Y folytatja a termelést.",
   "remove.resumed": "Felvételi előkészítés megszakítva; az automatikus termelés folytatódhat.",
   "rescue.reviving": "Újraélesztés",
+  "rescue.interrupted": "Mentés megszakítva",
+  "rescue.not-started": "A mentés nem indult el: állj közvetlenül az elesett társad mellé, és ne mozogj.",
   "rescue.waiting": "Összeestél — {{seconds}} mp",
   "rescue.downed": "Összeestél. Feladás: kattintás, K vagy kontroller Back.",
   "rescue.give-up": "Feladás",

@@ -428,6 +428,8 @@
   "remove.empty-first": "Preparação para recolhimento: retire todas as iscas, materiais e produtos e use machado/picareta da margem. R / Y no controle no menu da máquina retoma a produção.",
   "remove.resumed": "Preparação para recolhimento cancelada; a produção automática pode retomar.",
   "rescue.reviving": "Reanimando",
+  "rescue.interrupted": "Resgate interrompido",
+  "rescue.not-started": "O resgate não começou: fique bem ao lado do seu companheiro caído e não se mexa.",
   "rescue.waiting": "Caído — {{seconds}}s",
   "rescue.downed": "Você caiu. Para desistir: clique, K ou Back no controle.",
   "rescue.give-up": "Desistir",

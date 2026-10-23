@@ -40,7 +40,9 @@ internal sealed class RescueRecord
 }
 internal sealed class RescueModel
 {
-    public const double DownSeconds = 60, RescueSeconds = 5, Reach = 64, MovementTolerance = 1;
+    public const double DownSeconds = 60, RescueSeconds = 5, Reach = 64;
+    // Replicated positions settle a few pixels after a hit; a quarter tile tolerates that but not a real step.
+    public const double MovementTolerance = 16;
     private readonly Dictionary<long, RescueRecord> records = new();
     // IDs live for this host epoch. A replay cannot create a second lethal event/attempt.
     private readonly HashSet<string> seenEvents = new(StringComparer.Ordinal);
@@ -60,13 +62,18 @@ internal sealed class RescueModel
             X = actor.X, Y = actor.Y, DownAt = now, Deadline = now + DownSeconds };
         Revision++; return true;
     }
-    public bool Begin(RescueActor actor, long target, string eventId, string attemptId, double now)
+    public bool Begin(RescueActor actor, long target, string eventId, string attemptId, double now, RescueActor? current = null)
     {
         var r = Find(target);
+        // Measure from where the downed player is now (their replicated position may still have
+        // been settling when the hit landed), not from the position captured at the moment of the hit.
+        double tx = current?.Location == r?.Location && current != null ? current.X : r?.X ?? 0;
+        double ty = current?.Location == r?.Location && current != null ? current.Y : r?.Y ?? 0;
         if (r == null || r.Outcome != RescueOutcome.Downed || r.EventId != eventId || now >= r.Deadline
             || r.Rescuer != 0 || actor.Id == target || IsDown(actor.Id) || IsRescuing(actor.Id)
-            || !actor.Available || !actor.Alive || actor.Location != r.Location || Distance(actor.X, actor.Y, r.X, r.Y) > Reach
+            || !actor.Available || !actor.Alive || actor.Location != r.Location || Distance(actor.X, actor.Y, tx, ty) > Reach
             || !ValidId(attemptId) || !seenAttempts.Add(attemptId)) return false;
+        r.X = tx; r.Y = ty;
         r.Rescuer = actor.Id; r.AttemptId = attemptId; r.StartedAt = now;
         r.RescuerX = actor.X; r.RescuerY = actor.Y; r.DamageSerial = actor.DamageSerial;
         r.Reason = ""; Revision++; return true;
@@ -133,7 +140,9 @@ internal sealed class RescueModel
             { Resolve(r, RescueOutcome.VanillaDeath, now, "target-unavailable"); continue; }
             if (r.Rescuer == 0) continue;
             var actor = lookup(r.Rescuer);
-            if (actor == null || !actor.Available || !actor.Alive || !target.Available || actor.Location != r.Location
+            // The downed player's own busy flag is ignored: their input is blocked anyway, and a key
+            // still held from before the hit must not keep cancelling every rescue attempt.
+            if (actor == null || !actor.Available || !actor.Alive || actor.Location != r.Location
                 || actor.DamageSerial != r.DamageSerial || IsDown(actor.Id)
                 || Distance(actor.X, actor.Y, r.RescuerX, r.RescuerY) > MovementTolerance
                 || Distance(target.X, target.Y, r.X, r.Y) > MovementTolerance

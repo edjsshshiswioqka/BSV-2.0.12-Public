@@ -33,7 +33,8 @@ internal sealed partial class RescueService
     private string ActiveEvent="", TerminatedEvent="", AppliedAttempt="";
     private double LocalDeadline=double.PositiveInfinity, NextSafetySend;
     private bool ReceiptConfirmed;
-    private double StandAt = -100;
+    private double StandAt = -100, ReleasedAt, BeginSentAt = -100;
+    private readonly List<SButton> HeldButtons = new();
     private int LastDay = -1;
     private string LastOutcome = "";
     private sealed class PeerState
@@ -85,7 +86,8 @@ internal sealed partial class RescueService
         helper.Events.Input.ButtonPressed += Input;
         helper.Events.Input.ButtonsChanged += (_, e) =>
         {
-            if (World && ProtectDeath(Game1.player)) foreach (var button in e.Held) helper.Input.Suppress(button);
+            HeldButtons.Clear(); HeldButtons.AddRange(e.Held);
+            if (World && ProtectDeath(Game1.player)) foreach (var button in e.Held) if (!ChatKey(button)) helper.Input.Suppress(button);
         };
         helper.Events.Display.RenderedWorld += (_, e) => Safe(() => DrawWorld(e.SpriteBatch));
         helper.Events.Display.RenderedHud += (_, e) => Safe(() => DrawHud(e.SpriteBatch));
@@ -111,6 +113,7 @@ internal sealed partial class RescueService
     }
     private void Reset()
     {
+        Healthy = true; FaultLogged = false; // a fault never outlives the session it happened in
         Model = new(); RemoteClock = new(); Peers.Clear(); View.Clear(); Ledger.Clear(); Epoch = Pending = AppliedEvent = "";
         Sequence = SnapshotSequence = ReceivedSequence = DamageSerial = 0;
         BroadcastRevision = -1; NextPulse = NextBroadcast = 0; Released = NativeStarted = false; GiveUpBounds = Rectangle.Empty;
@@ -119,7 +122,7 @@ internal sealed partial class RescueService
         PendingRescueUntil = 0;
         ActiveEvent=TerminatedEvent=AppliedAttempt="";LocalDeadline=double.PositiveInfinity;NextSafetySend=0;
         ReceiptConfirmed=false;
-        TraceUntil = 0; TraceRows.Clear();
+        TraceUntil = 0; TraceRows.Clear(); Bars.Clear(); BeginSentAt = -100;
     }
     private void Load()
     {
@@ -167,12 +170,18 @@ internal sealed partial class RescueService
         { Acknowledge(id); Pending = ""; Released = NativeStarted = false; }
         GiveUpBounds = Rectangle.Empty;
     }
+    private static bool ChatKey(SButton button) => button.TryGetKeyboard(out var key) && Game1.options.doesInputListContain(Game1.options.chatButton, key);
+    private RescueActor? CurrentTarget(long id)
+    {
+        var f = Game1.GetPlayer(id, onlyOnline: true);
+        return f?.currentLocation == null ? null : new RescueActor { Id = id, Location = f.currentLocation.NameOrUniqueName, X = f.StandingPixel.X, Y = f.StandingPixel.Y };
+    }
     private bool CompatiblePeer(long id) => Helper.Multiplayer.GetConnectedPlayer(id)?.GetMod(ModId)?.Version.ToString() == Version;
     private RescueActor? Actor(long id)
     {
         Farmer? f = Game1.GetPlayer(id, onlyOnline: true);
         if (f?.currentLocation == null) return null;
-        if (id != LocalId && (!Peers.TryGetValue(id, out var p) || Now-p.SeenAt > 2.5)) return null;
+        if (id != LocalId && (!Peers.TryGetValue(id, out var p) || Now-p.SeenAt > 6)) return null; // same allowance as the farmhand's host-silence timeout
         bool busy = id == LocalId ? Busy : Peers[id].Busy;
         // Native damage belongs to its owning client. Position/location are read from the
         // host's replicated Farmer, never accepted from request payload coordinates.
@@ -182,7 +191,7 @@ internal sealed partial class RescueService
     }
     private void Tick()
     {
-        if (!World) return;
+        if (!World || IntegrationHost.Saving) return; // nothing is written while the game serializes the save
         RecoveryTick();
         if (!Healthy) return;
         FinishTrace();
@@ -219,12 +228,15 @@ internal sealed partial class RescueService
         if (Game1.killScreen || Game1.player.passedOut || Game1.player.FarmerSprite.isPassingOut()) NativeStarted = true;
         if (NativeStarted && !Game1.killScreen && !Game1.player.passedOut && !Game1.player.FarmerSprite.isPassingOut() && Game1.player.health > 0)
         { Acknowledge(id); Released = NativeStarted = false; }
+        // Healed by something else after the handoff: the game will never pass out, so close the record now.
+        else if (!NativeStarted && Game1.player.health > 0 && Now - ReleasedAt > 2 && !Game1.killScreen && !Game1.player.passedOut)
+        { Acknowledge(id); Released = false; }
     }
     private void SaveLedger()
-    { if (World && Host) Game1.MasterPlayer.modData[LedgerKey] = JsonConvert.SerializeObject(Ledger); }
+    { if (World && Host && !IntegrationHost.Saving) Game1.MasterPlayer.modData[LedgerKey] = JsonConvert.SerializeObject(Ledger); }
     private void Publish(long? only = null, double echo = 0)
     {
-        if (!Host || !World) return;
+        if (!Host || !World || !Healthy || IntegrationHost.Saving) return;
         foreach (var r in Model.Records)
         {
             if(r.Acknowledged){Ledger.Remove(r.Target);continue;}
@@ -255,7 +267,7 @@ internal sealed partial class RescueService
     }
     private void Message(object? sender, ModMessageReceivedEventArgs e)
     {
-        if (e.FromModID != ModId || !World || Context.IsSplitScreen) return;
+        if (e.FromModID != ModId || !World || Context.IsSplitScreen || IntegrationHost.Saving) return; // resent by the next pulse
         try
         {
             if (Host && e.Type == Channel && CompatiblePeer(e.FromPlayerID)) Receive(e.FromPlayerID, e.ReadAs<RescueCommand>());
@@ -294,11 +306,17 @@ internal sealed partial class RescueService
             // A fatal blow can happen during a sword swing or an already committed
             // catch. Do not require the victim's tool to be idle to accept the hit.
             var victim = Game1.GetPlayer(sender, onlyOnline: true);
-            actor.Available = !Game1.eventUp && victim?.currentLocation is { currentEvent: null };
-            if (!Ledger.ContainsKey(sender))
+            // Only the victim's own cutscene matters; the host watching an event must not disable rescue.
+            actor.Available = victim?.currentLocation is { currentEvent: null };
+            // A player who can be hit again is alive: any older record of theirs is finished.
+            // Replace it instead of refusing, so one lost message can't disable rescue for them.
+            if (!Model.IsDown(sender))
+            {
+                if (Ledger.Remove(sender)) SaveLedger();
                 Model.Down(actor, c.EventId, Now);
+            }
         }
-        else if (c.Kind == "begin" && Healthy && actor != null) Model.Begin(actor, c.Target, c.EventId, c.AttemptId, Now);
+        else if (c.Kind == "begin" && Healthy && actor != null) Model.Begin(actor, c.Target, c.EventId, c.AttemptId, Now, CurrentTarget(c.Target));
         else if (c.Kind == "cancel") Model.Cancel(sender, c.EventId, c.AttemptId, "owner-interrupted");
         else if (c.Kind == "give-up")
         {
@@ -375,12 +393,12 @@ internal sealed partial class RescueService
             else ReleaseToNative(mine.Reason,preserveHealth:true);
         }
         else if (mine.Outcome == RescueOutcome.ReviveAuthorized && Healthy && !Released && TerminatedEvent!=mine.EventId
-            && Now<LocalDeadline && HostNow<mine.Deadline && !Game1.killScreen && !Game1.player.passedOut
+            && Now<LocalDeadline+1 && HostNow<mine.Deadline+1 && !Game1.killScreen && !Game1.player.passedOut
             && !Game1.player.FarmerSprite.isPassingOut() && Game1.timeOfDay < 2600 && !Game1.newDay
             && !Game1.eventUp && Game1.currentMinigame==null && Game1.player.currentLocation.currentEvent==null)
         {
             AppliedEvent=mine.EventId;AppliedAttempt=mine.AttemptId;
-            Game1.player.health = RescueModel.RestoredHealth(Game1.player.maxHealth);
+            Game1.player.health = Math.Max(Game1.player.health, RescueModel.RestoredHealth(Game1.player.maxHealth));
             StandAt = Now; Game1.player.Halt(); Acknowledge(mine.EventId,revived:true);
             Game1.addHUDMessage(new HUDMessage(Tr("revived"), 2));
         }
@@ -401,7 +419,7 @@ internal sealed partial class RescueService
     {
         bool first=!Released || TerminatedEvent!=ActiveEvent;
         TerminatedEvent=ActiveEvent;
-        Pending = ""; Released = true; GiveUpBounds = Rectangle.Empty;
+        Pending = ""; Released = true; GiveUpBounds = Rectangle.Empty; if (first) ReleasedAt = Now;
         PendingRescueUntil=0;
         // Actual lethal health was never increased while downed. Opening DeathHealth
         // is sufficient: no repeated zeroing, forced warp, tired callback or penalty.
@@ -444,6 +462,8 @@ internal sealed partial class RescueService
         LocalDeadline=PendingAt+RescueModel.DownSeconds;NextSafetySend=0;
         who.modData[LocalDebtKey] = Pending;
         AfkFishing.AfkFishingService.YieldForRescue(); who.Halt();
+        // A key already held when the hit lands never raises a new ButtonsChanged: suppress it now.
+        foreach (var button in HeldButtons) if (!ChatKey(button)) Helper.Input.Suppress(button);
         // Native action stop resets a FishingRod's pending result, so don't call it
         // for a rod. Its already committed result remains in the native/AFK pipeline.
         // A sword/slingshot action can end normally without changing inventories.

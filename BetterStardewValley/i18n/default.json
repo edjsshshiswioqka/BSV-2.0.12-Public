@@ -428,6 +428,8 @@
   "remove.empty-first": "Pickup preparation: empty all bait, materials and output, then use an axe/pickaxe from shore. R / controller Y in the machine menu resumes production.",
   "remove.resumed": "Pickup preparation cancelled; automatic production may resume.",
   "rescue.reviving": "Reviving",
+  "rescue.interrupted": "Rescue interrupted",
+  "rescue.not-started": "Rescue didn't start: stand right next to your downed friend and don't move.",
   "rescue.waiting": "Downed — {{seconds}}s",
   "rescue.downed": "You are down. Give Up: click, K, or controller Back.",
   "rescue.give-up": "Give Up",

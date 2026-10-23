@@ -428,6 +428,8 @@
   "remove.empty-first": "Préparation du retrait : videz appâts, matériaux et production, puis utilisez hache/pioche depuis la rive. R / Y de la manette dans le menu reprend la production.",
   "remove.resumed": "Préparation du retrait annulée ; la production automatique peut reprendre.",
   "rescue.reviving": "Réanimation",
+  "rescue.interrupted": "Sauvetage interrompu",
+  "rescue.not-started": "Le sauvetage n'a pas commencé : place-toi juste à côté de ton coéquipier à terre et ne bouge pas.",
   "rescue.waiting": "À terre — {{seconds}} s",
   "rescue.downed": "Vous êtes à terre. Abandonner : clic, K ou Back de la manette.",
   "rescue.give-up": "Abandonner",
