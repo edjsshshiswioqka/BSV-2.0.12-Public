@@ -49,6 +49,7 @@ internal sealed class TotemUnlockService
             var data = a.AsDictionary<string, string>().Data;
             foreach (var r in TotemUnlockRules.Recipes)
                 data[r.Mail] = Tr(r.Key + ".mail") + "%item craftingrecipe " + r.Id + " %%[#]" + Tr(r.Key + ".mail-title");
+            data[AllRecipesMail] = Tr("totem.all.mail") + "[#]" + Tr("totem.all.mail-title");
         });
     }
     private bool IsCrop(string id)
@@ -106,25 +107,27 @@ internal sealed class TotemUnlockService
             }
         }
     }
+    // Farming level 8: the Wizard writes the next morning and the letter teaches all four totems at once.
+    internal const string AllRecipesMail = "Eddie.BetterStardewValley_TotemRecipesWizard";
+    internal const int UnlockFarmingLevel = 8;
     private void Refresh()
     {
         if (!Context.IsWorldReady || IntegrationHost.Saving || Game1.eventUp || !Game1.player.IsLocalPlayer) return;
         var who = Game1.player;
         try
         {
-            var s = Read(who); int day = Game1.Date.TotalDays;
-            ObserveHistory(who, s); Reconcile(who, s, day);
-            TotemUnlockRules.ObserveEligibility(s, who.farmingLevel.Value, day);
-            TotemUnlockRules.Schedule(s, day);
-            var due = TotemUnlockRules.Due(s, day);
-            if (due != null)
+            if (who.mailReceived.Contains(AllRecipesMail))
             {
-                // Only our mail ID; native LetterViewerMenu learns the recipe when the letter is read.
-                if (!who.mailbox.Contains(due.Mail) && !who.mailReceived.Contains(due.Mail)) who.mailbox.Add(due.Mail);
-                TotemUnlockRules.Delivered(s, due, day);
+                foreach (var r in TotemUnlockRules.Recipes)
+                    if (!who.craftingRecipes.ContainsKey(r.Id)) who.craftingRecipes.Add(r.Id, 0);
+                return;
             }
-            TotemUnlockRules.Schedule(s, day);
-            Write(who, s);
+            bool knowsAll = TotemUnlockRules.Recipes.All(r => who.craftingRecipes.ContainsKey(r.Id));
+            if (who.farmingLevel.Value < UnlockFarmingLevel || knowsAll) return;
+            // The old one-totem letters are no longer sent; an unread one waiting in the mailbox is withdrawn.
+            foreach (var r in TotemUnlockRules.Recipes)
+                if (!who.mailReceived.Contains(r.Mail)) { who.mailbox.Remove(r.Mail); who.mailForTomorrow.Remove(r.Mail); }
+            if (!who.mailbox.Contains(AllRecipesMail) && !who.mailForTomorrow.Contains(AllRecipesMail)) who.mailForTomorrow.Add(AllRecipesMail);
         }
         catch (Exception ex) { Error(who, ex); }
     }

@@ -13,11 +13,9 @@ internal static class ProcessingPolicy
         WineRules.BsvKeg, "(BC)12", "(BC)13", "(BC)15", "(BC)16", "(BC)17", "(BC)19", "(BC)20", "(BC)24",
         "(BC)114", "(BC)Dehydrator", "(BC)FishSmoker", "(BC)HeavyFurnace"
     };
+    // Only the remaining time changes; collection, stats and experience happen natively when the player takes the output.
     internal static bool SupportsProcessingTotem(string machineId, MachineData? data)
-        => ProcessingTotemIds.Contains(machineId) && IsSafe(data)
-            // BSV Keg explicitly supports the totem even when its cloned native data tracks
-            // collection stats. Changing only remaining time does not collect or update stats.
-            && (machineId == WineRules.BsvKeg || !(data!.StatsToIncrementWhenHarvested?.Count > 0));
+        => ProcessingTotemIds.Contains(machineId) && IsSafe(data);
 
     internal static string? BlockReason(MachineData? data, string? machineId = null)
     {

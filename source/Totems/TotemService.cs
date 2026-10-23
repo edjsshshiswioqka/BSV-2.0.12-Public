@@ -108,8 +108,15 @@ internal sealed class TotemService
         long actor = Game1.player.UniqueMultiplayerID;
         if (Notices.Remove(actor, out var notice))
         {
-            Pending.Remove(actor); SentAt.Remove(actor);
-            Game1.addHUDMessage(new HUDMessage(Tr(notice.Key, new { days = notice.Days }), notice.Key == "totem.success" ? 2 : 3));
+            Pending.Remove(actor, out var asked); SentAt.Remove(actor);
+            if (notice.Key == "totem.success" && asked != null)
+            {
+                // Each totem's own closing line, in a dialogue box like native shrines.
+                string line = Tr("totem." + asked.Kind.ToString().ToLowerInvariant() + ".success");
+                if (Game1.activeClickableMenu == null && !Game1.eventUp) Game1.drawObjectDialogue(line);
+                else Game1.addHUDMessage(new HUDMessage(line, 2));
+            }
+            else Game1.addHUDMessage(new HUDMessage(Tr(notice.Key, new { days = notice.Days }), notice.Key == "totem.success" ? 2 : 3));
         }
         if (Pending.TryGetValue(actor, out var pending) && Environment.TickCount64 - SentAt[actor] >= 2000)
         {
