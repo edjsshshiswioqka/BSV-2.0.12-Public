@@ -78,5 +78,5 @@ foreach(int fps in new[]{30,60,120}){
 }
 var clock=new RescueClock();clock.Observe(100,20,20.1);double t=clock.Estimate(21,100);
 clock.Observe(99,20.99,21);Check(clock.Estimate(21,99)>=t,"clock correction never runs backwards");
-File.WriteAllLines(args.Length>0?args[0]:"rescue-model-progress.csv",progressLog);
+File.WriteAllLines(args.Length>0&&!args[0].StartsWith("-")?args[0]:Path.Combine(Path.GetTempPath(),"rescue-model-progress.csv"),progressLog);
 Console.WriteLine($"TOTAL {count} PASS (pure production model; NOT real multiplayer)");
