@@ -444,7 +444,7 @@ internal sealed partial class ProductionService
             string P(double p)=>(p*100).ToString("0.##",System.Globalization.CultureInfo.InvariantCulture)+"%";
             var q=MachineLevelRules.QualityShares(level);var t=MachineLevelRules.TreasureShares(level);
             IClickableMenu.drawHoverText(b,Mod.T("machine.balance",new{capacity=MachineUpgrade.Capacity(level),mult=string.Join(" / ",new[]{1-twice-triple,twice,triple}.Select(P)),
-                quality=string.Join(" / ",q.Select(P)),treasure=string.Join(" / ",t.Select(P)),legend=P(CycleLegendaryRules.Chance(level))})+"\n"+Mod.T(level>=2?"machine.no-trash":"machine.trash-lv1"),Game1.smallFont);
+                quality=string.Join(" / ",q.Select(P)),treasure=string.Join(" / ",t.Select(P)),legend=P(CycleLegendaryRules.Chance(level))})+"\n"+Mod.T("machine.bait-quality",new{mid=string.Join(" / ",MachineLevelRules.QualityShares(level,1,BaitKind.Targeted).Select(P)),high=string.Join(" / ",MachineLevelRules.QualityShares(level,1,BaitKind.Deluxe).Select(P))})+"\n"+Mod.T(level>=2?"machine.no-trash":"machine.trash-lv1"),Game1.smallFont);
         }
         string status=Status(c);
         float statusScale=Math.Min(.75f,(menu.inventory.width-16)/Math.Max(1,Game1.smallFont.MeasureString(status).X));

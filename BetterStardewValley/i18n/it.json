@@ -641,5 +641,6 @@
   "panel.power-now-off": "Fishing machine switched off.",
   "panel.off": "Switched off",
   "status.off": "Switched off. Put in {{needed}} bait (now {{count}}) and press ON.",
-  "panel.power-need-bait": "Not enough bait to start: {{count}} / {{needed}}."
+  "panel.power-need-bait": "Not enough bait to start: {{count}} / {{needed}}.",
+  "machine.bait-quality": "Quality with targeted / challenge bait: {{mid}}\nQuality with deluxe bait: {{high}}\nMixed bait is fine: every bait is judged by its own type."
 }

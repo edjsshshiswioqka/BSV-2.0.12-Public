@@ -583,7 +583,7 @@
   "config.crab-days1.help": "房主设置。1–4 个日历游戏日，每日 1440 分钟；下一批生效，不改变耗饵、品质和暴击。",
   "config.crab-days2": "捕蟹机生产天数 · Lv2",
   "config.crab-days2.help": "房主设置。1–4 个日历游戏日，每日 1440 分钟；下一批生效，不改变耗饵、品质和暴击。",
-  "machine.balance": "下一周期 · {{capacity}} 格\n鱼类 ×1 / ×2 / ×3：{{mult}}\n品质 普通 / 银 / 金 / 铱：{{quality}}\n额外宝箱 普通 / 高级：{{treasure}}\n每个合格周期传奇机会：{{legend}}",
+  "machine.balance": "下一周期 · {{capacity}} 格\n鱼类 ×1 / ×2 / ×3：{{mult}}\n普通鱼饵品质 普通 / 银 / 金 / 铱：{{quality}}\n额外宝箱 普通 / 高级：{{treasure}}\n每个合格周期传奇机会：{{legend}}",
   "machine.no-trash": "Lv2 起不再产出垃圾；藻类和凝胶仍可获得。已存物品全部保留。",
   "machine.trash-lv1": "Lv1 仍可能捕获垃圾。",
   "horse.call.departing": "马匹正在离开。",
@@ -641,5 +641,6 @@
   "panel.power-now-off": "钓鱼机已关机。",
   "panel.off": "已关机",
   "status.off": "已关机。放够 {{needed}} 个鱼饵（现在 {{count}} 个）后点「开机」。",
-  "panel.power-need-bait": "鱼饵不够，无法开机：{{count}} / {{needed}}。"
+  "panel.power-need-bait": "鱼饵不够，无法开机：{{count}} / {{needed}}。",
+  "machine.bait-quality": "定向/挑战鱼饵品质：{{mid}}\n高级鱼饵品质：{{high}}\n鱼饵可以混着放，凑够数量就行；每个鱼饵按自己的种类单独判定品质。"
 }

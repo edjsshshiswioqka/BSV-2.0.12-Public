@@ -150,7 +150,7 @@ public static class Production
         foreach (var s in input.OrderBy(s => s.Index))
         {
             if (s.Index < 0 || s.Count <= 0 || !Enum.IsDefined(typeof(BaitKind), s.Kind)) continue;
-            if (s.Kind == BaitKind.Targeted && (s.Target == null || !eligible.Contains(s.Target))) continue;
+            if (s.Kind == BaitKind.Targeted && s.Target == null) continue;
             int take = Math.Min(count, s.Count);
             plan.Add(new(s.Index, take, s.Kind, s.Target));
             count -= take;
@@ -242,7 +242,7 @@ public static class Production
                     if(id==SpiritId)bonus=Math.Min(bonus,3-baseCount);
                     if (isFish) state.ChallengeExtraFish += baseCount - 1;
                     state.CriticalFishCount += bonus;
-                    int quality = isFish ? MachineLevelRules.Quality(state.Level,qualityRandom.NextDouble(),config.FishingBalanceVersion) : 0;
+                    int quality = isFish ? MachineLevelRules.Quality(state.Level,qualityRandom.NextDouble(),config.FishingBalanceVersion,s.Kind) : 0;
                     Add(id, baseCount + bonus, quality);
                     if(isFish && fish.Any(f=>f.Id==id && f.IsLegendary))
                         state.LegendaryPlans.Add(new(id,baseCount+bonus,quality,Pick(ordinary,fallbackRandom.NextDouble())));

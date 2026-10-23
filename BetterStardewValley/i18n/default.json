@@ -583,7 +583,7 @@
   "config.crab-days1.help": "Host setting. 1–4 calendar days (1440 minutes/day); next batch only. No bait, quality or critical changes.",
   "config.crab-days2": "Crab Machine Production Days · Lv2",
   "config.crab-days2.help": "Host setting. 1–4 calendar days (1440 minutes/day); next batch only. No bait, quality or critical changes.",
-  "machine.balance": "Next cycle · {{capacity}} slots\nFish ×1 / ×2 / ×3: {{mult}}\nQuality normal / silver / gold / iridium: {{quality}}\nExtra treasure normal / advanced: {{treasure}}\nLegendary chance per eligible cycle: {{legend}}",
+  "machine.balance": "Next cycle · {{capacity}} slots\nFish ×1 / ×2 / ×3: {{mult}}\nQuality with plain bait (normal / silver / gold / iridium): {{quality}}\nExtra treasure normal / advanced: {{treasure}}\nLegendary chance per eligible cycle: {{legend}}",
   "machine.no-trash": "Lv2+ produces no trash. Algae and jelly remain eligible. Existing stored items are preserved.",
   "machine.trash-lv1": "Lv1 can catch trash.",
   "horse.call.departing": "The horse is leaving.",
@@ -641,5 +641,6 @@
   "panel.power-now-off": "Fishing machine switched off.",
   "panel.off": "Switched off",
   "status.off": "Switched off. Put in {{needed}} bait (now {{count}}) and press ON.",
-  "panel.power-need-bait": "Not enough bait to start: {{count}} / {{needed}}."
+  "panel.power-need-bait": "Not enough bait to start: {{count}} / {{needed}}.",
+  "machine.bait-quality": "Quality with targeted / challenge bait: {{mid}}\nQuality with deluxe bait: {{high}}\nMixed bait is fine: every bait is judged by its own type."
 }

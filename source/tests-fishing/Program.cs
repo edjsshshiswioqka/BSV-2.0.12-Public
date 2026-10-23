@@ -108,5 +108,37 @@ foreach (int lv in levels) Near(MachineLevelRules.QualityShares(lv).Sum(), 1, 1e
     Check(night.Fish.Single(w => 2100 >= w.From && 2100 < w.Until).Fish[0].Id == "(O)151", "after 18:00 only after-18:00 fish");
 }
 
+// ---- 6. Mixed bait: any mix that adds up to a full load starts; each bait keeps its own quality ----
+{
+    var mix = new[] { new BaitSlot(0, 120, BaitKind.Normal), new BaitSlot(3, 50, BaitKind.Deluxe), new BaitSlot(5, 40, BaitKind.Targeted, "(O)999") };
+    var plan = Production.PlanBait(mix, 200, new HashSet<string> { "(O)129" });
+    Check(plan != null && plan.Sum(p => p.Count) == 200 && plan.Count == 3, "120 bait + 50 deluxe + 30 targeted (fish not here now) make one Lv1 load");
+    Check(Production.PlanBait(mix.Take(2), 200, new HashSet<string>()) == null, "120 + 50 = 170 mixed bait still cannot start Lv1");
+    var run = MachineTimeline.StartFish(new(), cfg, plan!, 1, start, 11);
+    Check(MachineTimeline.Valid(run) && run.Timeline!.Plan.Count == 200, "a mixed load starts a normal 2-day cycle");
+    Console.WriteLine("level bait       normal silver gold iridium   (quality of fish caught)");
+    foreach (int lv in levels)
+    {
+        double lastGood = -1;
+        foreach (var kind in new[] { BaitKind.Normal, BaitKind.Targeted, BaitKind.Deluxe })
+        {
+            var q = new long[5]; long n = 0;
+            var prev = new ProductionState { Level = lv };
+            string? target = kind == BaitKind.Targeted ? "(O)129" : null;
+            for (int i = 0; i < 30000; i++)
+            {
+                var u = Production.Begin(cfg, new[] { new BaitSpend(0, 1, kind, target) }, fishes, other, start, 5000 + i * 7919, prev, "(O)SeaJelly", true);
+                foreach (var p in u.Pending.Where(p => fishes.Any(f => f.Id == p.Id))) { q[p.Quality] += p.Count; n += p.Count; }
+            }
+            var want = MachineLevelRules.QualityShares(lv, 1, kind);
+            Console.WriteLine($"Lv{lv}   {kind,-9}  {q[0] * 100.0 / n,5:0.0} {q[1] * 100.0 / n,5:0.0} {q[2] * 100.0 / n,5:0.0} {q[4] * 100.0 / n,5:0.0}");
+            Near(q[0] / (double)n, want[0], .015, $"Lv{lv} {kind} normal quality share");
+            Near(q[4] / (double)n, want[3], .015, $"Lv{lv} {kind} iridium share");
+            double good = (q[2] + 2.0 * q[4]) / n + q[1] / (2.0 * n);
+            Check(good > lastGood, $"Lv{lv}: {kind} bait gives better quality than the bait tier below"); lastGood = good;
+        }
+    }
+}
+
 Console.WriteLine($"{{\"suite\":\"fishing-machine\",\"passed\":{passed},\"failed\":{failed},\"status\":\"{(failed == 0 ? "PASS" : "FAIL")}\"}}");
 return failed == 0 ? 0 : 1;
