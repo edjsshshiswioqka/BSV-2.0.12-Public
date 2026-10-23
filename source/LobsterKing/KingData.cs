@@ -10,18 +10,22 @@ internal static class KingData
     internal const string TextureRoot="Mods/Eddie.BetterStardewValley/LobsterKing/",Tag="bsv_lobster_king";
     // Edibility 80 is native 200 energy. KingSashimi mirrors native energy for health.
     internal static SashimiBalance ApprovedSashimi=>new(80);
+    // Edible like the loaded Legend (vanilla 500 energy / 225 health): smoked Lobster King then follows the
+    // native x1.5 rule instead of the inedible-fish rule (price x0.3), which gave thousands of energy.
+    internal const int LegendEdibilityFallback=200;
+    internal static int LegendEdibility(IDictionary<string,ObjectData> data)=>data.TryGetValue("163",out var legend)&&legend.Edibility>0?legend.Edibility:LegendEdibilityFallback;
     internal static void Objects(IDictionary<string,ObjectData> data,Func<string,string> tr,SashimiBalance? sashimi=null)
     {
         if(data.TryGetValue(LobsterKingRules.Id,out var old)&&old.Name!="Lobster King")throw new InvalidOperationException("Lobster King ID collision.");
         data[LobsterKingRules.Id]=new(){Name="Lobster King",DisplayName=tr("king.fish.name"),Description=tr("king.fish.description"),
-            Type="Fish",Category=-4,Price=LobsterKingRules.Price,Edibility=-300,Texture=TextureRoot+"fish",SpriteIndex=0,ExcludeFromRandomSale=true,
+            Type="Fish",Category=-4,Price=LobsterKingRules.Price,Edibility=LegendEdibility(data),Texture=TextureRoot+"fish",SpriteIndex=0,ExcludeFromRandomSale=true,
             ContextTags=new(){Tag,"bsv_seafood"}};
         // Callers explicitly opt into the approved food definition.
         if(sashimi==null)return;
         if(sashimi.Edibility<=0)throw new ArgumentOutOfRangeException(nameof(sashimi));
         if(data.TryGetValue(LobsterKingRules.SashimiId,out var prior)&&prior.Name!="Lobster King Sashimi")throw new InvalidOperationException("King sashimi ID collision.");
         data[LobsterKingRules.SashimiId]=new(){Name="Lobster King Sashimi",DisplayName=tr("king.sashimi.name"),Description=tr("king.sashimi.description"),
-            Type="Cooking",Category=-7,Price=2000,Edibility=sashimi.Edibility,IsDrink=false,Texture=TextureRoot+"sashimi",SpriteIndex=0,
+            Type="Cooking",Category=-7,Price=LobsterKingRules.Price,Edibility=sashimi.Edibility,IsDrink=false,Texture=TextureRoot+"sashimi",SpriteIndex=0,
             ExcludeFromRandomSale=true,Buffs=new(){new(){Id=LobsterKingRules.SashimiId,Duration=600,CustomAttributes=new(){Attack=6,Speed=2}}}};
     }
     internal static void Cooking(IDictionary<string,string> data,Func<string,string> tr,bool enabled)

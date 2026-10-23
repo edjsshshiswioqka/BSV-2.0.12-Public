@@ -8,7 +8,7 @@ internal sealed record BowlBalance(int Price,int Edibility);
 internal static class KingCrabData
 {
     internal const string TextureRoot="Mods/Eddie.BetterStardewValley/KingCrab/";
-    internal static BowlBalance ApprovedBowl {get;}=new(850,60);
+    internal static BowlBalance ApprovedBowl {get;}=new(950,60);
     internal static void Objects(IDictionary<string,ObjectData> data,Func<string,string> tr,BowlBalance? bowl)
     {
         void Add(string id,ObjectData value)
@@ -17,7 +17,7 @@ internal static class KingCrabData
             data[id]=value;
         }
         Add(KingCrabRules.Id,new(){Name="King Crab",DisplayName=tr("kingcrab.fish.name"),Description=tr("kingcrab.fish.description"),
-            Type="Fish",Category=-4,Price=KingCrabRules.Price,Edibility=-300,Texture=TextureRoot+"fish",SpriteIndex=0,
+            Type="Fish",Category=-4,Price=KingCrabRules.Price,Edibility=KingCrabRules.RawEdibility,Texture=TextureRoot+"fish",SpriteIndex=0,
             ExcludeFromRandomSale=true,ContextTags=new(){"bsv_seafood","bsv_king_crab"}});
         if(bowl==null)return;
         if(bowl.Price<=0||bowl.Edibility<=0)throw new ArgumentOutOfRangeException(nameof(bowl),"Approved positive price and food edibility are required.");

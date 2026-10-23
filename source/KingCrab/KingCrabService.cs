@@ -21,7 +21,7 @@ internal sealed class KingCrabService
             var pot=DrawPatchTargets.Require(typeof(StardewValley.Objects.CrabPot),"DayUpdate",typeof(void));
             if(Harmony.GetPatchInfo(pot)?.Transpilers.Any(p=>p.PatchMethod.DeclaringType==typeof(GiantLobster.LobsterCrabPots))!=true)
                 throw new InvalidOperationException("Shared native CrabPot selection patch is not installed; King Crab cannot safely start.");
-            KingCrabFoodClock.Install(h);KingCrabTelevision.Install(h);KingCrabHardShell.Install(h,helper);
+            KingCrabFoodClock.Install(h);KingCrabTelevision.Install(h);
         }catch{h.UnpatchAll(h.Id);throw;}
         helper.Events.Content.AssetRequested+=(_,e)=>
         {
@@ -37,7 +37,7 @@ internal sealed class KingCrabService
         helper.Events.Player.Warped+=(_,e)=>{if(e.IsLocalPlayer)KingCrabTelevision.Cancel();};
         helper.Events.GameLoop.ReturnedToTitle+=(_,_)=>KingCrabTelevision.Reset();
         helper.ConsoleCommands.Add("bsv_king_crab_status",BsvI18n.Get(helper,"cmd.king-crab-status"),(_,_)=>
-            monitor.Log("King Crab: ocean base opportunities 1.5%, one shared rare selector; non-crab outcomes 98.5%, price 750g; inedible. Rice Bowl enabled: 850g, base health/energy 150/150. TV premiere year 1 winter 18; reruns every subsequent winter 18. Native food attributes +8 Defense/+4 Immunity; clock adapter implements 600 world minutes (seasoned native duration modifier retained).",LogLevel.Info));
+            monitor.Log($"King Crab: ocean base opportunities {KingCrabRules.Chance:P1}, one shared rare selector; price 750g; edible ({KingCrabRules.RawEdibility}). Rice Bowl enabled: {KingCrabData.ApprovedBowl.Price}g, base health/energy 150/150. TV premiere year 1 winter 18; reruns every subsequent winter 18. Native food attributes +8 Defense/+4 Immunity; clock adapter implements 600 world minutes (seasoned native duration modifier retained).",LogLevel.Info));
         Ready=true;monitor.Log("King Crab, rice bowl and annual winter 18 TV special registered.",LogLevel.Debug);
     }
     private void ClearTextures()

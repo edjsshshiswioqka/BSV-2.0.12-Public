@@ -7,7 +7,7 @@ public static class GiantLobsterRules
     public const string BaitId="Eddie.BetterStardewValley_GiantLobsterBait";
     public const string DinnerId="Eddie.BetterStardewValley_LobsterDinner";
     public const string Bait="(O)"+BaitId;
-    public const double CrabChance=.03;
+    public const double CrabChance=.05;
     public const double SpiritChance=.01;
     public const int HighValuePrice=300,DeluxeBarBonus=12;
     public const double ValueFactor=1.25,BarFactor=1.20;

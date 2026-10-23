@@ -10,7 +10,15 @@ internal static class LobsterMigration
     {
         if(item is not StardewValley.Object o)return true;
         // Lobster King and Mutant Lobster King made before the price change keep the old price in the item itself.
-        if(o.QualifiedItemId==LobsterKingRules.Fish&&o.Price==LobsterKingRules.OldPrice){o.Price=LobsterKingRules.Price;return true;}
+        if(o.QualifiedItemId==LobsterKingRules.Fish)
+        {
+            if(o.Price==LobsterKingRules.OldPrice)o.Price=LobsterKingRules.Price;
+            // Lobster Kings and King Crabs caught while they were inedible keep -300 in the item itself.
+            if(o.Edibility==-300)o.Edibility=Game1.objectData.TryGetValue("163",out var legend)&&legend.Edibility>0?legend.Edibility:BetterStardewValley.LobsterKing.KingData.LegendEdibilityFallback;
+            return true;
+        }
+        if(o.QualifiedItemId==KingCrabRules.Fish){if(o.Edibility==-300)o.Edibility=KingCrabRules.RawEdibility;return true;}
+        if(o.QualifiedItemId==KingCrabRules.Bowl){if(o.Price==KingCrabRules.OldBowlPrice)o.Price=BetterStardewValley.KingCrab.KingCrabData.ApprovedBowl.Price;return true;}
         if(o.QualifiedItemId==MutantLobsterRules.Item&&o.Price==MutantLobsterRules.OldPrice){o.Price=MutantLobsterRules.Price;return true;}
         int price=o.QualifiedItemId switch
         {

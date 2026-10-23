@@ -22,14 +22,14 @@ internal static class KingChecks
         // Service patches installed at startup before native method use.
         var farm=new Farm();farm.name.Value="Farm";Game1.game1._locations.Add(farm);Game1._locationLookup.Clear();
         KingData.Objects(Game1.objectData,k=>k);KingData.Fish(rows);
-        check(ItemRegistry.Create<SObject>(LobsterKingRules.Fish).Price==4500,"native King object registered with distinct identity and price 4500");
+        check(ItemRegistry.Create<SObject>(LobsterKingRules.Fish).Price==LobsterKingRules.Price,"native King object registered with distinct identity and price "+LobsterKingRules.Price);
         check(!GiantLobsterRules.OrdinaryTrapData(rows).ContainsKey(LobsterKingRules.Id)&&!CrabRules.NativePool(rows,new HashSet<string>{"ocean"}).Any(f=>LobsterKingRules.IsFish(f.Id)),"King excluded from both native/machine ordinary pools including Mariner");
         const int trials=1000000,seed=141003;var random=new Random(seed);int king=0,giant=0,crab=0,ordinary=0;
         for(int i=0;i<trials;i++)switch(LobsterKingRules.Select(true,true,random.NextDouble(),true)){case RareCrab.LobsterKing:king++;break;case RareCrab.GiantLobster:giant++;break;case RareCrab.KingCrab:crab++;break;default:ordinary++;break;}
-        foreach(var t in new[]{(king,.003),(giant,.03),(crab,.015),(ordinary,.952)})check(Math.Abs(t.Item1-trials*t.Item2)<6*Math.Sqrt(trials*t.Item2*(1-t.Item2)),"one million actual shared selector, predeclared six-sigma tolerance: "+t.Item2);
-        foreach(bool crabEnabled in new[]{false,true})foreach(bool eligible in new[]{false,true})foreach(bool ocean in new[]{false,true})foreach(double u in new[]{0d,Math.BitDecrement(.003),.003,Math.BitIncrement(.003),Math.BitDecrement(.033),.033,Math.BitIncrement(.033),Math.BitDecrement(.048),.048,Math.BitIncrement(.048),Math.BitDecrement(1d)})
+        foreach(var t in new[]{(king,.003),(giant,.05),(crab,.03),(ordinary,.917)})check(Math.Abs(t.Item1-trials*t.Item2)<6*Math.Sqrt(trials*t.Item2*(1-t.Item2)),"one million actual shared selector, predeclared six-sigma tolerance: "+t.Item2);
+        foreach(bool crabEnabled in new[]{false,true})foreach(bool eligible in new[]{false,true})foreach(bool ocean in new[]{false,true})foreach(double u in new[]{0d,Math.BitDecrement(.003),.003,Math.BitIncrement(.003),Math.BitDecrement(.053),.053,Math.BitIncrement(.053),Math.BitDecrement(.083),.083,Math.BitIncrement(.083),Math.BitDecrement(1d)})
         {
-            var expected=!ocean?RareCrab.Ordinary:u<.003?(eligible?RareCrab.LobsterKing:RareCrab.Ordinary):u<.033?RareCrab.GiantLobster:u<.048&&crabEnabled?RareCrab.KingCrab:RareCrab.Ordinary;
+            var expected=!ocean?RareCrab.Ordinary:u<.003?(eligible?RareCrab.LobsterKing:RareCrab.Ordinary):u<.053?RareCrab.GiantLobster:u<.083&&crabEnabled?RareCrab.KingCrab:RareCrab.Ordinary;
             check(LobsterKingRules.Select(ocean,eligible,u,crabEnabled)==expected,$"mutually exclusive boundary {ocean}/{eligible}/{u:R}");
         }
         var pot=new CrabPot{Location=new GameLocation()};pot.Location.name.Value="LobsterFixtureOcean";

@@ -5,8 +5,10 @@ public static class KingCrabRules
 {
     public const string Id="Eddie.BetterStardewValley_KingCrab", Fish="(O)"+Id;
     public const string BowlId="Eddie.BetterStardewValley_KingCrabRiceBowl", Bowl="(O)"+BowlId;
-    public const double Chance=.015;
+    public const double Chance=.03;
     public const int Price=750, Defense=8, Immunity=4, Minutes=600;
+    // Eaten raw: a little more than a Giant Lobster (54 = 135 energy / 60 health): 58 = 145 / 65.
+    public const int RawEdibility=58, OldBowlPrice=850;
     public static bool IsFish(string? id)=>id==Id||id==Fish;
     public static bool Select(bool ocean,double u)
     {
