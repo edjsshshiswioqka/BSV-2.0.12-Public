@@ -51,7 +51,7 @@
   "remove.full": "请先腾出背包空间。",
   "remove.damaged": "机器占地结构不完整，已保留机器。请查看SMAPI日志。",
   "remove.working": "机器仍在工作或保留着待入库的鱼获，暂时不能回收。",
-  "status.idle": "等待鱼饵：{{count}} / {{needed}}。",
+  "status.idle": "等待鱼饵。放多少都可以开工：每个鱼饵钓一次，满一轮是 {{needed}} 个。",
   "status.waiting": "等待启动：请关闭机器界面，并确保有可用鱼饵及符合条件的捕获对象。",
   "status.working": "生产中：剩余{{hours}}小时{{minutes}}分钟（游戏时间）。",
   "status.timeline-paused": "生产暂停，已付费机会已保留：{{reason}}",

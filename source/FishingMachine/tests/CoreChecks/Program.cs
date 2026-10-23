@@ -284,7 +284,8 @@ Check(sourceCycle.Save() == savedCycle, "detached transaction cannot mutate cach
 Check(!ProductionSchedule.NeedsWork(sourceCycle, sourceCycle.DueAt - 1, 100000, 350, false), "no production lock before deadline even with fuel");
 Check(ProductionSchedule.NeedsWork(sourceCycle, sourceCycle.DueAt, 0, 350, true), "deadline takes precedence over inventory contents");
 Check(ProductionSchedule.NeedsWork(sourceCycle, sourceCycle.DueAt + 10000, 0, 350, false), "overdue save resumes immediately");
-Check(!ProductionSchedule.NeedsWork(new(), 0, 349, 350, false), "idle with insufficient bait needs no lock");
+Check(!ProductionSchedule.NeedsWork(new(), 0, 0, 350, false), "idle with no bait needs no lock");
+Check(ProductionSchedule.NeedsWork(new(), 0, 1, 350, false), "a single bait is enough to start fishing");
 Check(ProductionSchedule.NeedsWork(new(), 0, 350, 350, false), "exact fuel threshold schedules immediately");
 Check(ProductionSchedule.NeedsWork(new(), 0, (long)int.MaxValue + 1, 350, false), "bait preflight cannot overflow int");
 var readyForSchedule = ProductionState.Load(savedCycle); readyForSchedule.Phase = "ready";

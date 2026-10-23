@@ -51,7 +51,7 @@
   "remove.full": "Make room in your backpack first.",
   "remove.damaged": "The footprint is damaged. The machine was kept in place; check the SMAPI log.",
   "remove.working": "Finish the cycle and collect pending catches before retrieving this machine.",
-  "status.idle": "Waiting for bait: {{count}} / {{needed}}.",
+  "status.idle": "Waiting for bait. Any amount works: each bait is one cast; a full cycle is {{needed}}.",
   "status.waiting": "Waiting to start: release the machine menu; bait and eligible catches must be available.",
   "status.working": "Producing: {{hours}} h {{minutes}} min remaining (game time).",
   "status.timeline-paused": "Production paused; paid opportunities preserved: {{reason}}",

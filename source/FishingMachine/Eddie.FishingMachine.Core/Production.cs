@@ -45,6 +45,11 @@ public sealed class ProductionState
     public long StartedAt { get; set; }
     public long DueAt { get; set; }
     public int BaitUsed { get; set; }
+    /// <summary>Bait a full cycle of this level takes. 0 = legacy full cycle. A cycle may start with less
+    /// (every bait is one timed cast); partial cycles add their bait to BaitCredit and count as a completed
+    /// cycle for upgrades only once a full cycle's worth of bait has been fished.</summary>
+    public int CycleBait { get; set; }
+    public long BaitCredit { get; set; }
     public int Seed { get; set; }
     public int FishCount { get; set; }
     public int CriticalFishCount { get; set; }
@@ -116,6 +121,12 @@ public sealed class ProductionState
         if (Phase != "working" || !CycleClock.IsComplete(now, DueAt) || Timeline!=null&&Timeline.Cursor!=Timeline.Plan.Count) return false;
         Phase = "ready";LastNormalTreasures=NormalTreasures;LastAdvancedTreasures=AdvancedTreasures;
         Schema = Timeline!=null ? 8 : CycleRulesVersion > 0 ? 7 : 6;
+        if(CycleBait>0&&BaitUsed<CycleBait)
+        {
+            BaitCredit=checked(BaitCredit+BaitUsed);
+            if(BaitCredit<CycleBait)return true;
+            BaitCredit-=CycleBait;
+        }
         CompletedCycles = checked(CompletedCycles + 1);
         LevelCycles=checked(LevelCycles+1);
         // Missing historical stage evidence never grants lifetime credit. Newly observed
@@ -123,7 +134,7 @@ public sealed class ProductionState
         if(StageProgressUnverified&&Level==2&&Kind==MachineKinds.Fishing&&LevelCycles>=MachineCycleRules.RequiredCycles(this))StageProgressUnverified=false;
         return true;
     }
-    public ProductionState IdleCopy() => new() { LegendaryStats=LegendaryStats.Copy(), LastNormalTreasures=LastNormalTreasures, LastAdvancedTreasures=LastAdvancedTreasures, Schema=CycleRulesVersion>0?7:6, CycleRulesVersion=CycleRulesVersion, Kind=Kind, PersistentId=PersistentId, OwnerId=OwnerId, Level=Level, CompletedCycles=CompletedCycles, LevelCycles=LevelCycles, StageProgressUnverified=StageProgressUnverified, AutoTrash=AutoTrash, Seed=Seed, Continuity=Continuity?.Copy() };
+    public ProductionState IdleCopy() => new() { LegendaryStats=LegendaryStats.Copy(), LastNormalTreasures=LastNormalTreasures, LastAdvancedTreasures=LastAdvancedTreasures, Schema=CycleRulesVersion>0?7:6, CycleRulesVersion=CycleRulesVersion, Kind=Kind, PersistentId=PersistentId, OwnerId=OwnerId, Level=Level, CompletedCycles=CompletedCycles, LevelCycles=LevelCycles, StageProgressUnverified=StageProgressUnverified, AutoTrash=AutoTrash, Seed=Seed, BaitCredit=BaitCredit, Continuity=Continuity?.Copy() };
     public bool BlocksRemoval => Phase == "working" || Pending.Count > 0;
 }
 

@@ -17,6 +17,27 @@ internal static class TimelineChecks
         check(MachineTimeline.Season(27)==0&&MachineTimeline.Season(28)==1&&MachineTimeline.Season(111)==3&&MachineTimeline.Season(112)==0,"season/year keys use opportunity date, not completion date");
         var cfg=new BalanceConfig{BaitPerCycle=200,Normal=new(){Fish=1},FishCriticalChance=0};
         var state=MachineTimeline.StartFish(new(),cfg,new[]{new BaitSpend(0,200,BaitKind.Normal,null)},35,start,seed);
+        // Partial loads: any bait starts a cycle; each bait is one cast inside legal fishing hours.
+        foreach(int n in new[]{1,7,50,199})
+        {
+            var part=MachineTimeline.StartFish(new(),cfg,new[]{new BaitSpend(0,n,BaitKind.Normal,null)},35,start,seed);
+            check(MachineTimeline.Valid(part)&&part.BaitUsed==n&&part.Timeline!.Plan.Count==n&&part.CycleBait==200,"partial load of "+n+" bait plans exactly "+n+" casts");
+            check(part.DueAt>start&&part.DueAt<=state.DueAt,"partial load of "+n+" bait finishes no later than a full cycle");
+            check(part.Timeline.Plan.All(o=>MachineTimeline.Time(o.At) is >=600 and <2600),"partial casts stay inside 06:00-02:00");
+        }
+        check(MachineTimeline.DueAfterLegal(CycleClock.ToAbsoluteMinutes(5,2550),30)==CycleClock.ToAbsoluteMinutes(6,620),"legal time skips 02:00-06:00");
+        reject(()=>MachineTimeline.StartFish(new(),cfg,new[]{new BaitSpend(0,201,BaitKind.Normal,null)},35,start,seed),"more than a full cycle of bait is refused");
+        {
+            var credit=new ProductionState();long t0=start;
+            for(int k=0;k<4;k++)
+            {
+                var run=MachineTimeline.StartFish(credit,cfg,new[]{new BaitSpend(0,50,BaitKind.Normal,null)},35,t0,seed+k);
+                run.Timeline!.Cursor=run.Timeline.Plan.Count;run.FishCount=run.BaitUsed;
+                check(run.Complete(run.DueAt),"partial cycle completes");
+                check(run.CompletedCycles==(k==3?1:0),"four 50-bait runs count as one full cycle for upgrades (run "+(k+1)+")");
+                credit=run.IdleCopy();t0=run.DueAt;
+            }
+        }
         check(MachineTimeline.Valid(state)&&state.Pending.Count==0&&state.Timeline!.Cursor==0,"paid new batch contains no future result");
         cfg.FishCriticalChance=1;check(state.Timeline!.FishingConfig!.FishCriticalChance==0,"production balance frozen for paid cycle");
         var journal=new MachineEnvironmentJournal();

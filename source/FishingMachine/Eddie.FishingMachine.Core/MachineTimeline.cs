@@ -34,6 +34,18 @@ public sealed class MachineTimeline
         unchecked {uint x=(uint)seed ^ (uint)ordinal*0x9E3779B9u ^ (uint)domain;
             x^=x>>16;x*=0x7FEB352Du;x^=x>>15;x*=0x846CA68Bu;x^=x>>16;return (int)x;}
     }
+    /// <summary>First moment after `start` by which `legalMinutes` of fishing time (6:00-2:00) have passed.</summary>
+    public static long DueAfterLegal(long start,long legalMinutes)
+    {
+        if(legalMinutes<1)throw new ArgumentOutOfRangeException(nameof(legalMinutes));
+        for(int day=Day(start);;day++)
+        {
+            long from=Math.Max(start,(long)day*1440+360),to=(long)day*1440+1560;
+            if(to<=from)continue;
+            if(to-from>=legalMinutes)return from+legalMinutes;
+            legalMinutes-=to-from;
+        }
+    }
     private static List<(long From,long Length)> Windows(long start,long due)
     {
         var windows=new List<(long From,long Length)>();
@@ -81,8 +93,14 @@ public sealed class MachineTimeline
     public static ProductionState StartFish(ProductionState previous,BalanceConfig config,IReadOnlyList<BaitSpend> bait,long owner,long now,int seed)
     {
         config.Validate();int required=MachineUpgrade.RequiredBait(previous,config);
-        if(previous.Phase!="idle"||previous.BlocksRemoval||bait.Sum(p=>(long)p.Count)!=required)throw new ArgumentException("Invalid paid fish plan.");
-        var s=previous.IdleCopy();s.Schema=8;s.CycleRulesVersion=1;s.OwnerId=owner;s.Phase="working";s.StartedAt=now;s.DueAt=now+config.MinutesForLevel(previous.Level);s.Seed=seed;s.BaitUsed=required;s.CycleToken=Guid.NewGuid().ToString("N");
+        long used=bait.Sum(p=>(long)p.Count);
+        if(previous.Phase!="idle"||previous.BlocksRemoval||used<1||used>required)throw new ArgumentException("Invalid paid fish plan.");
+        var s=previous.IdleCopy();s.Schema=8;s.CycleRulesVersion=1;s.OwnerId=owner;s.Phase="working";s.StartedAt=now;s.Seed=seed;s.BaitUsed=(int)used;s.CycleToken=Guid.NewGuid().ToString("N");
+        s.CycleBait=required;
+        // A full load keeps the level's cycle length. A partial load fishes for the same time per bait,
+        // counted in legal fishing hours (6:00-2:00), so each bait is one cast at its own time of day.
+        s.DueAt=used==required?now+config.MinutesForLevel(previous.Level)
+            :DueAfterLegal(now,Math.Max(10,(long)Math.Ceiling(config.MinutesForLevel(previous.Level)*20.0/24.0*used/required)));
         s.FishingBalanceVersion=config.FishingBalanceVersion;
         var t=s.Timeline=new(){Version=2,OriginalDue=s.DueAt,FishingConfig=JsonSerializer.Deserialize<BalanceConfig>(JsonSerializer.Serialize(config)),FishingBait=bait.ToList()};
         t.Plan=Schedule(now,s.DueAt,seed,bait.SelectMany((b,i)=>Enumerable.Repeat(i,b.Count)).ToArray());return s;

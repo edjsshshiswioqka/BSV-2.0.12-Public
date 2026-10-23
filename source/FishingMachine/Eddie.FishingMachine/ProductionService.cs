@@ -105,7 +105,8 @@ internal sealed partial class ProductionService
         if(state.Phase!="working" && state.Continuity is {Stopped:false} history && history.NextAt<=Now)return true;
         if(ModEntry.IsCrab(c))return CrabNeedsWork(c,state);
 
-        if(state.Phase=="working"&&state.Timeline!=null)return state.Timeline.Cursor<state.Timeline.Plan.Count?state.Timeline.Plan[state.Timeline.Cursor].At<Now:Now>=state.DueAt;
+        if(state.Phase=="working"&&state.Timeline!=null)return state.Timeline.Cursor<state.Timeline.Plan.Count?state.Timeline.Plan[state.Timeline.Cursor].At<Now:Now>=state.DueAt
+            || state.Pending.Count>0 && DeliverableNow(state).Count>0 && c.Items.Count(i=>i!=null)<c.GetActualCapacity();
         if (PreparingRecovery(c)) return state.Phase == "working" ? Now >= state.DueAt : state.Pending.Count > 0;
         if (state.Phase != "working" && UpgradePlan(c,state) != null) return true;
         int required=MachineUpgrade.RequiredBait(state,Mod.Config);
@@ -117,7 +118,7 @@ internal sealed partial class ProductionService
             var slot=Bait(item,0,state.Level);
             if(slot!=null)bait+=slot.Count; else if(!UpgradeMaterial(item,state))other=true;
         }
-        return ProductionSchedule.NeedsWork(state,Now,bait,required,other) || state.Phase=="ready" && bait>=required;
+        return ProductionSchedule.NeedsWork(state,Now,bait,required,other) || state.Phase=="ready" && bait>=1;
     }
 
     internal int Level(Item? item)
@@ -146,7 +147,7 @@ internal sealed partial class ProductionService
             inventory[spend.Index].Stack-=spend.Count;
             if(inventory[spend.Index].Stack==0)inventory[spend.Index]=null!;
         }
-        s.Level++; s.LevelCycles=0;
+        s.Level++; s.LevelCycles=0; s.BaitCredit=0;
         Commit(c,inventory.Where(i=>i!=null).ToArray(),s);
         c.SpecialChestType=Chest.SpecialChestTypes.BigChest;
             Mod.Monitor.Log(Mod.T("diag.machine-upgraded",new{level=s.Level,location=c.Location.NameOrUniqueName+":"+c.TileLocation,cycles=s.CompletedCycles}),LogLevel.Info);
@@ -172,6 +173,9 @@ internal sealed partial class ProductionService
         RemoveEmptyStacks(c);
         if(ModEntry.IsCrab(c)){ProcessCrab(c, deferDelivery);return;}
         AdvanceTimeline(c);
+        // Fish appear in the machine as soon as each cast lands, not only when the whole cycle ends.
+        if(!deferDelivery&&Read(c) is {Phase:"working",Timeline:not null} live&&live.Pending.Count>0)
+        {var running=live.Snapshot();Deliver(c,running,DeliverableNow(running));}
         // Work with a detached state. Render caches never observe half a transaction.
         var state = Read(c).Snapshot();
 
@@ -202,12 +206,16 @@ internal sealed partial class ProductionService
         var budget=FuelBudget(state,at);
         var slots=c.Items.Select((item,index)=>Bait(item,index,state.Level) is {} b?b with{Count=FuelLimit(item,budget)}:null)
             .Where(b=>b!=null&&b.Count>0).Cast<BaitSlot>().ToArray();
-        if(slots.Sum(s=>(long)s.Count)<required){StopContinuity(c,"insufficient historically available bait");return;}
+        if(slots.Sum(s=>(long)s.Count)<1){StopContinuity(c,"insufficient historically available bait");return;}
         Farmer owner=Game1.GetPlayer(c.owner.Value,onlyOnline:false)
             ??throw new InvalidOperationException($"Machine owner {c.owner.Value} unavailable; bait and cycle preserved.");
         var fish=TimelineEnvironment.CandidatesAt(c,state,owner,at);
         if(!fish.Any(f=>!f.IsLegendary)&&!TimelineEnvironment.HasLegalOtherAt(c,state,at)){StopContinuity(c,"no known eligible ecology");return;}
-        var plan=Production.PlanBait(slots,required,fish.Select(f=>f.Id).ToHashSet());
+        // Any amount of bait starts the machine: each bait is one cast at its own time of day, up to a full cycle.
+        var eligible=fish.Select(f=>f.Id).ToHashSet();
+        long usable=slots.Where(b=>b.Kind!=BaitKind.Targeted||b.Target!=null&&eligible.Contains(b.Target)).Sum(b=>(long)b.Count);
+        if(usable<1){StopContinuity(c,"no eligible bait plan");return;}
+        var plan=Production.PlanBait(slots,(int)Math.Min(required,usable),eligible);
         if(plan==null){StopContinuity(c,"no eligible bait plan");return;}
         var next=MachineTimeline.StartFish(state,config,plan,owner.UniqueMultiplayerID,at,
             state.CompletedCycles==0?Game1.random.Next():MachineTimeline.SeedFor(state.Seed,(int)(state.CompletedCycles%int.MaxValue),0x51710));
@@ -249,8 +257,54 @@ internal sealed partial class ProductionService
         }
         return item;
     }
-    private void Deliver(Chest c, ProductionState state)
+    /// <summary>Catches that may leave a running cycle now. Fish that a legendary roll at the end of the
+    /// cycle could still replace stay in the machine's ledger until the cycle settles.</summary>
+    private static List<StoredCatch> DeliverableNow(ProductionState s)
     {
+        var hold=new Dictionary<(string,int),long>();
+        var t=s.Timeline;
+        if(t!=null&&!t.LegendaryDecision.Committed)
+            foreach(var o in t.LegendaryOpportunities){var k=(o.OrdinaryId,o.Quality);hold[k]=hold.GetValueOrDefault(k)+o.Count;}
+        var result=new List<StoredCatch>();
+        foreach(var p in s.Pending)
+        {
+            if(p.WildClaim!=null)continue;
+            var k=(p.Id,p.Quality);long keep=Math.Min(p.Count,hold.GetValueOrDefault(k));hold[k]=hold.GetValueOrDefault(k)-keep;
+            if(p.Count-keep>0)result.Add(p with{Count=(int)(p.Count-keep)});
+        }
+        return result;
+    }
+    private void Deliver(Chest c, ProductionState state, List<StoredCatch>? only = null)
+    {
+        if (state.Pending.Count == 0) return;
+        if (only != null)
+        {
+            // Deliver part of the ledger; whatever does not fit or is held stays pending.
+            if (only.Count == 0) return;
+            var held = state.Pending.Select(p => p).ToList();
+            foreach (var d in only)
+            {
+                int i = held.FindIndex(p => p.Key == d.Key);
+                held[i] = held[i] with { Count = held[i].Count - d.Count };
+            }
+            held.RemoveAll(p => p.Count <= 0);
+            var partial = state.Snapshot(); partial.Pending = only.ToList();
+            DeliverCore(c, partial, commit: false, out var inventory);
+            if (inventory == null) return;
+            foreach (var left in partial.Pending)
+            {
+                int i = held.FindIndex(p => p.Key == left.Key);
+                if (i < 0) held.Add(left); else held[i] = held[i] with { Count = held[i].Count + left.Count };
+            }
+            state.Pending = held;
+            Commit(c, inventory, state);
+            return;
+        }
+        DeliverCore(c, state, commit: true, out _);
+    }
+    private void DeliverCore(Chest c, ProductionState state, bool commit, out Item[]? inventoryOut)
+    {
+        inventoryOut = null;
         if (state.Pending.Count == 0) return;
         var original = c.Items.Where(i => i != null).ToArray();
         var templates = state.Pending.GroupBy(p=>p.Key).ToDictionary(g=>g.Key,g=>Resolve(g.First()));
@@ -265,7 +319,8 @@ internal sealed partial class ProductionService
             item.Stack = s.Count; return item;
         }).ToArray();
         state.Pending = result.Pending.ToList();
-        Commit(c, inventory, state);
+        inventoryOut = inventory;
+        if (commit) Commit(c, inventory, state);
     }
 
     private void Commit(Chest c,IReadOnlyList<Item>? inventory,ProductionState state)
@@ -322,7 +377,7 @@ internal sealed partial class ProductionService
             if (!BetterStardewValley.Configuration.SharedPreferences.Current.AutoRestartProduction) return Mod.T("status.auto-off");
             long bait = c.Items.Select((i, n) => (long)(Bait(i, n,s.Level)?.Count ?? 0)).Sum();
             int required=MachineUpgrade.RequiredBait(s,Mod.Config);
-            return Mod.T(bait >= required ? "status.waiting" : "status.idle", new { count = bait, needed = required });
+            return Mod.T(bait >= 1 ? "status.waiting" : "status.idle", new { count = bait, needed = required });
         }
         catch { return Mod.T("status.error"); }
     }
