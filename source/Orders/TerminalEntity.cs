@@ -13,11 +13,13 @@ internal static class TerminalEntity
     internal const string Prefix = OrderRules.Prefix + "Terminal2x2/";
     internal const string IdKey = Prefix + "Id", RoleKey = Prefix + "Role", XKey = Prefix + "X", YKey = Prefix + "Y", PendingKey = Prefix + "Pending";
     internal const int Width = 2, Depth = 1, WorldSize = 2;
-    // Opaque extent of the unchanged 64x128 formal asset. Fit uniformly, center the
-    // base on the two ground cells, and align its bottom with the ground boundary.
-    internal static readonly Rectangle WorldSource = new(6, 66, 54, 59);
-    internal const float WorldScale = 128f / 59f;
-    internal static Vector2 DrawPosition(Vector2 anchor) => new(anchor.X * 64 + (128 - WorldSource.Width * WorldScale) / 2, anchor.Y * 64 - 64);
+    // Opaque extent of the 64x128 formal asset (fringe-free). Drawn at a whole-number
+    // scale so every art pixel is the same 2x2 screen block, centred on the two ground
+    // cells with the legs standing on the bottom edge of the base row.
+    internal static readonly Rectangle WorldSource = new(9, 68, 48, 54);
+    internal const int WorldScale = 2;
+    internal static Vector2 DrawPosition(Vector2 anchor) => new(anchor.X * 64 + (Width * 64 - WorldSource.Width * WorldScale) / 2,
+        (anchor.Y + Depth) * 64 - WorldSource.Height * WorldScale);
     internal static bool IsPart(SObject o) => OrderTerminal.IsTerminal(o) && o.modData.TryGetValue(RoleKey, out var role) && role == "part";
     internal static bool Pending(SObject o) => o.modData.ContainsKey(PendingKey);
     internal static string Id(SObject o) => o.modData.TryGetValue(IdKey, out var id) ? id : "";
@@ -74,13 +76,20 @@ internal static class TerminalEntity
         bool own = location.objects.TryGetValue(tile, out var current) && ownId != null
             && OrderTerminal.IsTerminal(current) && Id(current) == ownId;
         if (location.objects.ContainsKey(tile) && !own) return false;
+        // Like native placement: grass, flooring and tilled soil without a crop may sit under the desk;
+        // trees, saplings, bushes and other features may not.
+        if (location.terrainFeatures.TryGetValue(tile, out var feature)
+            && feature is not (StardewValley.TerrainFeatures.Grass or StardewValley.TerrainFeatures.Flooring or StardewValley.TerrainFeatures.HoeDirt)) return false;
         // Native rugs are passable. Inspect every overlapping piece so a rug cannot
         // hide a table/chair behind GetFurnitureAt's first result.
         if (location.furniture.Any(f => f.GetBoundingBox().Intersects(CellBounds(tile)) && !f.isPassable())) return false;
         var mask = CollisionMask.All & ~(CollisionMask.Flooring | CollisionMask.Furniture);
-        if (own) mask &= ~CollisionMask.Objects;
-        return !location.IsTileOccupiedBy(tile, mask, CollisionMask.None);
+        // A terminal already standing here must not be judged by someone walking past it.
+        if (own) mask &= ~(CollisionMask.Objects | CollisionMask.Farmers | CollisionMask.Characters);
+        return !location.IsTileOccupiedBy(tile, mask, PassableIgnored);
     }
+    // Native placement ignores passable things (grass tufts, flooring) but never people or objects.
+    internal const CollisionMask PassableIgnored = CollisionMask.All & ~(CollisionMask.Objects | CollisionMask.Farmers | CollisionMask.Characters);
     // Placement has its own range; interaction and pickup retain InReach unchanged.
     internal static int PlacementDistance = 3;
     internal static bool PlacementReach(Farmer who, Vector2 anchor)
@@ -104,7 +113,7 @@ internal static class TerminalEntity
             return location.isTileOnMap(tile) && location.isTilePassable(tile)
                 && !location.isWaterTile(cx, cy)
                 && !location.furniture.Any(f => f.GetBoundingBox().Intersects(CellBounds(tile)) && !f.isPassable())
-                && !location.IsTileOccupiedBy(tile, CollisionMask.All & ~(CollisionMask.Flooring | CollisionMask.Furniture), CollisionMask.None);
+                && !location.IsTileOccupiedBy(tile, CollisionMask.All & ~(CollisionMask.Flooring | CollisionMask.Furniture), PassableIgnored);
         }
         int ix = 0, iy = 0;
         while (ix < nx || iy < ny)

@@ -108,9 +108,14 @@ internal sealed class OrderTerminal
  internal static void DrawPlaced(SpriteBatch spriteBatch,Vector2 tile,float alpha,bool legacy)
  {
   Instance.WorldTexture??=Instance.Helper.ModContent.Load<Texture2D>("assets/orders/terminal-world.png");
-  float scale=TerminalEntity.WorldScale;
+  float depth=Math.Max(0,(TerminalEntity.VisualBounds(tile).Bottom-1)/10000f);
+  // Soft ground shadow under the desk, the same shadow sprite the game uses under things standing on the floor.
+  var foot=Game1.GlobalToLocal(Game1.viewport,new Vector2(tile.X*64+TerminalEntity.Width*32,(tile.Y+TerminalEntity.Depth)*64-6));
+  var sb=Game1.shadowTexture.Bounds;
+  spriteBatch.Draw(Game1.shadowTexture,foot,sb,Color.White*(0.45f*alpha),0,new Vector2(sb.Width/2f,sb.Height/2f),
+   new Vector2(104f/sb.Width,18f/sb.Height),SpriteEffects.None,Math.Max(0,depth-0.0001f));
   spriteBatch.Draw(Instance.WorldTexture,Game1.GlobalToLocal(Game1.viewport,TerminalEntity.DrawPosition(tile)),TerminalEntity.WorldSource,
-   Color.White*alpha,0,Vector2.Zero,scale,SpriteEffects.None,Math.Max(0,(TerminalEntity.VisualBounds(tile).Bottom-1)/10000f));
+   Color.White*alpha,0,Vector2.Zero,TerminalEntity.WorldScale,SpriteEffects.None,depth);
  }
  private static bool DrawMenu(SObject __instance,SpriteBatch spriteBatch,Vector2 location,float scaleSize,float transparency,float layerDepth,StackDrawType drawStackNumber,Color color)
  {

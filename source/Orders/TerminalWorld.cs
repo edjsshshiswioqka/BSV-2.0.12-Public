@@ -76,10 +76,14 @@ internal sealed class TerminalWorld
         if (!TerminalEntity.CanPlace(l, tile, who)) return "orders.terminal-blocked";
         TerminalEntity.Stamp(item, l, tile, tile, id, false); item.owner.Value = who.UniqueMultiplayerID;
         var entries = TerminalEntity.Tiles(tile).Select(t => (Tile: t, Item: t == tile ? item : TerminalEntity.NewPart(l, t, item))).ToArray();
-        var steps = entries.Select(p => new AtomicStep(() => l.objects.Add(p.Tile, p.Item), () =>
+        // Native placement clears grass under a new object; do the same so no blades poke through the desk.
+        var grass = TerminalEntity.Tiles(tile).Where(t => l.terrainFeatures.TryGetValue(t, out var f) && f is StardewValley.TerrainFeatures.Grass)
+            .Select(t => (Tile: t, Feature: l.terrainFeatures[t])).ToArray();
+        var steps = grass.Select(g => new AtomicStep(() => l.terrainFeatures.Remove(g.Tile), () => { if (!l.terrainFeatures.ContainsKey(g.Tile)) l.terrainFeatures.Add(g.Tile, g.Feature); })).ToList();
+        steps.AddRange(entries.Select(p => new AtomicStep(() => l.objects.Add(p.Tile, p.Item), () =>
         {
             if (l.objects.TryGetValue(p.Tile, out var current) && ReferenceEquals(current, p.Item)) l.objects.Remove(p.Tile);
-        })).ToList();
+        })));
         Commit(who, steps, commit);
         Dirty.Add(l); SafeLightUpdate(); return null;
     }
@@ -177,7 +181,14 @@ internal sealed class TerminalWorld
                 if (Monitor.IsVerbose) Monitor.Log($"Terminal placement map={l.NameOrUniqueName} target={tile} anchor={tile} footprint={TerminalEntity.Bounds(tile)} result={rejected ?? "accepted"}", LogLevel.Trace);
                 // Invalid placement must fall through to native door/object interaction.
                 // No preview object exists and native placement remains escrow-only.
-                if (rejected != null) return;
+                if (rejected != null)
+                {
+                    // Tell the player why nothing happened, unless the click has its own native use (door, object, furniture).
+                    if (rejected is not ("map" or "range") && !l.objects.ContainsKey(tile) && l.GetFurnitureAt(tile) == null
+                        && l.doesTileHaveProperty((int)tile.X, (int)tile.Y, "Action", "Buildings") == null
+                        && !l.warps.Any(w => w.X == (int)tile.X && w.Y == (int)tile.Y)) Notice("orders.terminal-blocked");
+                    return;
+                }
                 Helper.Input.Suppress(e.Button); Network.Request(l, tile); return;
             }
             if (!TerminalEntity.Resolve(l, tile, out var anchor)) return;
