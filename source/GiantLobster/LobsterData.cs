@@ -6,7 +6,11 @@ namespace BetterStardewValley.GiantLobster;
 internal static class LobsterBalance
 {
     internal const string Potato="192", Kale="250";
-    internal const int FishPrice=450,BaitPrice=60,DinnerPrice=700,FoodEdibility=64;
+    internal const int OldFishPrice=450,BaitPrice=60,DinnerPrice=700,FoodEdibility=64;
+    internal const double PriceFactor=1.5;   // Giant Lobster sells for 1.5x a vanilla Lobster (120g -> 180g)
+    internal const int BaitLevel=8,DinnerLevel=7;
+    internal static int VanillaLobsterPrice()=>Game1.objectData!=null&&Game1.objectData.TryGetValue("715",out var o)&&o.Price>0?o.Price:120;
+    internal static int FishPrice(int vanillaLobster)=>(int)(vanillaLobster*PriceFactor);
     // 1.6.15 food data Duration uses 700 ms units, not seconds. Native food/seasoning
     // modifiers and paused buff ticking remain native; base duration = 420,000 ms.
     internal const double EdibleFactor=1.5;
@@ -28,7 +32,7 @@ internal static class LobsterData
         // (120g -> 36 = 90 energy / 40 health), so the Giant Lobster gets 54 (135 / 60). Smoking it then
         // follows the native x1.5 rule (81 = 203 / 91).
         int lobsterPrice=data.TryGetValue("715",out var vanilla)&&vanilla.Price>0?vanilla.Price:120;
-        Add(GiantLobsterRules.Id,"Giant Lobster","fish","Fish",-4,LobsterBalance.FishPrice,(int)(lobsterPrice*.3*LobsterBalance.EdibleFactor));
+        Add(GiantLobsterRules.Id,"Giant Lobster","fish","Fish",-4,LobsterBalance.FishPrice(lobsterPrice),(int)(lobsterPrice*.3*LobsterBalance.EdibleFactor));
         Add(GiantLobsterRules.BaitId,"Giant Lobster Bait","bait","Basic",-21,LobsterBalance.BaitPrice,-300);
         data[GiantLobsterRules.BaitId].CanBeGivenAsGift=false;
         Add(GiantLobsterRules.DinnerId,"Lobster Dinner","dinner","Cooking",-7,LobsterBalance.DinnerPrice,LobsterBalance.FoodEdibility);
@@ -45,13 +49,12 @@ internal static class LobsterData
         data[GiantLobsterRules.Id]=string.Join('/',fields);
     }
     internal static void Crafting(IDictionary<string,string> data,Func<string,string> tr)=>
-        data[GiantLobsterRules.BaitId]=$"{GiantLobsterRules.Id} 1/Field/{GiantLobsterRules.BaitId} 5/false/s Fishing 7/{tr("lobster.bait.name")}";
+        data[GiantLobsterRules.BaitId]=$"{GiantLobsterRules.Id} 1/Field/{GiantLobsterRules.BaitId} 5/false/s Fishing {LobsterBalance.BaitLevel}/{tr("lobster.bait.name")}";
     internal static void Cooking(IDictionary<string,string> data,Func<string,string> tr)=>
-        data[GiantLobsterRules.DinnerId]=$"{GiantLobsterRules.Id} 1 256 1 {LobsterBalance.Potato} 1 {LobsterBalance.Kale} 1/Home/{GiantLobsterRules.DinnerId} {LobsterBalance.DinnerCount}/s Fishing 7/{tr("lobster.dinner.name")}";
+        data[GiantLobsterRules.DinnerId]=$"{GiantLobsterRules.Id} 1 256 1 {LobsterBalance.Potato} 1 {LobsterBalance.Kale} 1/Home/{GiantLobsterRules.DinnerId} {LobsterBalance.DinnerCount}/s Fishing {LobsterBalance.DinnerLevel}/{tr("lobster.dinner.name")}";
     internal static void Learn(Farmer farmer)
     {
-        if(farmer.fishingLevel.Value<7)return;
-        farmer.craftingRecipes.TryAdd(GiantLobsterRules.BaitId,0);
-        farmer.cookingRecipes.TryAdd(GiantLobsterRules.DinnerId,0);
+        if(farmer.fishingLevel.Value>=LobsterBalance.BaitLevel)farmer.craftingRecipes.TryAdd(GiantLobsterRules.BaitId,0);
+        if(farmer.fishingLevel.Value>=LobsterBalance.DinnerLevel)farmer.cookingRecipes.TryAdd(GiantLobsterRules.DinnerId,0);
     }
 }
