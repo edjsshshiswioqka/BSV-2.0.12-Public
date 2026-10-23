@@ -106,9 +106,9 @@ public sealed class GrapeWineFeature
     {
         if (justCheckingForActivity || !WineRules.IsIndexedKeg(__instance.QualifiedItemId)) return true;
         instance.Guard("resolve", () => Resolve(__instance));
+        // Every player resolves the bottle themselves when taking it out (same saved draw for everyone).
         if (__instance.heldObject.Value?.modData.ContainsKey(WineRules.PendingKey) != true) return true;
-        // A farmhand waits for the authoritative output rather than removing an unresolved bottle.
-        __result = false;
+        __result = false;   // only if resolving failed: keep the bottle rather than hand out an unresolved one
         return false;
     }
 
@@ -124,7 +124,7 @@ public sealed class GrapeWineFeature
             pending.modData.Remove(WineRules.BatchKey);
             return;
         }
-        if (!WineRules.ShouldResolve(Game1.IsMasterGame, machine.QualifiedItemId,
+        if (!WineRules.ShouldResolve(machine.QualifiedItemId,
             pending?.QualifiedItemId, pending?.modData.ContainsKey(WineRules.PendingKey) == true)) return;
         // Build both possible results before drawing: a failed item lookup cannot consume a roll.
         var normal = (SObject)pending!.getOne();

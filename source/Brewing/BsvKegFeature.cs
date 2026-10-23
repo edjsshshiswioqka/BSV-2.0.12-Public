@@ -15,7 +15,8 @@ internal sealed class BsvKegFeature
 {
     internal const string TextureAsset = "Mods/" + WineRules.Prefix + "/Keg";
     internal const string Ingredients = "388 30 334 1 335 1 725 1";
-    internal const int MinimumMinutes = 10, AlcoholReduction = 1440;
+    internal const int MinimumMinutes = 10;
+    internal const double AlcoholSpeedup = .25;   // alcohol brews 25% faster in the BSV keg
     private readonly IModHelper Helper;
 
     internal BsvKegFeature(IModHelper helper)
@@ -40,7 +41,7 @@ internal sealed class BsvKegFeature
 
     internal static bool Alcohol(string? output) => output is "(O)348" or "(O)346" or "(O)303" or "(O)459"
         || output == WineRules.GrapeWine || output == WineRules.BloodOfJesus;
-    internal static int Duration(int nativeMinutes) => (int)Math.Max(MinimumMinutes, (long)nativeMinutes - AlcoholReduction);
+    internal static int Duration(int nativeMinutes) => (int)Math.Max(MinimumMinutes, Math.Round(nativeMinutes * (1 - AlcoholSpeedup)));
     internal static void AfterOutput(SObject __instance, bool probe, bool heldObjectOnly, bool __result)
     {
         if (!__result || probe || heldObjectOnly || __instance.QualifiedItemId != WineRules.BsvKeg

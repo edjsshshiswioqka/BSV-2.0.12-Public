@@ -16,14 +16,15 @@ internal static class WineRules
     internal const int GrapeSeedPrice = 1200;
     internal const int GrapeDaysToMature = 15, GrapeRegrowDays = 7;
     internal const int GrapeWinePrice = 990, BloodOfJesusPrice = 30000;
-    internal const int BloodOfJesusDenominator = 150;
+    internal const int BloodOfJesusDenominator = 120;
     internal const double BloodOfJesusChance = 1.0 / BloodOfJesusDenominator;
     internal const double CellarCapacityMultiplier = 2.0;
 
     // Independent draws: no history, streak, pity, or per-player state.
     internal static bool IsRare(int uniformDraw) => uniformDraw == 0;
-    internal static bool ShouldResolve(bool host, string machineId, string? outputId, bool pending)
-        => host && machineId == BsvKeg && outputId == GrapeWine && pending;
+    // Any player may resolve: the result comes from the batch's saved draw, so it is the same whoever does it.
+    internal static bool ShouldResolve(string machineId, string? outputId, bool pending)
+        => machineId == BsvKeg && outputId == GrapeWine && pending;
     internal static bool IsIndexedKeg(string id) => id == Keg || id == BsvKeg;
 
     // Saved batch entropy is generated only on an actual input, never by a probe or collection.
