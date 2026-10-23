@@ -44,6 +44,7 @@ internal sealed class SpiritService
             Patch(typeof(NPC),"receiveGift",typeof(void),nameof(Gift),null,typeof(SObject),typeof(Farmer),typeof(bool),typeof(float),typeof(bool));
             Patch(typeof(FishPond),"SpawnFish",typeof(void),nameof(Spawn),null);
             Patch(typeof(FishPond),"GetWaterColor",typeof(Color?),null,nameof(Water),typeof(Vector2));
+            Patch(typeof(FishPond),"draw",typeof(void),null,nameof(PondDraw),typeof(SpriteBatch));
             SpiritArt.Install(h,helper,monitor);
             SpiritSelection.Install(h);
         }
@@ -57,6 +58,10 @@ internal sealed class SpiritService
         helper.Events.GameLoop.SaveLoaded+=(_,_)=>{Learn();SpiritPondRewards.ValidateLoaded(monitor);};
         helper.Events.GameLoop.DayStarted+=(_,_)=>Learn();
         helper.Events.GameLoop.TimeChanged+=(_,_)=>Learn();
+        // The blessing shows as a buff icon while the soup's luck lasts (the luck itself lives in SpiritLuck).
+        helper.Events.GameLoop.TimeChanged+=(_,_)=>ReconcileBuff();
+        helper.Events.GameLoop.OneSecondUpdateTicked+=(_,_)=>ReconcileBuff();
+        helper.Events.GameLoop.DayStarted+=(_,_)=>ReconcileBuff();
         helper.ConsoleCommands.Add("bsv_spirit_status",Tr("cmd.spirit-status"),(_,_)=>Status());
         monitor.Log("Spirit Fish registered; native processing, annual quota and soup hooks installed.",LogLevel.Debug);
     }
@@ -118,7 +123,50 @@ internal sealed class SpiritService
     private static void Energy(SObject __instance,ref int __result){if(__instance.QualifiedItemId==SpiritRules.Soup)__result=225;}
     private static void Health(SObject __instance,ref int __result){if(__instance.QualifiedItemId==SpiritRules.Soup)__result=225;}
     private static void DoneEating(Farmer __instance)
-    {if(__instance.IsLocalPlayer&&__instance.itemToEat?.QualifiedItemId==SpiritRules.Soup)__instance.modData[SpiritRules.LuckKey]=Game1.Date.TotalDays.ToString();}
+    {if(__instance.IsLocalPlayer&&__instance.itemToEat?.QualifiedItemId==SpiritRules.Soup){__instance.modData[SpiritRules.LuckKey]=Game1.Date.TotalDays.ToString();Instance.ReconcileBuff();}}
+    private Texture2D? BuffIcon;
+    private void ReconcileBuff()
+    {
+        if(!Context.IsWorldReady)return;
+        var who=Game1.player;
+        if(!SpiritLuck.Active(who)){if(who.hasBuff(SpiritRules.LuckBuff))who.buffs.Remove(SpiritRules.LuckBuff);return;}
+        if(who.hasBuff(SpiritRules.LuckBuff))return;
+        BuffIcon??=Helper.ModContent.Load<Texture2D>("assets/buffs/spirit_luck.png");
+        // Display only: no stat effects here, so the luck values are never applied twice.
+        who.applyBuff(new Buff(SpiritRules.LuckBuff,SpiritRules.SoupId,Tr("spirit.soup.name"),Buff.ENDLESS,BuffIcon,0,
+            displayName:Tr("spirit.buff.name"),description:Tr("spirit.buff.description")));
+    }
+    // ---- Rainbow pond surface. Vanilla tints the whole water layer with ONE colour (overrideWaterColor, applied
+    // the morning after the fish moves in). From that morning on, the Spirit pond's water layer is drawn again on
+    // top with a colour per spot, at the same position/scale and just above the native water, below the waves.
+    private static readonly Dictionary<Texture2D,Texture2D> RainbowWater=new();
+    private static void PondDraw(FishPond __instance,SpriteBatch __0)
+    {
+        if(__instance.isMoving||__instance.daysOfConstructionLeft.Value>0||__instance.FishCount<=0||!SpiritRules.IsFish(__instance.fishType.Value))return;
+        if(__instance.overrideWaterColor.Value==Color.White)return;
+        var source=__instance.texture.Value;if(source==null||source.IsDisposed)return;
+        if(!RainbowWater.TryGetValue(source,out var water)||water.IsDisposed){water=MakeRainbowWater(source);RainbowWater[source]=water;}
+        __0.Draw(water,Game1.GlobalToLocal(Game1.viewport,new Vector2(__instance.tileX.Value*64,__instance.tileY.Value*64+__instance.tilesHigh.Value*64)),
+            null,Color.White*__instance.alpha,0f,new Vector2(0f,80f),4f,SpriteEffects.None,((__instance.tileY.Value+.5f)*64f-2.9f)/10000f);
+    }
+    internal static Color RainbowAt(float tileX,float tileY)
+    {
+        var colors=PondColors;
+        double phase=(tileX*.55+tileY*.35)%colors.Length;if(phase<0)phase+=colors.Length;int index=(int)phase;
+        return Color.Lerp(colors[index],colors[(index+1)%colors.Length],(float)(phase-index));
+    }
+    private static Texture2D MakeRainbowWater(Texture2D source)
+    {
+        var area=new Rectangle(0,80,80,80);var pixels=new Color[area.Width*area.Height];
+        source.GetData(0,area,pixels,0,pixels.Length);
+        for(int y=0;y<area.Height;y++)for(int x=0;x<area.Width;x++)
+        {
+            int i=y*area.Width+x;var c=pixels[i];if(c.A==0)continue;
+            var t=RainbowAt(x/16f,y/16f);   // 16 source pixels = one tile
+            pixels[i]=new Color(c.R*t.R/255,c.G*t.G/255,c.B*t.B/255,(int)c.A);
+        }
+        var texture=new Texture2D(Game1.graphics.GraphicsDevice,area.Width,area.Height);texture.SetData(pixels);return texture;
+    }
     private static void Taste(Item item,ref int __result){if(item?.QualifiedItemId==SpiritRules.Soup)__result=0;}
     private static void Gift(SObject o,ref float friendshipChangeMultiplier)
     {if(o?.QualifiedItemId==SpiritRules.Soup)friendshipChangeMultiplier=8f;} // native birthday branch assigns 8, it does not multiply again.

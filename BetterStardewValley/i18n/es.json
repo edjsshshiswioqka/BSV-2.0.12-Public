@@ -427,9 +427,9 @@
   "rescue.revived": "Te han reanimado. ¡Cuídate!",
   "rescue.rescued": "Rescatado",
   "spirit.fish.name": "Pez espiritual",
-  "spirit.fish.description": "Raro espíritu de montaña que aparece después de las 18:00 con Pesca 10 y cebo de langosta gigante. Una vez por jugador y año.",
+  "spirit.fish.description": "Said to be a spirit in fish form. It only appears in the mountain lake at night. It ignores ordinary bait, but can't resist Giant Lobster Bait.",
   "spirit.soup.name": "Sopa de pez espiritual",
-  "spirit.soup.description": "Restaura 225 de salud y energía, sin superar tus máximos. Fija suerte diaria en 0,125 y nivel de suerte en 13 hasta fin de día; las tragaperras usan 14 localmente. Un regalo digno de cumpleaños.",
+  "spirit.soup.description": "A soup slowly simmered from a Spirit Fish, shimmering with a faint rainbow glow. Whoever drinks it is blessed with good luck all day. A dish this precious is treasured as the finest gift by anyone who receives it.",
   "spirit.soup.kitchen": "La sopa de pez espiritual debe prepararse en una cocina.",
   "spirit.smoked.name": "Pez espiritual ahumado",
   "spirit.roe.name": "Huevas de pez espiritual",
@@ -644,5 +644,7 @@
   "panel.power-need-bait": "Not enough bait to start: {{count}} / {{needed}}.",
   "machine.bait-quality": "Quality with targeted / challenge bait: {{mid}}\nQuality with deluxe bait: {{high}}\nMixed bait is fine: every bait is judged by its own type.",
   "crab.power-on-help": "ON: whenever there is a full load of bait the machine sets its traps again, cycle after cycle. Click to switch off: it stops now, the catch so far stays, unused bait comes back into the machine.",
-  "crab.power-off-help": "OFF: the machine does nothing. Put in a full load of bait (Lv1 150, Lv2 350; half with the Luremaster profession), then click to switch on."
+  "crab.power-off-help": "OFF: the machine does nothing. Put in a full load of bait (Lv1 150, Lv2 350; half with the Luremaster profession), then click to switch on.",
+  "spirit.buff.name": "Spirit's Blessing",
+  "spirit.buff.description": "The spirits are watching over you. Everything goes your way today."
 }

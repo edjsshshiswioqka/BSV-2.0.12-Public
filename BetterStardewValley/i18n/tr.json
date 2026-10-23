@@ -427,9 +427,9 @@
   "rescue.revived": "Canlandınız. Dikkatli olun!",
   "rescue.rescued": "Kurtarıldı",
   "spirit.fish.name": "Ruh Balığı",
-  "spirit.fish.description": "Dev Istakoz Yemi kullanan Balıkçılık 10 oltacılarına 18.00'den sonra görünen nadir bir dağ ruhu. Oyuncu başına yılda bir.",
+  "spirit.fish.description": "Said to be a spirit in fish form. It only appears in the mountain lake at night. It ignores ordinary bait, but can't resist Giant Lobster Bait.",
   "spirit.soup.name": "Ruh Balığı Çorbası",
-  "spirit.soup.description": "Üst sınıra kadar 225 can ve 225 enerji yeniler. Gün sonuna kadar günlük şansı 0,125'e, şans seviyesini 13'e sabitler; yalnızca slotlarda 14 kullanılır. Doğum gününe yakışır bir hediye.",
+  "spirit.soup.description": "A soup slowly simmered from a Spirit Fish, shimmering with a faint rainbow glow. Whoever drinks it is blessed with good luck all day. A dish this precious is treasured as the finest gift by anyone who receives it.",
   "spirit.soup.kitchen": "Ruh Balığı Çorbası mutfakta pişirilmelidir.",
   "spirit.smoked.name": "Tütsülenmiş Ruh Balığı",
   "spirit.roe.name": "Ruh Balığı Yumurtası",
@@ -644,5 +644,7 @@
   "panel.power-need-bait": "Not enough bait to start: {{count}} / {{needed}}.",
   "machine.bait-quality": "Quality with targeted / challenge bait: {{mid}}\nQuality with deluxe bait: {{high}}\nMixed bait is fine: every bait is judged by its own type.",
   "crab.power-on-help": "ON: whenever there is a full load of bait the machine sets its traps again, cycle after cycle. Click to switch off: it stops now, the catch so far stays, unused bait comes back into the machine.",
-  "crab.power-off-help": "OFF: the machine does nothing. Put in a full load of bait (Lv1 150, Lv2 350; half with the Luremaster profession), then click to switch on."
+  "crab.power-off-help": "OFF: the machine does nothing. Put in a full load of bait (Lv1 150, Lv2 350; half with the Luremaster profession), then click to switch on.",
+  "spirit.buff.name": "Spirit's Blessing",
+  "spirit.buff.description": "The spirits are watching over you. Everything goes your way today."
 }

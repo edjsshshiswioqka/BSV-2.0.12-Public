@@ -427,9 +427,9 @@
   "rescue.revived": "已获救，请小心！",
   "rescue.rescued": "已获救",
   "spirit.fish.name": "精灵鱼",
-  "spirit.fish.description": "18点后在山区现身的稀有精灵。钓鱼10级并使用大龙虾钓饵才有机会捕获，每名玩家每年限一次。",
+  "spirit.fish.description": "传说中精灵的化身，只在夜晚的山区湖泊出现。对一般的鱼饵不感兴趣，只对大龙虾钓饵情有独钟。",
   "spirit.soup.name": "精灵鱼汤",
-  "spirit.soup.description": "恢复225点生命与225点体力，不超过自身上限。当天每日运气固定为0.125、幸运等级固定为13；老虎机判定局部使用14级。也是一份生日级的珍贵礼物。",
+  "spirit.soup.description": "用精灵鱼慢火熬成的汤，泛着淡淡的彩光。喝下以后，一整天都会被好运眷顾。这样珍贵的佳肴无论送给谁，都会被当成最珍贵的心意。",
   "spirit.soup.kitchen": "精灵鱼汤需要在厨房烹饪。",
   "spirit.smoked.name": "熏制精灵鱼",
   "spirit.roe.name": "精灵鱼鱼籽",
@@ -644,5 +644,7 @@
   "panel.power-need-bait": "鱼饵不够，无法开机：{{count}} / {{needed}}。",
   "machine.bait-quality": "定向/挑战鱼饵品质：{{mid}}\n高级鱼饵品质：{{high}}\n鱼饵可以混着放，凑够数量就行；每个鱼饵按自己的种类单独判定品质。",
   "crab.power-on-help": "开机中：鱼饵够一整轮就会自动一轮接一轮地下蟹笼。点一下关机：马上停止，已收到的东西留着，没用掉的鱼饵退回机器。",
-  "crab.power-off-help": "已关机：机器不会运行。放够一整轮的鱼饵（Lv1 150 个、Lv2 350 个；有诱饵大师职业时减半）后点一下开机。"
+  "crab.power-off-help": "已关机：机器不会运行。放够一整轮的鱼饵（Lv1 150 个、Lv2 350 个；有诱饵大师职业时减半）后点一下开机。",
+  "spirit.buff.name": "精灵的祝福",
+  "spirit.buff.description": "精灵正在眷顾你，今天做什么都格外顺利。"
 }

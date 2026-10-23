@@ -427,9 +427,9 @@
   "rescue.revived": "소생했습니다. 조심하세요!",
   "rescue.rescued": "구조됨",
   "spirit.fish.name": "정령 물고기",
-  "spirit.fish.description": "오후 6시 이후 대왕 바닷가재 미끼를 쓰는 낚시 레벨 10 낚시꾼에게 나타나는 희귀한 산의 정령. 플레이어당 1년에 한 번.",
+  "spirit.fish.description": "Said to be a spirit in fish form. It only appears in the mountain lake at night. It ignores ordinary bait, but can't resist Giant Lobster Bait.",
   "spirit.soup.name": "정령 물고기 수프",
-  "spirit.soup.description": "최대치 이내에서 체력 225와 기력 225를 회복합니다. 하루가 끝날 때까지 일일 운을 0.125, 행운 레벨을 13으로 고정하며 슬롯머신에서만 14를 사용합니다. 생일 선물로도 좋습니다.",
+  "spirit.soup.description": "A soup slowly simmered from a Spirit Fish, shimmering with a faint rainbow glow. Whoever drinks it is blessed with good luck all day. A dish this precious is treasured as the finest gift by anyone who receives it.",
   "spirit.soup.kitchen": "정령 물고기 수프는 주방에서 조리해야 합니다.",
   "spirit.smoked.name": "훈제 정령 물고기",
   "spirit.roe.name": "정령 물고기 어란",
@@ -644,5 +644,7 @@
   "panel.power-need-bait": "Not enough bait to start: {{count}} / {{needed}}.",
   "machine.bait-quality": "Quality with targeted / challenge bait: {{mid}}\nQuality with deluxe bait: {{high}}\nMixed bait is fine: every bait is judged by its own type.",
   "crab.power-on-help": "ON: whenever there is a full load of bait the machine sets its traps again, cycle after cycle. Click to switch off: it stops now, the catch so far stays, unused bait comes back into the machine.",
-  "crab.power-off-help": "OFF: the machine does nothing. Put in a full load of bait (Lv1 150, Lv2 350; half with the Luremaster profession), then click to switch on."
+  "crab.power-off-help": "OFF: the machine does nothing. Put in a full load of bait (Lv1 150, Lv2 350; half with the Luremaster profession), then click to switch on.",
+  "spirit.buff.name": "Spirit's Blessing",
+  "spirit.buff.description": "The spirits are watching over you. Everything goes your way today."
 }

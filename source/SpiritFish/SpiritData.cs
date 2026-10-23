@@ -10,11 +10,15 @@ internal static class SpiritData
 {
     internal static void Objects(IDictionary<string,ObjectData> data, Func<string,string> tr)
     {
+        // Edible like the loaded Legend (vanilla 500 energy / 225 health). Smoked Spirit Fish then follows the
+        // native x1.5 rule instead of the inedible-fish rule (price x0.3 = 4500 energy).
+        int edibility=data.TryGetValue(SpiritRules.LegendFish,out var legend)&&legend.Edibility>0?legend.Edibility:SpiritRules.LegendEdibilityFallback;
+        int PriceOf(string id,int fallback)=>data.TryGetValue(id,out var o)?o.Price:fallback;
         data[SpiritRules.Id] = new ObjectData { Name="Spirit Fish", DisplayName=tr("spirit.fish.name"), Description=tr("spirit.fish.description"),
-            Type="Fish", Category=-4, Price=SpiritRules.Price, Edibility=-300, Texture=SpiritRules.TextureRoot+"fish", SpriteIndex=0,
+            Type="Fish", Category=-4, Price=SpiritRules.Price, Edibility=edibility, Texture=SpiritRules.TextureRoot+"fish", SpriteIndex=0,
             ContextTags=new(){SpiritRules.Tag,"fish_legendary","fish_has_roe","color_purple"}, ExcludeFromRandomSale=true };
         data[SpiritRules.SoupId] = new ObjectData { Name="Spirit Fish Soup", DisplayName=tr("spirit.soup.name"), Description=tr("spirit.soup.description"),
-            Type="Cooking", Category=-7, Price=SpiritRules.SoupPrice, Edibility=90, Texture=SpiritRules.TextureRoot+"soup", SpriteIndex=0,
+            Type="Cooking", Category=-7, Price=SpiritRules.SoupPrice(SpiritRules.Price,PriceOf(SpiritRules.Truffle,625),PriceOf(SpiritRules.Morel,150)), Edibility=90, Texture=SpiritRules.TextureRoot+"soup", SpriteIndex=0,
             ContextTags=new(){"bsv_seafood"}, ExcludeFromRandomSale=true };
     }
     internal static void Fish(IDictionary<string,string> data)

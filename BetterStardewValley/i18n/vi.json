@@ -427,9 +427,9 @@
   "rescue.revived": "Đã hồi sinh. Hãy cẩn thận!",
   "rescue.rescued": "Được cứu",
   "spirit.fish.name": "Cá Linh Hồn",
-  "spirit.fish.description": "Tinh linh núi hiếm xuất hiện sau 6 giờ tối cho người Câu Cá cấp 10 dùng Mồi Tôm Hùm Khổng Lồ. Mỗi người một lần mỗi năm.",
+  "spirit.fish.description": "Said to be a spirit in fish form. It only appears in the mountain lake at night. It ignores ordinary bait, but can't resist Giant Lobster Bait.",
   "spirit.soup.name": "Súp Cá Linh Hồn",
-  "spirit.soup.description": "Hồi 225 máu và 225 năng lượng, không vượt tối đa. Cố định may mắn ngày ở 0,125 và cấp may mắn ở 13 đến hết ngày; riêng máy xèng dùng 14. Món quà xứng đáng cho sinh nhật.",
+  "spirit.soup.description": "A soup slowly simmered from a Spirit Fish, shimmering with a faint rainbow glow. Whoever drinks it is blessed with good luck all day. A dish this precious is treasured as the finest gift by anyone who receives it.",
   "spirit.soup.kitchen": "Súp Cá Linh Hồn phải nấu trong bếp.",
   "spirit.smoked.name": "Cá Linh Hồn Hun Khói",
   "spirit.roe.name": "Trứng Cá Linh Hồn",
@@ -644,5 +644,7 @@
   "panel.power-need-bait": "Not enough bait to start: {{count}} / {{needed}}.",
   "machine.bait-quality": "Quality with targeted / challenge bait: {{mid}}\nQuality with deluxe bait: {{high}}\nMixed bait is fine: every bait is judged by its own type.",
   "crab.power-on-help": "ON: whenever there is a full load of bait the machine sets its traps again, cycle after cycle. Click to switch off: it stops now, the catch so far stays, unused bait comes back into the machine.",
-  "crab.power-off-help": "OFF: the machine does nothing. Put in a full load of bait (Lv1 150, Lv2 350; half with the Luremaster profession), then click to switch on."
+  "crab.power-off-help": "OFF: the machine does nothing. Put in a full load of bait (Lv1 150, Lv2 350; half with the Luremaster profession), then click to switch on.",
+  "spirit.buff.name": "Spirit's Blessing",
+  "spirit.buff.description": "The spirits are watching over you. Everything goes your way today."
 }

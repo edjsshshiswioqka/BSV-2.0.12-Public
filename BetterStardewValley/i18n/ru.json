@@ -427,9 +427,9 @@
   "rescue.revived": "Вы ожили. Берегите себя!",
   "rescue.rescued": "Спасён",
   "spirit.fish.name": "Рыба-дух",
-  "spirit.fish.description": "Редкий горный дух, появляющийся после 18:00 для рыбаков 10-го уровня с наживкой из гигантского омара. Раз в год на игрока.",
+  "spirit.fish.description": "Said to be a spirit in fish form. It only appears in the mountain lake at night. It ignores ordinary bait, but can't resist Giant Lobster Bait.",
   "spirit.soup.name": "Суп из рыбы-духа",
-  "spirit.soup.description": "Восстанавливает 225 здоровья и 225 энергии, не выше максимума. До конца дня фиксирует дневную удачу на 0,125 и уровень удачи на 13; только слот-машины используют 14. Достойный подарок на день рождения.",
+  "spirit.soup.description": "A soup slowly simmered from a Spirit Fish, shimmering with a faint rainbow glow. Whoever drinks it is blessed with good luck all day. A dish this precious is treasured as the finest gift by anyone who receives it.",
   "spirit.soup.kitchen": "Суп из рыбы-духа нужно готовить на кухне.",
   "spirit.smoked.name": "Копчёная рыба-дух",
   "spirit.roe.name": "Икра рыбы-духа",
@@ -644,5 +644,7 @@
   "panel.power-need-bait": "Not enough bait to start: {{count}} / {{needed}}.",
   "machine.bait-quality": "Quality with targeted / challenge bait: {{mid}}\nQuality with deluxe bait: {{high}}\nMixed bait is fine: every bait is judged by its own type.",
   "crab.power-on-help": "ON: whenever there is a full load of bait the machine sets its traps again, cycle after cycle. Click to switch off: it stops now, the catch so far stays, unused bait comes back into the machine.",
-  "crab.power-off-help": "OFF: the machine does nothing. Put in a full load of bait (Lv1 150, Lv2 350; half with the Luremaster profession), then click to switch on."
+  "crab.power-off-help": "OFF: the machine does nothing. Put in a full load of bait (Lv1 150, Lv2 350; half with the Luremaster profession), then click to switch on.",
+  "spirit.buff.name": "Spirit's Blessing",
+  "spirit.buff.description": "The spirits are watching over you. Everything goes your way today."
 }

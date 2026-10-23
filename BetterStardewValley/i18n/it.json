@@ -427,9 +427,9 @@
   "rescue.revived": "Sei di nuovo in piedi. Fai attenzione!",
   "rescue.rescued": "Soccorso ricevuto",
   "spirit.fish.name": "Pesce spirito",
-  "spirit.fish.description": "Un raro spirito di montagna, che appare dopo le 18:00 ai pescatori di livello 10 che usano l'esca di aragosta gigante. Una volta per giocatore all'anno.",
+  "spirit.fish.description": "Said to be a spirit in fish form. It only appears in the mountain lake at night. It ignores ordinary bait, but can't resist Giant Lobster Bait.",
   "spirit.soup.name": "Zuppa di pesce spirito",
-  "spirit.soup.description": "Ripristina 225 salute e 225 energia, fino al tuo massimo. Fissa la fortuna giornaliera a 0,125 e il livello di fortuna a 13 fino a fine giornata; le slot usano localmente 14. Un regalo degno di un compleanno.",
+  "spirit.soup.description": "A soup slowly simmered from a Spirit Fish, shimmering with a faint rainbow glow. Whoever drinks it is blessed with good luck all day. A dish this precious is treasured as the finest gift by anyone who receives it.",
   "spirit.soup.kitchen": "La zuppa di pesce spirito deve essere preparata in cucina.",
   "spirit.smoked.name": "Pesce spirito affumicato",
   "spirit.roe.name": "Uova di pesce spirito",
@@ -644,5 +644,7 @@
   "panel.power-need-bait": "Not enough bait to start: {{count}} / {{needed}}.",
   "machine.bait-quality": "Quality with targeted / challenge bait: {{mid}}\nQuality with deluxe bait: {{high}}\nMixed bait is fine: every bait is judged by its own type.",
   "crab.power-on-help": "ON: whenever there is a full load of bait the machine sets its traps again, cycle after cycle. Click to switch off: it stops now, the catch so far stays, unused bait comes back into the machine.",
-  "crab.power-off-help": "OFF: the machine does nothing. Put in a full load of bait (Lv1 150, Lv2 350; half with the Luremaster profession), then click to switch on."
+  "crab.power-off-help": "OFF: the machine does nothing. Put in a full load of bait (Lv1 150, Lv2 350; half with the Luremaster profession), then click to switch on.",
+  "spirit.buff.name": "Spirit's Blessing",
+  "spirit.buff.description": "The spirits are watching over you. Everything goes your way today."
 }
