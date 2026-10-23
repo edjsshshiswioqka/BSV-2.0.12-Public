@@ -126,7 +126,8 @@ internal static class HorseSkins
         };
         return list;
     }
-    internal static Skin? Find(string? id) => All.FirstOrDefault(s => s.Id == (id == "unicorn" ? "rainbow" : id));
+    private static readonly Dictionary<string, Skin> ById = All.ToDictionary(s => s.Id, StringComparer.Ordinal);
+    internal static Skin? Find(string? id) => id == null ? null : ById.GetValueOrDefault(id == "unicorn" ? "rainbow" : id);
     internal static string AssetName(string id) => AssetPrefix + id;
 
     private static readonly Color[] RainbowBands = { C(232, 64, 72), C(250, 150, 50), C(250, 220, 70), C(90, 200, 110), C(80, 150, 240), C(160, 100, 220) };

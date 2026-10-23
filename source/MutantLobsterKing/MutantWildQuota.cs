@@ -61,7 +61,8 @@ internal static class MutantWildQuota
     {
         if(!MutantService.Ready||!Game1.IsMasterGame||day<0||day>Game1.Date.TotalDays||Game1.getLocationFromName("Farm") is not Farm)return false;
         if(!Game1.getFarm().modData.ContainsKey(Key))return false;
-        lock(Gate)return Read().Available(MachineTimeline.Year(day));
+        // A damaged ledger fails closed (no Mutant tonight) instead of aborting the overnight crab pot update.
+        try{lock(Gate)return Read().Available(MachineTimeline.Year(day));}catch{return false;}
     }
     internal static bool CommitAt(int day,string source,Action<string> apply,Action rollback)
     {

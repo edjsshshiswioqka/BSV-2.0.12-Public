@@ -17,6 +17,7 @@
     <Reference Include="Newtonsoft.Json" HintPath="$(GamePath)\smapi-internal\Newtonsoft.Json.dll" Private="false" />
     <Compile Include="GlobalUsings.cs" />
     <Compile Include="DisplayText.cs" />
+    <Compile Include="TranspilerGuard.cs" />
     <Compile Include="Configuration/*.cs" /><Compile Include="Farming/*.cs" />
     <Compile Include="CellarAppearance.cs" />
     <Compile Include="AfkFishing/*.cs" />

@@ -16,7 +16,10 @@ internal sealed partial class ProductionService
         Mod.Monitor.Log($"[BSV production] machine={c.modData.GetValueOrDefault(ModEntry.Tag+"MachineId")} kind={state.Kind} level={state.Level} location={c.Location.NameOrUniqueName}:{c.TileLocation} token={state.CycleToken} start={state.StartedAt} due={state.DueAt} now={Now} phase={state.Phase} settlement={state.Timeline?.Cursor}/{state.Timeline?.Plan.Count} paidBait={state.BaitUsed} storedBait={StoredBait(c)} pending={state.Pending.Sum(p=>(long)p.Count)} completed={state.CompletedCycles} levelCycles={state.LevelCycles} reason={state.Timeline?.PausedReason??(state.Continuity?.StopReason??"running")}",StardewModdingAPI.LogLevel.Debug);
     }
     private readonly Dictionary<Chest,string> TraceStates=new();
-    internal bool HasBacklog=>Mod.Machines.All.Any(p=>GetCached(p.Key).State?.Phase=="working"&&NextEvent(p.Key)<Now);
+    // Per-frame catch-up only for work that can actually run now. A paused timeline or a machine whose
+    // menu is open (mutex held) waits for the once-per-second tick instead of retrying every frame.
+    internal bool HasBacklog=>Mod.Machines.All.Any(p=>GetCached(p.Key).State is {Phase:"working"} s&&s.Timeline?.PausedReason==null
+        &&!p.Key.GetMutex().IsLocked()&&NextEvent(p.Key)<Now);
     private bool Scheduling;
     private int InventoryMutation;
     partial void TrackInputs(Chest c);

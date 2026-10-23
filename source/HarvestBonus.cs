@@ -20,7 +20,8 @@ public sealed partial class ModEntry
             if (code.Calls(target)) { code.opcode = OpCodes.Call; code.operand = capture; found = true; }
             yield return code;
         }
-        if (!found) throw new InvalidOperationException("Crop.harvest output boundary was not found.");
+        if (found) TranspilerGuard.Succeeded("Crop.harvest");
+        else TranspilerGuard.Failed("Crop.harvest", "Crop.harvest output boundary was not found.");
     }
 
     private static Item CopyHarvestItem(Item source)

@@ -22,8 +22,12 @@ internal sealed class TerminalNetwork
     private readonly IModHelper Helper;
     private readonly TerminalWorld World;
     private readonly PerScreen<string> LastNotice = new(() => "");
-    private readonly string Version = typeof(OrderTerminal).Assembly.GetName().Version!.ToString(3);
-    internal TerminalNetwork(IModHelper helper, TerminalWorld world) { Helper = helper; World = world; }
+    private readonly string Version;
+    internal TerminalNetwork(IModHelper helper, TerminalWorld world)
+    {
+        Helper = helper; World = world;
+        Version = helper.ModRegistry.Get(ModId)?.Manifest.Version.ToString() ?? typeof(OrderTerminal).Assembly.GetName().Version!.ToString(3);
+    }
     internal bool HasPending => Game1.player.modData.ContainsKey(PendingKey);
     internal static string ReceiptKey(long actor) => ReceiptPrefix + actor.ToString(CultureInfo.InvariantCulture);
     internal static bool Valid(TerminalRequest r) => r.Schema == 1 && Guid.TryParseExact(r.Id, "N", out _) && r.Sequence > 0

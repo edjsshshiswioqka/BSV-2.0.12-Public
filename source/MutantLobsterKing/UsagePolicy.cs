@@ -49,8 +49,10 @@ internal static class UsagePolicy
     {if(!__instance.recipeList.Keys.Any(MutantLobsterRules.IsItem))return true;__result=0;return false;}
     private static bool Additional([HarmonyArgument(0)]List<KeyValuePair<string,int>> ingredients,ref bool __result)
     {if(!ingredients.Any(p=>MutantLobsterRules.IsItem(p.Key)))return true;__result=false;return false;}
+#pragma warning disable CS0618 // these replace the native calls inside drawRecipeDescription, so they must keep the same (category-aware) matching
     internal static int InventoryCount(Farmer who,string id)=>MutantLobsterRules.IsItem(id)?0:who.getItemCount(id);
     internal static int ContainerCount(Farmer who,IList<Item> items,string id)=>MutantLobsterRules.IsItem(id)?0:who.getItemCountInList(items,id);
+#pragma warning restore CS0618
     private static IEnumerable<CodeInstruction> DescriptionCounts(IEnumerable<CodeInstruction> source)
     {
         var code=source.Select(i=>new CodeInstruction(i)).ToList();

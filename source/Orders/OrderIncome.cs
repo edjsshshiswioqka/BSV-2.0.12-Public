@@ -28,7 +28,7 @@ internal static class OrderIncome
  {
   int gold=OrdersService.Instance.Income();if(gold<=0)return;
   var totals=(List<int>)Totals.GetValue(__instance)!;var dials=(List<MoneyDial>)Dials.GetValue(__instance)!;
-  if(totals.Count!=6||dials.Count!=6)throw new InvalidOperationException("Unknown native shipping layout; Orders ledger remains intact.");
+  if(totals.Count!=6||dials.Count!=6)return; // unknown layout (another mod): keep the native summary; the gold itself was already paid
   Receipts.GetOrCreateValue(__instance).Gold=gold;totals[5]=checked(totals[5]+gold);
   dials[5].currentValue=totals[5];dials[5].previousTargetValue=totals[5];
  }

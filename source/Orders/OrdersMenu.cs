@@ -64,7 +64,20 @@ internal sealed class OrdersMenu:IClickableMenu
  {Fill(b,new(x+4,y,14,22),Ink);Fill(b,new(x,y+4,22,14),Ink);Fill(b,new(x+3,y+5,16,12),Gold);Fill(b,new(x+6,y+3,10,16),Gold);Fill(b,new(x+8,y+5,3,11),new Color(255,232,138));}
  private string Status(MarketOrder c)=>c.State=="completed"?Tr("completed-day",new{day=c.Completed+1}):Tr(c.State=="pending"?"settles-tonight":c.State=="legacy-active"?"legacy-active":"kind."+c.Kind);
  private bool CanAct()=>Current!=null&&Tab!=2&&!Service.HasPending&&Eligible;
- public override bool readyToClose()=>!Service.HasPending&&base.readyToClose();
+ // A pending request normally settles within a second. If the host never answers (it paused, or the
+ // reply cannot be matched), the menu can be closed after 10 s; the request stays saved and the host still
+ // settles it or refunds it, so closing never loses or duplicates anything.
+ private readonly System.Diagnostics.Stopwatch PendingClock=new();
+ private bool CloseLocked
+ {
+  get
+  {
+   if(!Service.HasPending){PendingClock.Reset();return false;}
+   if(!PendingClock.IsRunning)PendingClock.Start();
+   return PendingClock.Elapsed.TotalSeconds<10;
+  }
+ }
+ public override bool readyToClose()=>!CloseLocked&&base.readyToClose();
  private void Act(){if(CanAct()&&Current is {} c){Service.Request("accept",c,Location,TileX,TileY);ConfirmReject=null;Refresh();}}
  private void Reject(){if(Tab==0&&Current is {} c&&!Service.HasPending){if(ConfirmReject==c.Id){Service.Request("reject",c,Location,TileX,TileY);ConfirmReject=null;Refresh();}else ConfirmReject=c.Id;}}
  private void SelectTab(int value){ConfirmReject=null;Tab=(value+3)%3;Selected=0;Scroll=0;Refresh();Game1.playSound("shwip");}
@@ -72,13 +85,13 @@ internal sealed class OrdersMenu:IClickableMenu
  {
   for(int n=0;n<3;n++)if(Hit(Layout.Tab(n),x,y)){SelectTab(n);return;}
   for(int n=0;n<4&&Scroll+n<Rows.Count;n++)if(Hit(Layout.Row(n),x,y)){Selected=Scroll+n;ConfirmReject=null;Refresh();Game1.playSound("smallSelect");return;}
-  if(Hit(Layout.Close,x,y)){if(!Service.HasPending){if(ConfirmReject!=null)ConfirmReject=null;else exitThisMenu();}return;}if(Hit(Layout.Reject,x,y)){Reject();return;}if(Hit(Layout.Action,x,y)){Act();return;}
+  if(Hit(Layout.Close,x,y)){if(!CloseLocked){if(ConfirmReject!=null)ConfirmReject=null;else exitThisMenu();}return;}if(Hit(Layout.Reject,x,y)){Reject();return;}if(Hit(Layout.Action,x,y)){Act();return;}
   if(Hit(Layout.Previous,x,y))Scroll=Math.Max(0,Scroll-4);if(Hit(Layout.Next,x,y))Scroll=Math.Min(Math.Max(0,Rows.Count-4),Scroll+4);
  }
  public override void receiveScrollWheelAction(int direction){Scroll=Math.Clamp(Scroll+(direction<0?1:-1),0,Math.Max(0,Rows.Count-4));}
  public override void receiveKeyPress(Keys key)
  {
-  if(key==Keys.Escape){if(!Service.HasPending){if(ConfirmReject!=null)ConfirmReject=null;else exitThisMenu();}return;}if(key==Keys.Left){SelectTab(Tab-1);return;}if(key==Keys.Right||key==Keys.Tab){SelectTab(Tab+1);return;}
+  if(key==Keys.Escape){if(!CloseLocked){if(ConfirmReject!=null)ConfirmReject=null;else exitThisMenu();}return;}if(key==Keys.Left){SelectTab(Tab-1);return;}if(key==Keys.Right||key==Keys.Tab){SelectTab(Tab+1);return;}
   if(key==Keys.Up||key==Keys.Down){Selected=Math.Clamp(Selected+(key==Keys.Up?-1:1),0,Math.Max(0,Rows.Count-1));Scroll=Math.Clamp(Scroll,Math.Max(0,Selected-3),Selected);ConfirmReject=null;Refresh();return;}
   if(key==Keys.Enter||key==Keys.Space)Act();
  }

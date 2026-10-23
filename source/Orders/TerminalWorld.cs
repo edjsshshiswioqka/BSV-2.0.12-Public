@@ -67,6 +67,7 @@ internal sealed class TerminalWorld
                 Dirty.Remove(l);
                 try { Repair(l); } catch (Exception ex) { Error(ex); }
             }
+        else Dirty.Clear(); // only the host repairs; a farmhand must not keep every visited level alive
         Network.Tick(); SafeLightUpdate();
     }
     internal string? Place(GameLocation l, Vector2 tile, Farmer who, string id, SObject item, Action commit)

@@ -74,6 +74,7 @@ internal sealed class ConfigMenu
             next.AfkFishing.ReturnStaminaThreshold=draft.AfkFishing.ReturnStaminaThreshold;
             next.AfkFishing.ReturnToFishingSpotNextDay=draft.AfkFishing.ReturnToFishingSpotNextDay;
             next.AfkFishing.EnableChestConnection=draft.AfkFishing.EnableChestConnection;
+            next.EnableLargeHorses=draft.EnableLargeHorses; // visual only, drawn locally: a personal setting
             if(HostEditable)
             {
                 next.EnableHarvestSeeds=draft.EnableHarvestSeeds;next.SeedChance=draft.SeedChance;
@@ -82,7 +83,7 @@ internal sealed class ConfigMenu
                 next.AutoRestartProduction=draft.AutoRestartProduction;next.EnableAllProfessions=draft.EnableAllProfessions;
                 next.EnableAnnualLegendaryFish=draft.EnableAnnualLegendaryFish;
                 next.EnableHorseSpeedBonus=draft.EnableHorseSpeedBonus;next.HorseSpeedBonus=draft.HorseSpeedBonus;
-                next.EnableOrdersSystem=draft.EnableOrdersSystem;next.EnableLargeHorses=draft.EnableLargeHorses;next.OnlyOwnersRide=draft.OnlyOwnersRide;
+                next.EnableOrdersSystem=draft.EnableOrdersSystem;next.OnlyOwnersRide=draft.OnlyOwnersRide;
                 next.EnableGreenhouseExpansion=draft.EnableGreenhouseExpansion;next.EnableCellarExpansion=draft.EnableCellarExpansion;
                 next.EnableCellarAppearance=draft.EnableCellarAppearance;
             }
@@ -109,7 +110,7 @@ internal sealed class ConfigMenu
             if(machines)
             {
                 // Existing batches have captured DueAt/plan. Only the next Begin reads these.
-                ConfigPolicy.Apply(fish,MachineMod.Instance.Config);
+                ConfigPolicy.Apply(fish,MachineMod.Instance!.Config);
                 ConfigPolicy.Apply(crab,MachineMod.Instance.CrabConfig);
             }
             ConfigPolicy.Apply(next,live);SharedPreferences.Publish(live);helper.GameContent.InvalidateCache("Data/BigCraftables");
@@ -191,7 +192,7 @@ internal sealed class ConfigMenu
             Page("other");
             Flag("horse-enabled",()=>draft.EnableHorseSpeedBonus,v=>draft.EnableHorseSpeedBonus=v);
             Step("horse-speed",()=>draft.HorseSpeedBonus,v=>draft.HorseSpeedBonus=v,0,50,5);
-            Flag("horse-large",()=>draft.EnableLargeHorses,v=>draft.EnableLargeHorses=v);
+            Flag("horse-large",()=>draft.EnableLargeHorses,v=>draft.EnableLargeHorses=v,true);
             Flag("horse-owner-only",()=>draft.OnlyOwnersRide,v=>draft.OnlyOwnersRide=v);
             Flag("orders-enabled",()=>draft.EnableOrdersSystem,v=>draft.EnableOrdersSystem=v);
         }

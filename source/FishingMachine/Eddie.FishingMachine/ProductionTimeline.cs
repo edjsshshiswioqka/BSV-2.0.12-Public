@@ -116,6 +116,7 @@ internal sealed partial class ProductionService
     }
     /// <summary>Per running cycle: casts made, casts with no fish available at that time/place, casts in unwatched time.</summary>
     private static readonly Dictionary<string,(int Casts,int NoFish,int Unwatched)> CycleDiag=new();
+    private static void ClearCycleDiagnostics()=>CycleDiag.Clear();
     private void LogCycle(Chest c,ProductionState s)
     {
         var d=CycleDiag.GetValueOrDefault(s.CycleToken);CycleDiag.Remove(s.CycleToken);

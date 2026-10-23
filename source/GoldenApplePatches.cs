@@ -9,7 +9,8 @@ internal sealed partial class GoldenAppleFeature
 {
     internal static IEnumerable<CodeInstruction> DamageTranspiler(IEnumerable<CodeInstruction> instructions)
     {
-        var code = instructions.ToList();
+        var original = instructions.ToList();
+        var code = original.Select(c => new CodeInstruction(c)).ToList();
         var health = AccessTools.Field(typeof(Farmer), nameof(Farmer.health));
         int patched = 0;
         for (int i = 0; i < code.Count; i++)
@@ -21,12 +22,14 @@ internal sealed partial class GoldenAppleFeature
             code[i].operand = AccessTools.Method(typeof(GoldenAppleFeature), nameof(SetDamageHealth));
             patched++;
         }
-        if (patched != 1) throw new InvalidOperationException($"BSV Tenacity requires exactly one final damage assignment; found {patched}.");
+        if (patched != 1) { TranspilerGuard.Failed("Farmer.takeDamage", $"BSV Tenacity requires exactly one final damage assignment; found {patched}."); return original; }
+        TranspilerGuard.Succeeded("Farmer.takeDamage");
         return code;
     }
     internal static IEnumerable<CodeInstruction> SeasoningTranspiler(IEnumerable<CodeInstruction> instructions)
     {
-        var code = instructions.ToList();
+        var original = instructions.ToList();
+        var code = original.Select(c => new CodeInstruction(c)).ToList();
         var getter = AccessTools.PropertyGetter(typeof(Item), nameof(Item.Quality));
         int patched = 0;
         foreach (var instruction in code)
@@ -36,7 +39,8 @@ internal sealed partial class GoldenAppleFeature
                 instruction.operand = AccessTools.Method(typeof(GoldenAppleFeature), nameof(SeasoningQuality));
                 patched++;
             }
-        if (patched != 1) throw new InvalidOperationException($"BSV Golden Apple requires exactly one seasoning quality check; found {patched}.");
+        if (patched != 1) { TranspilerGuard.Failed("CraftingPage.seasoning", $"BSV Golden Apple requires exactly one seasoning quality check; found {patched}."); return original; }
+        TranspilerGuard.Succeeded("CraftingPage.seasoning");
         return code;
     }
 }

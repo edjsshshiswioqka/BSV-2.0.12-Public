@@ -86,7 +86,7 @@ internal sealed partial class RescueService
         helper.Events.Input.ButtonPressed += Input;
         helper.Events.Input.ButtonsChanged += (_, e) =>
         {
-            HeldButtons.Clear(); HeldButtons.AddRange(e.Held);
+            HeldButtons.Clear(); HeldButtons.AddRange(e.Pressed); HeldButtons.AddRange(e.Held);
             if (World && ProtectDeath(Game1.player)) foreach (var button in e.Held) if (!ChatKey(button)) helper.Input.Suppress(button);
         };
         helper.Events.Display.RenderedWorld += (_, e) => Safe(() => DrawWorld(e.SpriteBatch));
@@ -310,11 +310,8 @@ internal sealed partial class RescueService
             actor.Available = victim?.currentLocation is { currentEvent: null };
             // A player who can be hit again is alive: any older record of theirs is finished.
             // Replace it instead of refusing, so one lost message can't disable rescue for them.
-            if (!Model.IsDown(sender))
-            {
-                if (Ledger.Remove(sender)) SaveLedger();
-                Model.Down(actor, c.EventId, Now);
-            }
+            if (!Model.IsDown(sender) && Model.Down(actor, c.EventId, Now))
+                if (Ledger.Remove(sender)) SaveLedger(); // only a real new down replaces the old verdict
         }
         else if (c.Kind == "begin" && Healthy && actor != null) Model.Begin(actor, c.Target, c.EventId, c.AttemptId, Now, CurrentTarget(c.Target));
         else if (c.Kind == "cancel") Model.Cancel(sender, c.EventId, c.AttemptId, "owner-interrupted");

@@ -26,11 +26,15 @@ public sealed partial class ModEntry : Mod
         HdSprites.Install(helper, Monitor, ModManifest.UniqueID);
         Startup.Check(HdSprites.Initialized);
         CoalPriceFeature.Register(helper);
-        try { _ = new GrapeWineFeature(helper, Monitor); _ = new Brewing.BsvKegFeature(helper); }
+        TranspilerGuard.Monitor = Monitor;
+        // Each feature starts on its own, so one failure cannot leave another one's items unregistered (Error Items).
+        try { _ = new GrapeWineFeature(helper, Monitor); }
         catch(Exception ex) { Startup.Check(false); Monitor.Log($"BSV grape wine initialization failed; remaining features will continue.\n{ex}",LogLevel.Error); }
+        try { _ = new Brewing.BsvKegFeature(helper); }
+        catch(Exception ex) { Startup.Check(false); Monitor.Log($"BSV keg initialization failed; remaining features will continue.\n{ex}",LogLevel.Error); }
         try { _ = new DeveloperAppreciation.DeveloperLetterService(helper, Monitor, ModManifest.UniqueID); }
         catch(Exception ex) { Monitor.Log(BsvI18n.Get(helper,"diag.operation-error")+"\n"+BsvI18n.Get(helper,"diag.developer-letter-disabled")+$"\n{ex}",LogLevel.Error); }
-        _ = new CellarFeature(helper, Monitor, () => Config.EnableCellarExpansion, () => Config.EnableCellarAppearance);
+        _ = new CellarFeature(helper, Monitor, () => Configuration.SharedPreferences.Current.EnableCellarExpansion, () => Config.EnableCellarAppearance);
         string machineStatus = "diag.machine.waiting";
         string Tr(string key, object? tokens = null) => BsvI18n.Get(helper, key, tokens);
         helper.ConsoleCommands.Add("bsv_machine_status", BsvI18n.Get(helper, "cmd.machine"), (_, _) =>
@@ -91,7 +95,7 @@ public sealed partial class ModEntry : Mod
             Monitor.Log("BSV repaired invalid configuration values for this run; original files remain unchanged until a successful configuration save.",LogLevel.Warn);
         Configuration.SharedPreferences.Register(helper, Config);
         Startup.Check(new HorseFeature(helper, Monitor, ModManifest.UniqueID, Config).Initialized);
-        Greenhouse = new GreenhouseFeature(helper, Monitor, () => Config.EnableGreenhouseExpansion);
+        Greenhouse = new GreenhouseFeature(helper, Monitor, () => Configuration.SharedPreferences.Current.EnableGreenhouseExpansion);
         AnnualFish = new AnnualLegendaryFeature(helper, Monitor, ModManifest.UniqueID, Config.EnableAnnualLegendaryFish);
         Startup.Check(AnnualFish.Initialized);
         double normalized = HarvestRules.NormalizeChance(Config.SeedChance);
@@ -126,16 +130,10 @@ public sealed partial class ModEntry : Mod
         }
         // Initialize the new systems after the established BSV modules. A conflicting external
         // damage transpiler must not prevent horse, fishing, harvest or greenhouse registration.
-        try
-        {
-            _ = new TeaFeature(helper, Monitor);
-            _ = new GoldenAppleFeature(helper, Monitor);
-        }
-        catch (Exception ex)
-        {
-            Startup.Check(false);
-            Monitor.Log($"BSV tea/Golden Apple initialization failed. Existing BSV modules remain registered.\n{ex}", LogLevel.Error);
-        }
+        try { _ = new TeaFeature(helper, Monitor); }
+        catch (Exception ex) { Startup.Check(false); Monitor.Log($"BSV tea initialization failed. Existing BSV modules remain registered.\n{ex}", LogLevel.Error); }
+        try { _ = new GoldenAppleFeature(helper, Monitor); }
+        catch (Exception ex) { Startup.Check(false); Monitor.Log($"BSV Golden Apple initialization failed. Existing BSV modules remain registered.\n{ex}", LogLevel.Error); }
         IntegrationHost.Register(helper, Monitor, Config);
         Monitor.Log(Tr("hotfix.horse", new { enabled=Config.EnableHorseSpeedBonus, percent=BsvI18n.Number(helper,Config.HorseSpeedBonus*100,"0.##") }), LogLevel.Debug);
         try { _ = new Totems.TotemService(helper, Monitor, ModManifest); _ = new Totems.TotemUnlockService(helper, Monitor, ModManifest); Monitor.Log(Tr("totem.loaded"), LogLevel.Debug); }

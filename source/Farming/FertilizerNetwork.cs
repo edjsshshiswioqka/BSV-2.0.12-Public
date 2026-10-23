@@ -35,7 +35,7 @@ internal sealed class FertilizerNetwork
         ?JsonSerializer.Deserialize<FertilizerReceipt>(raw):null;
     private static void Store(FertilizerReceipt r)=>Game1.MasterPlayer.modData[ReceiptKey(r.Actor)]=JsonSerializer.Serialize(r);
     private bool PeerMatches(long actor)=>actor==Game1.MasterPlayer.UniqueMultiplayerID&&Context.IsMainPlayer||Context.IsSplitScreen
-        ||Service.Helper.Multiplayer.GetConnectedPlayer(actor)?.GetMod("Eddie.BetterStardewValley")?.Version.ToString()==typeof(FertilizerService).Assembly.GetName().Version!.ToString(3);
+        ||Service.Helper.Multiplayer.GetConnectedPlayer(actor)?.GetMod("Eddie.BetterStardewValley")?.Version.ToString()==Service.Helper.ModRegistry.Get("Eddie.BetterStardewValley")?.Manifest.Version.ToString();
     internal static bool Plain(SObject item)=>FertilizerRules.Known(item.QualifiedItemId)&&item.GetType()==typeof(SObject)&&!item.questItem.Value
         &&item.Stack>0&&item.Quality==0&&!item.modData.Any()&&item.heldObject.Value==null;
     internal void Request(HoeDirt soil,Farmer who,SObject item)

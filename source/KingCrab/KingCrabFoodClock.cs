@@ -38,7 +38,7 @@ internal static class KingCrabFoodClock
     }
     internal static void Start(Farmer who,Buff buff,int day,int time,bool partialTick=false)
     {
-        if(buff.millisecondsDuration<=0||Game1.realMilliSecondsPerGameMinute<=0)throw new InvalidOperationException("Invalid native food duration.");
+        if(buff.millisecondsDuration<=0||Game1.realMilliSecondsPerGameMinute<=0)return; // endless or unusual buff (another mod): leave it on the native clock
         Clocks.Remove(buff);Clocks.Add(buff,new(who,new(day,time,(double)buff.millisecondsDuration/Game1.realMilliSecondsPerGameMinute,partialTick)));
     }
     private static bool Current(Buff buff,Active active)=>active.Owner.buffs.AppliedBuffs.TryGetValue("food",out var value)&&ReferenceEquals(value,buff);

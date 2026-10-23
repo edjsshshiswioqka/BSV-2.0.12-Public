@@ -163,8 +163,10 @@ internal static class TimelineEnvironment
             if(s.Timeline==null)continue;
             if(s.Phase=="ready"){journal.Cycles.Remove(s.CycleToken);continue;}
             if(s.Phase!="working")continue;
-            var p=Capture(pair.Key,s);journal.Record(s.CycleToken,ProductionService.Now,p,closeDay);
+            // One machine that cannot be observed must not stop the others (its window stays "unknown").
+            try{var p=Capture(pair.Key,s);journal.Record(s.CycleToken,ProductionService.Now,p,closeDay);}catch{continue;}
         }
         Save(journal);
+        WeatherChanged(mod); // this pass already saw the current clock and weather; the 1 s check must not repeat it
     }
 }

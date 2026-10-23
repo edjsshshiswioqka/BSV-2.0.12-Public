@@ -41,11 +41,11 @@ internal static class SpiritPondRewards
         try
         {
             var data = FishPond.GetRawData(SpiritRules.Id);
-            if (data?.Id != SpiritRules.Id || data.ProducedItems?.Count < 4)
+            if (data?.Id != SpiritRules.Id || data.ProducedItems is not { Count: >= 4 } produced)
                 throw new InvalidOperationException("The loaded Spirit pond entry is missing or overridden.");
             for (int i = 0; i < Items.Length; i++)
             {
-                var row = data!.ProducedItems[i];
+                var row = produced[i];
                 if (row.Id != Prefix + Items[i][3..] || row.ItemId != Items[i]
                     || row.Chance != 1f / (10 - i) || row.Precedence != int.MinValue
                     || row.RequiredPopulation > 1 || !string.IsNullOrEmpty(row.Condition)
@@ -56,7 +56,7 @@ internal static class SpiritPondRewards
                 if (item is not StardewValley.Object obj || obj.bigCraftable.Value || item.QualifiedItemId != Items[i])
                     throw new InvalidOperationException("Required vanilla object is not registered: " + Items[i]);
             }
-            if (data!.ProducedItems.Skip(4).Any(p => p.RandomItemId?.Count > 0 ? p.RandomItemId.Any(IsRare) : IsRare(p.ItemId)))
+            if (produced.Skip(4).Any(p => p.RandomItemId?.Count > 0 ? p.RandomItemId.Any(IsRare) : IsRare(p.ItemId)))
                 throw new InvalidOperationException("Duplicate Spirit rare reward in the loaded ordinary pool.");
             monitor.Log("Spirit pond loaded rewards verified: four exclusive ~10% outcomes, ~60% ordinary; vanilla registry IDs valid. "
                 + JsonConvert.SerializeObject(data), successLevel);

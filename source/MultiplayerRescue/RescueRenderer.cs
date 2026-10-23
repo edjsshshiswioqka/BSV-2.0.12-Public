@@ -49,6 +49,8 @@ internal sealed partial class RescueService
             if (target == null) return;
             Helper.Input.Suppress(e.Button);
             PendingRescueUntil = Now + 2; BeginSentAt = Now; BeginTarget = target.Target;
+            // Fresh position first: the host's last pulse may still show the rescuer walking.
+            Send(new RescueCommand { Kind = "pulse", Busy = Busy, DamageSerial = DamageSerial });
             Send(new RescueCommand { Kind = "begin", Target = target.Target, EventId = target.EventId, AttemptId = Guid.NewGuid().ToString("N") });
             AfkFishing.AfkFishingService.YieldForRescue();
         });

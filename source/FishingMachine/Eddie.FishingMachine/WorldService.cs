@@ -159,7 +159,7 @@ internal sealed class WorldService
                     if (!c.isEmpty()) { result="remove.empty-first"; return; }
                     var returned = ItemRegistry.Create(c.QualifiedItemId);
                     returned.modData[ProductionService.StateKey] = Mod.Production.Portable(c);
-                    if (!who.couldInventoryAcceptThisItem(returned)) { result="remove.inventory-full"; return; }
+                    if (!who.couldInventoryAcceptThisItem(returned)) { result="remove.full"; return; }
                     var entries=new List<(Vector2 Tile,SObject Object)>();
                     foreach(var p in Footprint(c))
                     {

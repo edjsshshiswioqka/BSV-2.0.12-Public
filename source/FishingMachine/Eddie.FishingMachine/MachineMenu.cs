@@ -40,8 +40,11 @@ internal sealed partial class ProductionService
         public bool Labels;
     }
     /// <summary>The machine menu drawn with the full layout in the current frame (null when the fallback is used).</summary>
-    internal ItemGrabMenu? FullMenu;
-    internal FullLayout? FullGeometry;
+    // Per screen: in split-screen each player has their own machine menu and layout.
+    private readonly StardewModdingAPI.Utilities.PerScreen<ItemGrabMenu?> fullMenu=new();
+    private readonly StardewModdingAPI.Utilities.PerScreen<FullLayout?> fullGeometry=new();
+    internal ItemGrabMenu? FullMenu{get=>fullMenu.Value;set=>fullMenu.Value=value;}
+    internal FullLayout? FullGeometry{get=>fullGeometry.Value;set=>fullGeometry.Value=value;}
     private static readonly ConditionalWeakTable<ItemGrabMenu,object> Prepared=new();
     private static readonly ConditionalWeakTable<ItemGrabMenu,object> Diagnosed=new();
 
@@ -76,7 +79,7 @@ internal sealed partial class ProductionService
             }
             catch(Exception ex){journal="error: "+ex.Message;}
             Mod.Monitor.Log($"[BSV fishing pool] {c.Location.NameOrUniqueName} tile {c.TileLocation.X},{c.TileLocation.Y} facing {WorldService.GetFacing(c)} extended {WorldService.IsExtended(c)}; time {Game1.timeOfDay}, owner {owner.Name} fishing level {owner.fishingLevel.Value}, machine Lv{s.Level}, phase {s.Phase}."
-                +$"\n  journal: {journal}\n  now: {now.Count} fish [{string.Join(", ",now.Select(f=>f.Id))}]\n  cycle candidates: {timeline}\n  rejected: {string.Join("; ",rejected.Take(80))}",LogLevel.Info);
+                +$"\n  journal: {journal}\n  now: {now.Count} fish [{string.Join(", ",now.Select(f=>f.Id))}]\n  cycle candidates: {timeline}\n  rejected: {string.Join("; ",rejected.Take(80))}",LogLevel.Trace);
         }
         catch(Exception ex){Mod.Monitor.Log("[BSV fishing pool] diagnostic failed: "+ex,LogLevel.Warn);}
     }

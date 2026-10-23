@@ -27,7 +27,8 @@ internal static class DeveloperLetterAttachment
     }
     private static IEnumerable<CodeInstruction> Transfers(IEnumerable<CodeInstruction> instructions, MethodBase __originalMethod)
     {
-        var code = instructions.ToList();
+        var original = instructions.ToList();
+        var code = original.Select(c => new CodeInstruction(c)).ToList();
         string native = __originalMethod.Name == "receiveLeftClick" ? "addItemByMenuIfNecessary" : "addItemsByMenuIfNecessary";
         string replacement = __originalMethod.Name == "receiveLeftClick" ? nameof(One) : nameof(Many);
         int count = 0;
@@ -37,7 +38,9 @@ internal static class DeveloperLetterAttachment
             var load = new CodeInstruction(OpCodes.Ldarg_0); load.labels.AddRange(code[i].labels); code[i].labels.Clear();
             code.Insert(i++, load); code[i].opcode = OpCodes.Call; code[i].operand = AccessTools.Method(typeof(DeveloperLetterAttachment), replacement); count++;
         }
-        if (count != 1) throw new InvalidOperationException("Developer letter native transfer target mismatch: " + __originalMethod.Name);
+        string id = "LetterViewerMenu." + __originalMethod.Name;
+        if (count != 1) { TranspilerGuard.Failed(id, "Developer letter native transfer target mismatch: " + __originalMethod.Name); return original; }
+        TranspilerGuard.Succeeded(id);
         return code;
     }
     private static void One(Farmer who, Item item, ItemGrabMenu.behaviorOnItemSelect? callback, bool force, LetterViewerMenu menu)

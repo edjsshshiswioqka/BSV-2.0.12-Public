@@ -133,18 +133,20 @@ internal static class ProfessionSkillsPage
     private static bool ScClick(IClickableMenu __instance,int x,int y)=>ClickCore(__instance,x,y);
     internal static IEnumerable<CodeInstruction> ReplaceRows(IEnumerable<CodeInstruction> instructions,ILGenerator generator)
     {
-        var code=instructions.Select(c=>new CodeInstruction(c)).ToList();
+        var original=instructions.ToList();
+        var code=original.Select(c=>new CodeInstruction(c)).ToList();
         var bars=code.Select((c,i)=>(c,i)).Where(p=>p.c.opcode==OpCodes.Ldfld&&Equals(p.c.operand,Bars)).Select(p=>p.i).ToArray();
-        if(bars.Length!=2)throw new InvalidOperationException("SkillsPage vanilla bar boundaries changed; native UI retained.");
+        if(bars.Length!=2){TranspilerGuard.Failed("SkillsPage.draw","SkillsPage vanilla bar boundaries changed; native UI retained.");return original;}
         int end=bars[0]-1;
         var starts=Enumerable.Range(0,end-3).Where(i=>code[i].LoadsConstant(68)&&code[i+1].IsStloc()&&code[i+2].LoadsConstant(0)&&code[i+3].IsStloc()).ToArray();
-        if(starts.Length!=1)throw new InvalidOperationException("SkillsPage vanilla row boundary changed; native UI retained.");
+        if(starts.Length!=1){TranspilerGuard.Failed("SkillsPage.draw","SkillsPage vanilla row boundary changed; native UI retained.");return original;}
         int start=starts[0]+2;
-        if(code.Skip(start).Take(end-start).Any(c=>c.blocks.Count>0))throw new InvalidOperationException("SkillsPage unexpected exception region.");
+        if(code.Skip(start).Take(end-start).Any(c=>c.blocks.Count>0)){TranspilerGuard.Failed("SkillsPage.draw","SkillsPage unexpected exception region.");return original;}
         var finish=generator.DefineLabel();code[end].labels.Add(finish);
         var native=generator.DefineLabel();code[start].labels.Add(native);
         foreach(int i in bars){code[i].opcode=OpCodes.Call;code[i].operand=AccessTools.Method(typeof(ProfessionSkillsPage),nameof(VisibleBars));}
         code.InsertRange(start,new[]{new CodeInstruction(OpCodes.Ldarg_0),new CodeInstruction(OpCodes.Ldarg_1),new CodeInstruction(OpCodes.Call,AccessTools.Method(typeof(ProfessionSkillsPage),nameof(DrawRows))),new CodeInstruction(OpCodes.Brtrue,finish)});
+        TranspilerGuard.Succeeded("SkillsPage.draw");
         return code;
     }
     private static IClickableMenu? Page(GameMenu menu)

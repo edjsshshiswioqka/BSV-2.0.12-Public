@@ -13,9 +13,11 @@ internal static class SharedPreferences
     private static ModConfig? local;
     private static long revision;
     private static string? appliedLocationPolicy;
+    private static (bool,bool)? appliedMaps; // null: the first host snapshot always reloads both maps on a farmhand
     private static bool nextProfessions=true,nextAnnual=true;
     private static readonly ModConfig Waiting=new(){EnableBsvSpeedGro=false,EnableHarvestSeeds=false,HarvestBonus=new(){Enabled=false},
-        EnableHorseSpeedBonus=false,AutoRestartProduction=false,EnableAllProfessions=false,EnableAnnualLegendaryFish=false,EnableOrdersSystem=false};
+        EnableHorseSpeedBonus=false,AutoRestartProduction=false,EnableAllProfessions=false,EnableAnnualLegendaryFish=false,EnableOrdersSystem=false,
+        EnableGreenhouseExpansion=false,EnableCellarExpansion=false};
     internal sealed class Snapshot
     {
         [JsonProperty(Required=Required.Always)] public int Schema=3;
@@ -29,6 +31,8 @@ internal static class SharedPreferences
         [JsonProperty(Required=Required.Always)] public int FishLevelTwoMinutes=4320,FishLevelThreeMinutes=5760,CrabLevelTwoMinutes=5760;
         [JsonProperty(Required=Required.Always)] public bool EnableBsvSpeedGro;
         [JsonProperty] public bool OnlyOwnersRide=true;
+        // Map size is the host's decision: every player must load the same greenhouse and cellar map.
+        [JsonProperty] public bool EnableGreenhouseExpansion=true,EnableCellarExpansion=true;
     }
     internal static ModConfig Current=>local==null?Waiting:Effective(local);
     internal static bool HasLocal=>local!=null;
@@ -58,8 +62,16 @@ internal static class SharedPreferences
             // Net fields can arrive after SaveLoaded; never retain a pre-policy fish asset.
             if(appliedLocationPolicy==cachedRaw)return;
             appliedLocationPolicy=cachedRaw;helper.GameContent.InvalidateCache("Data/Locations");
+            // Reload the greenhouse and cellar maps when the host's map size decision arrives or changes.
+            var maps=(cachedPolicy!.EnableGreenhouseExpansion,cachedPolicy.EnableCellarExpansion);
+            if(appliedMaps!=maps)
+            {
+                if(appliedMaps?.Item1!=maps.Item1)helper.GameContent.InvalidateCache("Maps/Greenhouse");
+                if(appliedMaps?.Item2!=maps.Item2)helper.GameContent.InvalidateCache("Maps/Cellar");
+                appliedMaps=maps;
+            }
         };
-        helper.Events.GameLoop.ReturnedToTitle+=(_,_)=>{cachedRaw=null;cached=null;appliedLocationPolicy=null;};
+        helper.Events.GameLoop.ReturnedToTitle+=(_,_)=>{cachedRaw=null;cached=null;appliedLocationPolicy=null;appliedMaps=null;};
         helper.Events.Multiplayer.PeerConnected+=(_,_)=>Publish(config);
     }
     internal static void Publish(ModConfig c)
@@ -73,7 +85,8 @@ internal static class SharedPreferences
             CrabCycleMinutes=Eddie.FishingMachine.ModEntry.Instance?.CrabConfig.MinutesForLevel(1)??2880,
             FishLevelTwoMinutes=Eddie.FishingMachine.ModEntry.Instance?.Config.MinutesForLevel(2)??4320,
             FishLevelThreeMinutes=Eddie.FishingMachine.ModEntry.Instance?.Config.MinutesForLevel(3)??5760,
-            CrabLevelTwoMinutes=Eddie.FishingMachine.ModEntry.Instance?.CrabConfig.MinutesForLevel(2)??5760,OnlyOwnersRide=c.OnlyOwnersRide};
+            CrabLevelTwoMinutes=Eddie.FishingMachine.ModEntry.Instance?.CrabConfig.MinutesForLevel(2)??5760,OnlyOwnersRide=c.OnlyOwnersRide,
+            EnableGreenhouseExpansion=c.EnableGreenhouseExpansion,EnableCellarExpansion=c.EnableCellarExpansion};
         Game1.MasterPlayer.modData[Key]=JsonConvert.SerializeObject(snapshot);
     }
     private static ModConfig? Read()
@@ -92,7 +105,8 @@ internal static class SharedPreferences
             cached=new ModConfig{EnableHarvestSeeds=s.EnableHarvestSeeds,SeedChance=s.SeedChance,HarvestBonus=h,EnableBsvSpeedGro=s.EnableBsvSpeedGro,
                 AutoRestartProduction=s.AutoRestartProduction,EnableAllProfessions=s.EnableAllProfessions,
                 EnableAnnualLegendaryFish=s.EnableAnnualLegendaryFish,EnableHorseSpeedBonus=s.EnableHorseSpeedBonus,
-                HorseSpeedBonus=s.HorseSpeedBonus,EnableOrdersSystem=s.EnableOrdersSystem,OnlyOwnersRide=s.OnlyOwnersRide};
+                HorseSpeedBonus=s.HorseSpeedBonus,EnableOrdersSystem=s.EnableOrdersSystem,OnlyOwnersRide=s.OnlyOwnersRide,
+                EnableGreenhouseExpansion=s.EnableGreenhouseExpansion,EnableCellarExpansion=s.EnableCellarExpansion};
             cachedPolicy=s;
         }
         catch(JsonException){return null;}

@@ -32,7 +32,7 @@ internal sealed class TotemArt
         h.Patch(AccessTools.Method(typeof(SObject), nameof(SObject.placementAction)), prefix: new HarmonyMethod(typeof(TotemArt), nameof(Place)));
         h.Patch(AccessTools.Method(typeof(Utility), nameof(Utility.playerCanPlaceItemHere)), postfix: new HarmonyMethod(typeof(TotemArt), nameof(CanPlace)));
         helper.Events.Content.AssetRequested += Assets;
-        helper.Events.Content.AssetsInvalidated += (_, _) => { Textures.Clear(); WorldBounds.Clear(); };
+        // The textures come from the mod folder (ModContent); game asset invalidation never changes them.
     }
     private void Assets(object? sender, AssetRequestedEventArgs e)
     {

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 namespace BetterStardewValley.Totems;
 
 // A — original BSV rules. No game objects, RNG, inventories or third-party implementation.
@@ -33,11 +35,14 @@ internal static class TotemRules
     internal const string SharedKey = Prefix + "Totems.v1";
     internal const string BlessingKey = Prefix + "HarvestBlessing.v1";
     internal static string Id(TotemKind kind) => "Eddie.BetterStardewValley_" + kind + "Totem";
-    internal static bool TryKind(string id, out TotemKind kind)
+    // Called from per-frame draw and placement hooks: one dictionary lookup, no allocation.
+    private static readonly Dictionary<string, TotemKind> Kinds = Enum.GetValues<TotemKind>()
+        .SelectMany(k => new[] { (Id(k), k), ("(BC)" + Id(k), k) })
+        .ToDictionary(p => p.Item1, p => p.Item2, StringComparer.Ordinal);
+    internal static bool TryKind(string? id, out TotemKind kind)
     {
-        foreach (var k in Enum.GetValues<TotemKind>())
-            if (id == Id(k) || id == "(BC)" + Id(k)) { kind = k; return true; }
-        kind = default; return false;
+        kind = default;
+        return id != null && Kinds.TryGetValue(id, out kind);
     }
     // Ceil(70%) leaves at least one remaining unit and never accelerates by more than 30%.
     // Integer quotient avoids overflow and floating-point drift, even for very long machine times.

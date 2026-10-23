@@ -41,6 +41,7 @@ internal sealed class FertilizerService
         catch{h.UnpatchAll(h.Id);Instance=null;throw;}
         helper.Events.GameLoop.SaveLoaded+=(_,_)=>Scan();
         helper.Events.World.LocationListChanged+=(_,_)=>Scan();
+        helper.Events.GameLoop.DayStarted+=(_,_)=>{try{Harvests.PruneClaims();}catch(Exception ex){Error(ex);}};
         helper.Events.GameLoop.UpdateTicked+=(_,e)=>{if(e.IsMultipleOf(6)&&Context.IsWorldReady&&!IntegrationHost.Saving){Network.Tick();Harvests.Tick();}};
         helper.Events.Display.RenderedHud+=(_,e)=>Hover(e.SpriteBatch);
     }

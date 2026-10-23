@@ -186,7 +186,10 @@ internal sealed partial class HorseFeature
         if (Game1.activeClickableMenu is CarpenterMenu) local.CarpenterSeen = now;
         if (now < local.NextCoatCheck || !Context.IsPlayerFree || Game1.activeClickableMenu != null || Game1.eventUp) return;
         local.NextCoatCheck = now + 1;
-        foreach (var stable in Stables())
+        // Cheap pre-filter: stables that already have a coat never need the (costly) tractor/horse lookups.
+        var waiting = new List<Stable>();
+        Utility.ForEachLocation(location => { waiting.AddRange(location.buildings.OfType<Stable>().Where(s => !s.modData.ContainsKey(HorseSkins.SkinKey))); return true; });
+        foreach (var stable in waiting)
         {
             if (local.CoatOffered.Contains(stable.HorseId) || !PicksCoat(stable, Game1.player.UniqueMultiplayerID)) continue;
             if (!IsRealManagedHorse(stable.getStableHorse())) continue;

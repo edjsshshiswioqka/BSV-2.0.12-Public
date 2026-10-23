@@ -62,7 +62,7 @@ internal sealed class TotemService
         try
         {
             int left = TotemStorage.Read().Remaining(kind, TotemStorage.Season, Game1.Date.TotalDays);
-            if (left > 0) { Game1.drawObjectDialogue(Tr(kind == TotemKind.Thunderstorm ? "totem.cooldown" : "totem.used", new { days = left })); return; }
+            if (left > 0) { Game1.drawObjectDialogue(Tr(kind == TotemKind.Thunderstorm ? Days("totem.cooldown", left) : "totem.used", new { days = left })); return; }
             var request = new WorshipRequest(Guid.NewGuid().ToString("N"), actor.UniqueMultiplayerID, kind, (int)obj.TileLocation.X, (int)obj.TileLocation.Y, Game1.Date.TotalDays);
             Game1.currentLocation.createQuestionDialogue(Tr("totem.confirm", new { name = obj.DisplayName }),
                 new[] { new Response("Yes", Tr("totem.yes")), new Response("No", Tr("totem.no")) },
@@ -116,7 +116,7 @@ internal sealed class TotemService
                 if (Game1.activeClickableMenu == null && !Game1.eventUp) Game1.drawObjectDialogue(line);
                 else Game1.addHUDMessage(new HUDMessage(line, 2));
             }
-            else Game1.addHUDMessage(new HUDMessage(Tr(notice.Key, new { days = notice.Days }), notice.Key == "totem.success" ? 2 : 3));
+            else Game1.addHUDMessage(new HUDMessage(Tr(Days(notice.Key, notice.Days), new { days = notice.Days }), notice.Key == "totem.success" ? 2 : 3));
         }
         if (Pending.TryGetValue(actor, out var pending) && Environment.TickCount64 - SentAt[actor] >= 2000)
         {
@@ -163,7 +163,10 @@ internal sealed class TotemService
                 string after = JsonConvert.SerializeObject(state.Used(request.Kind, season, day));
                 plan.Steps.Add(new(() => farm.modData[TotemRules.SharedKey] = after,
                     () => { if (before == null) farm.modData.Remove(TotemRules.SharedKey); else farm.modData[TotemRules.SharedKey] = before; }));
-                AtomicChange.Execute(() => Valid() && plan.Valid() && season == TotemStorage.Season, plan.Steps);
+                // Everything below runs synchronously on the main thread, so the crop plan is checked once
+                // (checking it before every step made large farms cost N x N).
+                if (!plan.Valid()) throw new InvalidOperationException("Transaction lease is no longer valid.");
+                AtomicChange.Execute(() => Valid() && season == TotemStorage.Season, plan.Steps);
                 completed = true;
             });
             return Reply(completed ? "totem.success" : "totem.busy");
@@ -172,6 +175,8 @@ internal sealed class TotemService
         catch (AggregateException ex) { Suspended = true; Warn(ex); return Reply("totem.error"); }
         catch (Exception ex) { Warn(ex); return Reply("totem.error"); }
     }
+    /// <summary>"1 day remaining" instead of "1 days remaining".</summary>
+    private static string Days(string key, int days) => key == "totem.cooldown" && days == 1 ? "totem.cooldown-one" : key;
     private static void WithLocks(GameLocation farm, IReadOnlyList<Chest> machines, Action run)
     {
         // Keep work INSIDE all callbacks: the game's off-map mutex releases after a callback returns.

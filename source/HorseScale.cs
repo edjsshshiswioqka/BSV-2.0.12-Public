@@ -92,7 +92,7 @@ internal static class HorseScale
         else Monitor?.Log($"BSV horse size: 1.15x active (body {body}, draws {sprites}, hats {hats}).", LogLevel.Trace);
     }
 
-    /// <summary>NPC.draw (non-swimming branch) with the 1.3x scale around the hooves.</summary>
+    /// <summary>NPC.draw (non-swimming branch) with the horse scale around the hooves.</summary>
     private static void Body(Character npc, SpriteBatch b)
     {
         if (current == null || !ReferenceEquals(npc, current) || npc.Sprite?.Texture == null || current.swimming.Value) { BaseDraw(npc, b); return; }

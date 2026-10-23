@@ -26,7 +26,7 @@ internal sealed partial class ProductionService
     private ConditionalWeakTable<Chest,BaitVisualCache> BaitCache=new();
     internal ProductionService(ModEntry mod) => Mod = mod;
     internal static long Now => CycleClock.ToAbsoluteMinutes(Game1.Date.TotalDays, Game1.timeOfDay);
-    internal void Reset() { TraceStates.Clear();LockRequests.Clear(); Errors.Clear(); Cache = new(); BaitCache=new(); }
+    internal void Reset() { TraceStates.Clear();LockRequests.Clear(); Errors.Clear(); Cache = new(); BaitCache=new(); ClearCycleDiagnostics(); }
 
     private CachedState GetCached(Chest c)
     {
@@ -129,8 +129,13 @@ internal sealed partial class ProductionService
     {
         if(item is Chest c)return GetCached(c).State?.Level ?? 1;
         if(item==null || !item.modData.TryGetValue(StateKey,out var raw))return 1;
-        try{return ProductionState.Load(raw).Level;}catch{return 1;}
+        // Called from per-frame draw/name/description hooks: parse each saved state only once.
+        if(LevelCache.TryGetValue(item,out var hit)&&ReferenceEquals(hit.Raw,raw))return hit.Level;
+        int level;try{level=ProductionState.Load(raw).Level;}catch{level=1;}
+        LevelCache.AddOrUpdate(item,new LevelHit(raw,level));return level;
     }
+    private sealed record LevelHit(string Raw,int Level);
+    private readonly ConditionalWeakTable<Item,LevelHit> LevelCache=new();
     internal string Portable(Chest c){var portable=Read(c).IdleCopy();portable.Continuity=null;return portable.Save();}
     internal static bool IsTrash(Item? i)=>i!=null && MachineUpgrade.IsTrash(i.QualifiedItemId)
         && i is StardewValley.Object o && !o.questItem.Value;
@@ -473,10 +478,10 @@ internal sealed partial class ProductionService
     /// <summary>Flip the switch. Any player who has the machine open may do it; the host applies it.</summary>
     internal void TogglePower(Chest c)
     {
-        if (!PoweredOff(c)) { SetPower(c, false); Game1.playSound("trashcanlid"); Game1.showGlobalMessage(Mod.T("panel.power-now-off")); return; }
+        if (!PoweredOff(c)) { SetPower(c, false); Game1.playSound("trashcanlid"); Game1.showGlobalMessage(Mod.T(ModEntry.IsCrab(c) ? "crab.power-now-off" : "panel.power-now-off")); return; }
         var (have, need) = BaitForNextCycle(c);
         if (Read(c).Phase != "working" && have < need) { Game1.showRedMessage(Mod.T("panel.power-need-bait", new { count = have, needed = need })); return; }
-        SetPower(c, true); Game1.playSound("powerup"); Game1.showGlobalMessage(Mod.T("panel.power-now-on"));
+        SetPower(c, true); Game1.playSound("powerup"); Game1.showGlobalMessage(Mod.T(ModEntry.IsCrab(c) ? "crab.power-now-on" : "panel.power-now-on"));
     }
     private static bool StopWouldCut(ProductionState s)=>MachineStop.WouldCut(s);
     /// <summary>Switched off while working: what was already done stays, unused bait goes back into the machine.</summary>
@@ -492,9 +497,25 @@ internal sealed partial class ProductionService
         {
             Item item = crab ? CrabRefund(crabBait[index], count) : FishRefund(fishBait[index], count);
             var left = c.addItem(item);
-            if (left != null) Game1.createItemDebris(left, c.TileLocation * 64f + new Vector2(32f, 32f), -1, c.Location);
+            if (left != null) Game1.createItemDebris(left, DryDropPoint(c), -1, c.Location);
         }
         Mod.Monitor.Log($"[BSV {(crab ? "crab" : "fishing")} machine] switched off at {c.Location?.NameOrUniqueName}:{c.TileLocation}; {cut.Value.State.Timeline?.Plan.Count ?? 0} {(crab ? "trap checks" : "casts")} kept, {cut.Value.Refund.Sum(r => r.Count)} bait returned.", LogLevel.Info);
+    }
+    /// <summary>Bait that no longer fits back into the machine is dropped on the nearest dry, walkable
+    /// tile, never on the water the machine stands in (items dropped on water sink).</summary>
+    private static Vector2 DryDropPoint(Chest c)
+    {
+        var l = c.Location; var origin = c.TileLocation;
+        if (l != null)
+            for (int r = 0; r <= 4; r++)
+                for (int dx = -r; dx <= r; dx++)
+                    for (int dy = -r; dy <= r; dy++)
+                    {
+                        if (Math.Max(Math.Abs(dx), Math.Abs(dy)) != r) continue;
+                        var t = origin + new Vector2(dx, dy);
+                        if (!l.isWaterTile((int)t.X, (int)t.Y) && l.isTilePassable(t)) return t * 64f + new Vector2(32f, 32f);
+                    }
+        return (Game1.player?.Tile ?? origin) * 64f + new Vector2(32f, 32f);
     }
     private static Item FishRefund(BaitSpend bait, int count) => bait.Kind switch
     {

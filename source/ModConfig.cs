@@ -27,7 +27,7 @@ public sealed class ModConfig
     public int HorseSpawnOutsideViewportMinTiles { get; set; } = 2;
     public int HorseSpawnOutsideViewportMaxTiles { get; set; } = 5;
     public bool EnableHorseNameUI { get; set; } = true;
-    /// <summary>Draw BSV horses 1.3x larger (riders keep their size). Visual only.</summary>
+    /// <summary>Draw BSV horses 15% larger (riders keep their size). Visual only.</summary>
     public bool EnableLargeHorses { get; set; } = true;
     /// <summary>Host setting: only a horse's owner may ride it. Off: anyone may ride any horse (calling stays owner-only).</summary>
     public bool OnlyOwnersRide { get; set; } = true;

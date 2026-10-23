@@ -19,7 +19,7 @@ internal sealed partial class HorseFeature
         if (!Context.IsWorldReady || !IsRealManagedHorse(horse)) return;
         if (!Context.IsMainPlayer && !Context.IsSplitScreen
             && Helper.Multiplayer.GetConnectedPlayer(Game1.MasterPlayer.UniqueMultiplayerID)?.GetMod(ModId)?.Version.ToString()
-                != typeof(ModEntry).Assembly.GetName().Version?.ToString(3))
+                != Helper.ModRegistry.Get(ModId)?.Manifest.Version.ToString())
         { Message("horse.call.host_required"); return; }
         var r = new HorseRequest { Id = Guid.NewGuid().ToString("N"), Actor = Game1.player.UniqueMultiplayerID,
             Horse = horse.HorseId.ToString("N"), Location = Game1.currentLocation.NameOrUniqueName, Action = action,

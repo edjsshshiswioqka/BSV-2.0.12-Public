@@ -67,6 +67,28 @@ internal sealed class HarvestNetwork
         foreach(string key in local.modData.Keys.Where(k=>k.StartsWith(Outbox,StringComparison.Ordinal)).Take(32).ToArray())
             try{Receive(local,key);}catch(Exception ex){Service.Error(ex);}
     }
+    /// <summary>Host, once a day: forget harvest claims for crops that no longer exist and that no
+    /// queued request still refers to, so the save does not grow with every crop ever harvested.</summary>
+    internal void PruneClaims()
+    {
+        if(!Context.IsMainPlayer||!Context.IsWorldReady||IntegrationHost.Saving)return;
+        var master=Game1.MasterPlayer.modData;
+        var claims=master.Keys.Where(k=>k.StartsWith(Claims,StringComparison.Ordinal)).ToArray();
+        if(claims.Length==0)return;
+        var live=new HashSet<string>(StringComparer.Ordinal);
+        void See(HoeDirt? dirt){if(dirt?.crop?.modData.TryGetValue(FertilizerService.CropKey,out var id)==true)live.Add(id);}
+        Utility.ForEachLocation(location=>
+        {
+            foreach(var feature in location.terrainFeatures.Values)See(feature as HoeDirt);
+            foreach(var obj in location.objects.Values)if(obj is IndoorPot pot)See(pot.hoeDirt.Value);
+            return true;
+        },true,false);
+        foreach(var who in Game1.getAllFarmers())
+            foreach(var pair in who.modData.Pairs)
+                if(pair.Key.StartsWith(Outbox,StringComparison.Ordinal))
+                    try{var r=JsonSerializer.Deserialize<HarvestRequest>(pair.Value);if(r!=null)live.Add(r.Crop);}catch{return;} // unreadable queue: keep every claim
+        foreach(string key in claims)if(!live.Contains(key[Claims.Length..]))master.Remove(key);
+    }
     internal void Process(Farmer who,string key)
     {
         if(!Context.IsMainPlayer)return;

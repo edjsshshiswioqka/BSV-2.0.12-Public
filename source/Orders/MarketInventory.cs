@@ -18,7 +18,7 @@ internal static class MarketInventory
   &&c.GlobalInventoryId==null&&c.modData.Pairs.All(p=>p.Key==AfkFishing.AfkFishingService.ChestKey&&Guid.TryParseExact(p.Value,"N",out _))
   &&!c.questItem.Value&&c.heldObject.Value==null;
  internal static bool Goods(Item? item,MarketOrder order)=>OrdersInventory.Eligible(item,order.Item)&&item!.Quality>=order.MinimumQuality
-  &&item.modData.Count()==0&&!item.specialItem&&!item.isLostItem&&!item.IsRecipe&&item is SObject o
+  &&item.modData.Length==0&&!item.specialItem&&!item.isLostItem&&!item.IsRecipe&&item is SObject o
   &&string.IsNullOrEmpty(o.questId.Value)&&string.IsNullOrEmpty(o.orderData.Value);
  internal static List<MarketChest> Chests()
  {

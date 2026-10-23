@@ -48,7 +48,7 @@ internal static class KingSashimi
         for(int i=0;i<code.Count;i++)
         {
             yield return code[i];
-            if(i==at){yield return new(OpCodes.Ldarg_S,6);yield return new(OpCodes.Call,AccessTools.Method(typeof(KingSashimi),nameof(EffectiveCritical)));}
+            if(i==at){yield return new(OpCodes.Ldarg_S,(byte)6);yield return new(OpCodes.Call,AccessTools.Method(typeof(KingSashimi),nameof(EffectiveCritical)));}
         }
     }
     private static IEnumerable<CodeInstruction> SpeedRead(IEnumerable<CodeInstruction> instructions)
@@ -77,7 +77,7 @@ internal static class KingSashimi
     }
     internal static void Start(Farmer who,Buff buff,int day,int time,bool partialTick=false)
     {
-        if(buff.millisecondsDuration<=0||Game1.realMilliSecondsPerGameMinute<=0)throw new InvalidOperationException("Invalid native sashimi duration.");
+        if(buff.millisecondsDuration<=0||Game1.realMilliSecondsPerGameMinute<=0)return; // endless or unusual buff (another mod): leave it on the native clock
         Clocks.Remove(buff);Clocks.Add(buff,new(who,new(day,time,(double)buff.millisecondsDuration/Game1.realMilliSecondsPerGameMinute,partialTick)));
     }
     private static bool Current(Buff b,Active a)=>a.Owner.buffs.AppliedBuffs.TryGetValue("food",out var value)&&ReferenceEquals(value,b);

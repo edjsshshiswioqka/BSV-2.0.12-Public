@@ -2,12 +2,12 @@
   "Name": "Better Stardew Valley",
   "Author": "Eddie",
   "Version": "2.0.12",
-  "Description": "BSV R15: fishing machine balance, bait effects and shared rare-catch quotas. Test build; live validation pending.",
+  "Description": "Better Stardew Valley 2.0: fishing and crab machines, an order terminal, totems, horses, multiplayer rescue and more.",
   "UniqueID": "Eddie.BetterStardewValley",
   "EntryDll": "BetterStardewValley.dll",
   "MinimumApiVersion": "4.5.2",
   "MinimumGameVersion": "1.6.15",
-  "UpdateKeys": [],
+  "UpdateKeys": [ "Nexus:53251" ],
   "Dependencies": [
     {
       "UniqueID": "Pathoschild.Automate",
