@@ -234,7 +234,7 @@
   "orders.quote.Marnie": "I buoni prodotti della fattoria sono sempre richiesti. Potresti aiutarmi con questo ordine?",
   "orders.quote.Clint": "L'officina ha bisogno di altre scorte. Pagherò un prezzo equo per l'intera partita.",
   "orders.terminal-mail-title": "Il tuo terminale degli ordini",
-  "orders.terminal-mail": "Caro @,^ecco il tuo terminale ordini. Ritiralo dalla lettera e posalo su due caselle consentite affiancate in orizzontale, al chiuso o all’aperto. La base occupa 2×1 caselle e l’immagine di 2×2 si estende verso l’alto.^Interagisci con la base per gestire gli ordini della comunità.^^Ordini della comunità BSV^",
+  "orders.terminal-mail": "Caro @,^ultimamente in paese in molti mi chiedono se possono ordinare prodotti freschi direttamente dalla tua fattoria. Così ho pensato di mandarti un terminale degli ordini. D'ora in poi tutti gli ordini arriveranno lì.^Sistemalo in un posto comodo e dagli un'occhiata quando hai un momento. Tutto il paese conta su di te!^^-Sindaco Lewis^",
   "orders.terminal-mail-error": "BSV non ha potuto programmare la lettera del terminale; riproverà in un aggiornamento successivo.",
   "totem.thunderstorm.mail": "Ho notato la tua crescente comprensione del legame tra cielo e terra.^Il fulmine può sembrare indomabile, eppure segue leggi proprie.^^Forse sei pronto a invocarlo.^^—M. Rasmodius",
   "totem.thunderstorm.mail-title": "Dal mago: totem del temporale",

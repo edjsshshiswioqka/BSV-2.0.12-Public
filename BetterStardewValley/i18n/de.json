@@ -234,7 +234,7 @@
   "orders.quote.Marnie": "Gute Hofprodukte sind immer gefragt. Kannst du mir bei dieser Bestellung helfen?",
   "orders.quote.Clint": "Die Werkstatt braucht mehr Vorräte. Ich bezahle fair für die gesamte Lieferung.",
   "orders.terminal-mail-title": "Dein Bestellterminal",
-  "orders.terminal-mail": "Hallo @,^hier ist dein Auftragsterminal. Nimm es aus dem Brief und stelle es drinnen oder draußen auf zwei waagerecht benachbarte freie Felder. Die Grundfläche beträgt 2×1 Felder, die Grafik ragt auf 2×2 Feldern nach oben.^Über die Basis verwaltest du Gemeinschaftsaufträge.^^BSV-Auftragsdienst^",
+  "orders.terminal-mail": "Hallo @,^in letzter Zeit fragen mich viele Leute im Ort, ob sie frische Waren direkt bei deiner Farm bestellen können. Also schicke ich dir ein Bestellterminal. Ab jetzt landen alle Bestellungen genau dort.^Stell es an einem praktischen Platz auf und schau rein, wann immer du Zeit hast. Die ganze Stadt zählt auf dich!^^-Bürgermeister Lewis^",
   "orders.terminal-mail-error": "BSV konnte den Brief mit dem Bestellterminal nicht vormerken; ein späterer Aktualisierungsschritt versucht es erneut.",
   "totem.thunderstorm.mail": "Mir ist dein wachsendes Verständnis für das Band zwischen Himmel und Erde aufgefallen.^Blitze mögen wild wirken, doch auch sie folgen eigenen Gesetzen.^^Vielleicht bist du bereit, sie herbeizurufen.^^—M. Rasmodius",
   "totem.thunderstorm.mail-title": "Vom Zauberer: Gewittertotem",

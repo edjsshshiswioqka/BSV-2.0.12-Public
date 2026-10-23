@@ -234,7 +234,7 @@
   "orders.quote.Marnie": "Good farm products are always in demand. Could you help fill this order?",
   "orders.quote.Clint": "The workshop needs more supplies. I will pay fairly for the whole batch.",
   "orders.terminal-mail-title": "Your Order Terminal",
-  "orders.terminal-mail": "Dear @,^Here is your Order Terminal. Take it from this letter and place it on two clear horizontal ground tiles indoors or outdoors. Its 2×2 artwork extends upward from its 2×1 base.^Interact with the base to manage community orders.^^- BSV Community Orders^",
+  "orders.terminal-mail": "Dear @,^Folks around town keep asking me whether they can order fresh goods straight from your farm. So I figured I'd send you an Order Terminal. From now on, everyone's orders will show up right on it.^Set it up somewhere handy and take a look whenever you have a moment. The whole town is counting on you!^^-Mayor Lewis^",
   "orders.terminal-mail-error": "BSV could not schedule your Order Terminal letter; it will retry on a later update.",
   "totem.thunderstorm.mail": "I have noticed your growing understanding of the bond between sky and soil.^Lightning may seem wild, yet it follows laws of its own.^^Perhaps you are ready to call upon it.^^—M. Rasmodius",
   "totem.thunderstorm.mail-title": "From the Wizard: Thunderstorm Totem",

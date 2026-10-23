@@ -234,7 +234,7 @@
   "orders.quote.Marnie": "A jó farmtermékekre mindig van kereslet. Segítenél teljesíteni ezt a rendelést?",
   "orders.quote.Clint": "A műhelynek több alapanyag kell. Az egész adagért tisztességes árat fizetek.",
   "orders.terminal-mail-title": "A rendelési terminálod",
-  "orders.terminal-mail": "Kedves @!^Itt a rendelési terminálod. Vedd ki a levélből, és helyezd két vízszintesen szomszédos, engedélyezett mezőre, bent vagy kint. Az alapja 2×1 mezőt foglal, a 2×2 mezőnyi kép felfelé nyúlik.^Az alapjával kölcsönhatásba lépve kezelheted a közösségi rendeléseket.^^BSV közösségi rendelések^",
+  "orders.terminal-mail": "Kedves @!^Mostanában sokan kérdezik a városban, rendelhetnek-e friss árut közvetlenül a farmodról. Úgyhogy küldök neked egy rendelési terminált. Mostantól mindenki rendelése ezen jelenik meg.^Tedd egy kényelmes helyre, és nézz rá, amikor csak ráérsz. Az egész város számít rád!^^-Lewis polgármester^",
   "orders.terminal-mail-error": "A BSV nem tudta ütemezni a terminál levelét; egy későbbi frissítéskor újrapróbálja.",
   "totem.thunderstorm.mail": "Észrevettem, hogy egyre jobban érted az ég és a föld kötelékét.^A villám vadnak tűnhet, mégis saját törvényeket követ.^^Talán készen állsz megidézni.^^—M. Rasmodius",
   "totem.thunderstorm.mail-title": "A varázslótól: zivatartotem",

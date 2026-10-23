@@ -234,7 +234,7 @@
   "orders.quote.Marnie": "Siempre hay demanda de buenos productos. ¿Podrías ayudarme con este pedido?",
   "orders.quote.Clint": "El taller necesita suministros. Pagaré un precio justo por todo el lote.",
   "orders.terminal-mail-title": "Tu terminal de pedidos",
-  "orders.terminal-mail": "Hola, @:^Aquí tienes tu terminal de pedidos. Sácalo de esta carta y colócalo en dos casillas válidas contiguas en horizontal, dentro o fuera. La base ocupa 2×1 casillas y la imagen de 2×2 se extiende hacia arriba.^Interactúa con la base para gestionar los pedidos de la comunidad.^^Pedidos de la comunidad BSV^",
+  "orders.terminal-mail": "Hola, @:^Últimamente mucha gente del pueblo me pregunta si puede encargar productos frescos directamente a tu granja. Así que he pensado en enviarte un terminal de pedidos. A partir de ahora, todos los pedidos aparecerán ahí.^Colócalo en un sitio cómodo y échale un vistazo cuando tengas un rato. ¡Todo el pueblo cuenta contigo!^^-Alcalde Lewis^",
   "orders.terminal-mail-error": "BSV no pudo programar la carta del terminal; lo intentará en una actualización posterior.",
   "totem.thunderstorm.mail": "He notado tu creciente comprensión del vínculo entre cielo y tierra.^El rayo parece salvaje, pero obedece sus propias leyes.^^Quizá estés listo para invocarlo.^^—M. Rasmodius",
   "totem.thunderstorm.mail-title": "Del mago: tótem de tormenta",

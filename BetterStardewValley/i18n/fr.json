@@ -234,7 +234,7 @@
   "orders.quote.Marnie": "Les bons produits de la ferme sont toujours demandés. Peux-tu m’aider à remplir cette commande ?",
   "orders.quote.Clint": "L’atelier a besoin de fournitures. Je paierai le lot entier à un prix juste.",
   "orders.terminal-mail-title": "Votre terminal de commandes",
-  "orders.terminal-mail": "Cher @,^voici votre terminal de commandes. Prenez-le dans cette lettre et posez-le sur deux cases autorisées côte à côte, en intérieur ou en extérieur. Sa base occupe 2×1 cases et son image de 2×2 cases se prolonge vers le haut.^Interagissez avec la base pour gérer les commandes de la communauté.^^Service des commandes BSV^",
+  "orders.terminal-mail": "Cher @,^ces derniers temps, beaucoup de gens en ville me demandent s'ils peuvent commander des produits frais directement à ta ferme. Alors je t'envoie un terminal de commandes. Désormais, toutes les commandes s'afficheront dessus.^Installe-le à un endroit pratique et jettes-y un œil quand tu as un moment. Toute la ville compte sur toi !^^-Le maire Lewis^",
   "orders.terminal-mail-error": "BSV n’a pas pu programmer la lettre du terminal ; un nouvel essai aura lieu lors d’une mise à jour ultérieure.",
   "totem.thunderstorm.mail": "J’ai remarqué que tu comprends de mieux en mieux le lien entre le ciel et la terre.^La foudre paraît indomptable, mais elle suit ses propres lois.^^Peut-être es-tu prêt à l’invoquer.^^—M. Rasmodius",
   "totem.thunderstorm.mail-title": "Du sorcier : totem d’orage",

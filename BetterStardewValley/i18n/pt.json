@@ -234,7 +234,7 @@
   "orders.quote.Marnie": "Bons produtos da fazenda sempre têm procura. Poderia ajudar com esta encomenda?",
   "orders.quote.Clint": "A oficina precisa de mais suprimentos. Pagarei um preço justo pelo lote inteiro.",
   "orders.terminal-mail-title": "Seu Terminal de encomendas",
-  "orders.terminal-mail": "Olá, @!^Aqui está seu terminal de pedidos. Retire-o da carta e coloque-o em dois espaços permitidos lado a lado na horizontal, dentro ou fora de edifícios. A base ocupa 2×1 espaços e a imagem de 2×2 se estende para cima.^Interaja com a base para gerenciar os pedidos da comunidade.^^Pedidos da comunidade BSV^",
+  "orders.terminal-mail": "Olá, @!^Ultimamente muita gente na cidade tem me perguntado se pode encomendar produtos frescos direto da sua fazenda. Então resolvi te mandar um terminal de encomendas. De agora em diante, todas as encomendas vão aparecer nele.^Coloque-o num lugar prático e dê uma olhada quando tiver um tempinho. A cidade inteira conta com você!^^-Prefeito Lewis^",
   "orders.terminal-mail-error": "O BSV não conseguiu agendar a carta do Terminal de encomendas; tentará novamente em uma atualização posterior.",
   "totem.thunderstorm.mail": "Tenho notado sua crescente compreensão do vínculo entre o céu e o solo.^O relâmpago pode parecer indomável, mas segue suas próprias leis.^^Talvez você esteja pronto para invocá-lo.^^—M. Rasmodius",
   "totem.thunderstorm.mail-title": "Do Mago: Totem da tempestade",
