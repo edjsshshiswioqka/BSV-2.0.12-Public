@@ -64,8 +64,8 @@ public sealed class GrapeWineFeature
 
     private static void NormalizePrice(SObject __instance)
     {
-        if (__instance.QualifiedItemId == WineRules.GrapeWine && __instance.price.Value != WineRules.GrapeWinePrice)
-            __instance.price.Value = WineRules.GrapeWinePrice;
+        if (__instance.QualifiedItemId == WineRules.GrapeWine && __instance.Price != WineRules.GrapeWinePrice)
+            __instance.Price = WineRules.GrapeWinePrice;
     }
 
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)

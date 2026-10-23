@@ -15,7 +15,7 @@ internal sealed partial class AfkFishingService
     {
         if (Game1.player.CurrentTool is not FishingRod rod || !rod.CanUseBait()) return;
         if (rod.attachments[0] is SObject bait && bait.GetType()==typeof(SObject)
-            && bait.Category == SObject.baitCategory && !bait.questItem.Value && !bait.isRecipe.Value)
+            && bait.Category == SObject.baitCategory && !bait.questItem.Value && !bait.IsRecipe)
         {
             if(Current.BaitTemplate?.canStackWith(bait)==true && !string.IsNullOrEmpty(Current.Data.BaitPreference))return;
             Current.BaitTemplate = (SObject)bait.getOne();
@@ -52,7 +52,7 @@ internal sealed partial class AfkFishingService
         for (int slot = 0; slot < items.Count; slot++)
         {
             if (items[slot] is not SObject item || item.GetType() != typeof(SObject) || item.questItem.Value
-                || item.isRecipe.Value || item.Category != SObject.baitCategory || !template.canStackWith(item)) continue;
+                || item.IsRecipe || item.Category != SObject.baitCategory || !template.canStackWith(item)) continue;
             int old = item.Stack, before = attached?.Stack ?? 0;
             int take = Math.Min(old, Math.Max(0, template.maximumStackSize() - before));
             if (take == 0) continue;

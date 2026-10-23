@@ -12,7 +12,7 @@ internal static class AfkFood
     {
         if (item is not SObject o || o.GetType() != typeof(SObject) || o.bigCraftable.Value
             || !AfkRules.AcceptFood(o.Edibility != -300, o.staminaRecoveredOnConsumption(), o.questItem.Value,
-                o.QualifiedItemId is "(O)434" or "(O)StardropTea" || o.isRecipe.Value)
+                o.QualifiedItemId is "(O)434" or "(O)StardropTea" || o.IsRecipe)
             || o.heldObject.Value != null) return false;
         try
         {

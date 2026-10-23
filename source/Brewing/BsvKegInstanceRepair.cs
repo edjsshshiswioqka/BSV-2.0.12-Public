@@ -39,10 +39,10 @@ internal static class BsvKegInstanceRepair
         // Exact raw stable ID also recognizes the wrong (O) instance. Never guess from
         // display name/sprite index; don't reinterpret furniture, chests or recipe scrolls.
         if (item == null || item.GetType() != typeof(SObject) || item.ItemId != WineRules.BsvKegId
-            || item.isRecipe.Value || Game1.bigCraftableData == null
+            || item.IsRecipe || Game1.bigCraftableData == null
             || !Game1.bigCraftableData.TryGetValue(WineRules.BsvKegId, out var data)) return false;
         bool malformed = !item.bigCraftable.Value || item.Type != "Crafting" || item.Category != -9
-            || item.Edibility != -300 || !item.canBeSetDown.Value
+            || item.Edibility != -300 || !item.CanBeSetDown
             || item.setIndoors.Value != data.CanBePlacedIndoors || item.setOutdoors.Value != data.CanBePlacedOutdoors;
         if (!malformed) return false;
         // Change only type/placement metadata on the same instance. In particular, keep
@@ -51,7 +51,7 @@ internal static class BsvKegInstanceRepair
         item.Type = "Crafting";
         item.Category = -9;
         item.Edibility = -300;
-        item.canBeSetDown.Value = true;
+        item.CanBeSetDown = true;
         item.setIndoors.Value = data.CanBePlacedIndoors;
         item.setOutdoors.Value = data.CanBePlacedOutdoors;
         item.ResetParentSheetIndex();
