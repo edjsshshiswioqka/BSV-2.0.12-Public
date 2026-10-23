@@ -461,6 +461,7 @@
   "king.pond.cracker": "Hummerkönig-Nachwuchs ist auf ein Exemplar pro Fortpflanzungszyklus begrenzt. Der goldene Tierkeks wurde nicht verbraucht.",
   "kingcrab.fish.name": "Königskrabbe",
   "kingcrab.fish.description": "Eine große Meereskrabbe. Die Krabbe ist zu hart zum Essen.",
+  "kingcrab.too-hard": "Der Panzer der Königskrabbe ist zu hart!",
   "kingcrab.bowl.name": "Reisschale mit Königskrabbe",
   "kingcrab.bowl.description": "Königskrabbe auf Reis mit Forellenbarsch. Stellt vor Qualitätsboni 150 Gesundheit und Energie wieder her. Vor Würzung: Verteidigung +8 und Immunität +4 für 10 Spielstunden.",
   "kingcrab.time": "{hours} Std. {minutes} Min. (Spielzeit)",

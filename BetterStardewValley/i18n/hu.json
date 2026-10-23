@@ -461,6 +461,7 @@
   "king.pond.cracker": "A homárkirály utódszáma tenyésztési ciklusonként egyre korlátozott. Az arany állatkeksz nem fogyott el.",
   "kingcrab.fish.name": "Királyrák",
   "kingcrab.fish.description": "Nagy óceáni rák. Túl kemény ahhoz, hogy megedd.",
+  "kingcrab.too-hard": "A királyrák páncélja túl kemény!",
   "kingcrab.bowl.name": "Királyrákos rizstál",
   "kingcrab.bowl.description": "Királyrák rizsen, nagyszájú sügérrel. Minőségbónusz előtt 150 életerőt és energiát tölt vissza. Fűszerezés előtt 10 játékóráig védelem +8 és immunitás +4.",
   "kingcrab.time": "{hours} ó {minutes} perc (játékidő)",

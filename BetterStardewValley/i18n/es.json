@@ -461,6 +461,7 @@
   "king.pond.cracker": "La cría del rey de las langostas se limita a una por ciclo. No se consumió la galleta dorada para animales.",
   "kingcrab.fish.name": "Cangrejo real",
   "kingcrab.fish.description": "Un gran cangrejo marino. Es demasiado duro para comer.",
+  "kingcrab.too-hard": "¡El caparazón del cangrejo real es demasiado duro!",
   "kingcrab.bowl.name": "Bol de arroz con cangrejo real",
   "kingcrab.bowl.description": "Cangrejo real sobre arroz con perca americana. Restaura 150 de salud y energía antes de bonus de calidad. Defensa +8 e inmunidad +4 durante 10 horas de juego antes de sazonar.",
   "kingcrab.time": "{hours} h {minutes} min (tiempo del juego)",

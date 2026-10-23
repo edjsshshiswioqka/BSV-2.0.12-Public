@@ -461,6 +461,7 @@
   "king.pond.cracker": "A reprodução do Rei das lagostas é limitada a um filhote por ciclo. O biscoito dourado de animal não foi consumido.",
   "kingcrab.fish.name": "Caranguejo-real",
   "kingcrab.fish.description": "Um grande caranguejo marinho. Sua carapaça é dura demais para comê-lo.",
+  "kingcrab.too-hard": "A casca do caranguejo-real é dura demais!",
   "kingcrab.bowl.name": "Tigela de arroz com caranguejo-real",
   "kingcrab.bowl.description": "Caranguejo-real sobre arroz com achigã. Restaura 150 de vida e de energia antes dos bônus de qualidade. Defesa +8 e Imunidade +4 por 10 horas do jogo antes do tempero.",
   "kingcrab.time": "{hours}h {minutes}min (tempo do jogo)",

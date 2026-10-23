@@ -461,6 +461,7 @@
   "king.pond.cracker": "La prole del re delle aragoste è limitata a un esemplare per ciclo riproduttivo. Il cracker dorato per animali non è stato consumato.",
   "kingcrab.fish.name": "Granchio reale",
   "kingcrab.fish.description": "Un grande granchio oceanico. È troppo duro da mangiare.",
+  "kingcrab.too-hard": "Il guscio del granchio reale è troppo duro!",
   "kingcrab.bowl.name": "Ciotola di riso con granchio reale",
   "kingcrab.bowl.description": "Granchio reale su riso con persico trota. Ripristina 150 salute ed energia prima dei bonus qualità. Difesa +8 e Immunità +4 per 10 ore di gioco prima del condimento.",
   "kingcrab.time": "{hours} h {minutes} min (tempo di gioco)",

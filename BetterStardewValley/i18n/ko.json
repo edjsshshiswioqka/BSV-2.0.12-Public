@@ -461,6 +461,7 @@
   "king.pond.cracker": "바닷가재 왕 새끼는 번식 주기당 한 마리로 제한됩니다. 황금 동물 과자는 소모되지 않았습니다.",
   "kingcrab.fish.name": "킹크랩",
   "kingcrab.fish.description": "커다란 바다 게. 너무 단단해서 먹을 수 없습니다.",
+  "kingcrab.too-hard": "킹크랩 껍데기가 너무 단단해!",
   "kingcrab.bowl.name": "킹크랩 덮밥",
   "kingcrab.bowl.description": "킹크랩과 큰입우럭을 쌀밥 위에 얹었습니다. 품질 보너스 전 체력과 기력 각 150 회복. 조미료 적용 전 게임 내 10시간 동안 방어 +8, 면역 +4.",
   "kingcrab.time": "{hours}시간 {minutes}분(게임 시간)",

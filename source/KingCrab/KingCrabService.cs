@@ -21,7 +21,7 @@ internal sealed class KingCrabService
             var pot=DrawPatchTargets.Require(typeof(StardewValley.Objects.CrabPot),"DayUpdate",typeof(void));
             if(Harmony.GetPatchInfo(pot)?.Transpilers.Any(p=>p.PatchMethod.DeclaringType==typeof(GiantLobster.LobsterCrabPots))!=true)
                 throw new InvalidOperationException("Shared native CrabPot selection patch is not installed; King Crab cannot safely start.");
-            KingCrabFoodClock.Install(h);KingCrabTelevision.Install(h);
+            KingCrabFoodClock.Install(h);KingCrabTelevision.Install(h);KingCrabHardShell.Install(h,helper);
         }catch{h.UnpatchAll(h.Id);throw;}
         helper.Events.Content.AssetRequested+=(_,e)=>
         {

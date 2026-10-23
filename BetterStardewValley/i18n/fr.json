@@ -461,6 +461,7 @@
   "king.pond.cracker": "La descendance du roi des homards est limitée à un individu par cycle. Le biscuit doré pour animaux n’a pas été consommé.",
   "kingcrab.fish.name": "Crabe royal",
   "kingcrab.fish.description": "Un grand crabe marin. Sa carapace est trop dure pour le manger.",
+  "kingcrab.too-hard": "La carapace du crabe royal est trop dure !",
   "kingcrab.bowl.name": "Bol de riz au crabe royal",
   "kingcrab.bowl.description": "Crabe royal sur riz avec achigan à grande bouche. Rend 150 santé et énergie avant bonus de qualité. Défense +8 et immunité +4 pendant 10 heures de jeu avant assaisonnement.",
   "kingcrab.time": "{hours} h {minutes} min (temps de jeu)",

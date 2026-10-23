@@ -461,6 +461,7 @@
   "king.pond.cracker": "Lobster King offspring are limited to one per breeding cycle. The golden animal cracker was not consumed.",
   "kingcrab.fish.name": "King Crab",
   "kingcrab.fish.description": "A large ocean crab. The crab is too hard to eat.",
+  "kingcrab.too-hard": "The King Crab's shell is too hard!",
   "kingcrab.bowl.name": "King Crab Rice Bowl",
   "kingcrab.bowl.description": "King crab served over rice with largemouth bass. Restores 150 health and energy before quality bonuses. Defense +8 and Immunity +4 for 10 in-game hours before seasoning.",
   "kingcrab.time": "{hours}h {minutes}m (game time)",

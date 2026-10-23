@@ -461,6 +461,7 @@
   "king.pond.cracker": "龙虾王每个繁育周期仅产一只；不会消耗金色动物饼干。",
   "kingcrab.fish.name": "帝王蟹",
   "kingcrab.fish.description": "体型庞大的海蟹。螃蟹太硬了，无法食用。",
+  "kingcrab.too-hard": "帝王蟹的壳太硬了！",
   "kingcrab.bowl.name": "帝王蟹盖浇饭",
   "kingcrab.bowl.description": "以帝王蟹、大米与大嘴鲈鱼烹制的盖浇饭。基础恢复生命与体力各150；防御 +8、免疫 +4，持续游戏内十小时。",
   "kingcrab.time": "{hours}小时{minutes}分（游戏时间）",

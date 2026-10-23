@@ -461,6 +461,7 @@
   "king.pond.cracker": "Istakoz Kralı yavrusu üreme döngüsü başına birle sınırlıdır. Altın hayvan krakeri harcanmadı.",
   "kingcrab.fish.name": "Kral Yengeç",
   "kingcrab.fish.description": "Büyük okyanus yengeci. Yenemeyecek kadar sert.",
+  "kingcrab.too-hard": "Kral yengecin kabuğu çok sert!",
   "kingcrab.bowl.name": "Kral Yengeçli Pilav",
   "kingcrab.bowl.description": "Pirinç ve büyük ağızlı levrekle servis edilen kral yengeç. Kalite bonusundan önce 150 can ve enerji yeniler. Çeşniden önce 10 oyun saati boyunca Savunma +8 ve Bağışıklık +4.",
   "kingcrab.time": "{hours} sa {minutes} dk (oyun zamanı)",

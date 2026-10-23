@@ -461,6 +461,7 @@
   "king.pond.cracker": "Vua Tôm Hùm con giới hạn một con mỗi chu kỳ sinh sản. Bánh Quy Động Vật Vàng chưa bị dùng.",
   "kingcrab.fish.name": "Cua Hoàng Đế",
   "kingcrab.fish.description": "Cua biển lớn. Cua quá cứng để ăn.",
+  "kingcrab.too-hard": "Vỏ cua hoàng đế cứng quá!",
   "kingcrab.bowl.name": "Cơm Cua Hoàng Đế",
   "kingcrab.bowl.description": "Cua hoàng đế trên cơm với cá vược miệng rộng. Hồi 150 máu và năng lượng trước thưởng chất lượng. Phòng thủ +8, Miễn dịch +4 trong 10 giờ game trước gia vị.",
   "kingcrab.time": "{hours} giờ {minutes} phút (giờ game)",

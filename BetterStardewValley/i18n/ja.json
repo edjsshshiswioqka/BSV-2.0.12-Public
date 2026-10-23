@@ -461,6 +461,7 @@
   "king.pond.cracker": "ロブスター王の子は繁殖サイクルごとに 1 匹までです。金のアニマルクラッカーは消費していません。",
   "kingcrab.fish.name": "タラバガニ",
   "kingcrab.fish.description": "海にすむ大きなカニ。硬すぎて食べられない。",
+  "kingcrab.too-hard": "タラバガニの殻は硬すぎる！",
   "kingcrab.bowl.name": "タラバガニ丼",
   "kingcrab.bowl.description": "タラバガニとブラックバスをご飯にのせた一品。品質補正前で HP とエナジーを各 150 回復。調味料補正前で防御 +8、免疫 +4 がゲーム内 10 時間持続。",
   "kingcrab.time": "{hours} 時間 {minutes} 分（ゲーム時間）",
