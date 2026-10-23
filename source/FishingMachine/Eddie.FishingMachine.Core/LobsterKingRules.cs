@@ -7,6 +7,7 @@ public static class LobsterKingRules
     public const string SashimiId="Eddie.BetterStardewValley_LobsterKingSashimi";
     public const string ClaimKey="Eddie.BetterStardewValley/LobsterKing/WildClaim";
     public const double Chance=.003;
+    public const int Price=2000, OldPrice=4500;
     public static RareCrab Select(bool ocean,bool kingEligible,double u,bool kingCrabEnabled=false)
     {
         if(!double.IsFinite(u)||u<0||u>=1)throw new ArgumentOutOfRangeException(nameof(u));

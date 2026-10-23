@@ -14,7 +14,7 @@ internal static class KingData
     {
         if(data.TryGetValue(LobsterKingRules.Id,out var old)&&old.Name!="Lobster King")throw new InvalidOperationException("Lobster King ID collision.");
         data[LobsterKingRules.Id]=new(){Name="Lobster King",DisplayName=tr("king.fish.name"),Description=tr("king.fish.description"),
-            Type="Fish",Category=-4,Price=4500,Edibility=-300,Texture=TextureRoot+"fish",SpriteIndex=0,ExcludeFromRandomSale=true,
+            Type="Fish",Category=-4,Price=LobsterKingRules.Price,Edibility=-300,Texture=TextureRoot+"fish",SpriteIndex=0,ExcludeFromRandomSale=true,
             ContextTags=new(){Tag,"bsv_seafood"}};
         // Callers explicitly opt into the approved food definition.
         if(sashimi==null)return;

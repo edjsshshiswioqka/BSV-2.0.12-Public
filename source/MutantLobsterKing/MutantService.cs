@@ -53,7 +53,7 @@ internal sealed class MutantService
             {optional.UnpatchAll(optional.Id);AutomateState="FAILED: native Mutant capture disabled to avoid doubled output";monitor.Log(AutomateState+"; BSV crab production remains independent. "+ex,LogLevel.Error);}
         };
         helper.ConsoleCommands.Add("bsv_mutant_status",BsvI18n.Get(helper,"cmd.mutant-status"),(_,_)=>
-            monitor.Log($"Mutant Lobster King: ready={Ready}; nativeCapture={NativeCaptureReady}; Automate={AutomateState}; ID={MutantLobsterRules.Item}; Sewer water only; 0.05% per base opportunity; one per farm per game year, exactly one item per success; Basic/category 0, 50000g base, no food/crafting/processing/pond. Existing output and batches never rerolled. Use bsv_sewer_status at a candidate placement tile.",LogLevel.Info));
+            monitor.Log($"Mutant Lobster King: ready={Ready}; nativeCapture={NativeCaptureReady}; Automate={AutomateState}; ID={MutantLobsterRules.Item}; Sewer water only; 0.05% per base opportunity; one per farm per game year, exactly one item per success; Basic/category 0, {MutantLobsterRules.Price}g base, no food/crafting/processing/pond. Existing output and batches never rerolled. Use bsv_sewer_status at a candidate placement tile.",LogLevel.Info));
         helper.Events.GameLoop.SaveCreating+=(_,_)=>MutantWildQuota.Initialize(true,monitor);
         helper.Events.GameLoop.SaveLoaded+=(_,_)=>{MutantWildQuota.Initialize(false,monitor);MutantWildQuota.Reconcile();};
         Ready=true;NativeCaptureReady=true;monitor.Log("Mutant Lobster King collection rules initialized.",LogLevel.Debug);

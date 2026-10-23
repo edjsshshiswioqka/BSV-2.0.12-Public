@@ -5,7 +5,7 @@ public static class MutantLobsterRules
 {
     public const string Id="Eddie.BetterStardewValley_MutantLobsterKing";
     public const string Item="(O)"+Id;
-    public const int Price=50000;
+    public const int Price=3000, OldPrice=50000;
     public const double Chance=.0005;
     public static bool IsItem(string? id)=>id==Id||id==Item;
     public static bool Select(bool sewer,double roll)

@@ -9,6 +9,9 @@ internal static class LobsterMigration
     internal static bool RepairPreview(Item item)
     {
         if(item is not StardewValley.Object o)return true;
+        // Lobster King and Mutant Lobster King made before the price change keep the old price in the item itself.
+        if(o.QualifiedItemId==LobsterKingRules.Fish&&o.Price==LobsterKingRules.OldPrice){o.Price=LobsterKingRules.Price;return true;}
+        if(o.QualifiedItemId==MutantLobsterRules.Item&&o.Price==MutantLobsterRules.OldPrice){o.Price=MutantLobsterRules.Price;return true;}
         int price=o.QualifiedItemId switch
         {
             "(O)"+GiantLobsterRules.Id=>LobsterBalance.FishPrice(LobsterBalance.VanillaLobsterPrice()),
