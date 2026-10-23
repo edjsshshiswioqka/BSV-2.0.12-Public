@@ -555,7 +555,7 @@ internal sealed partial class AfkFishingService
         if (slot < 0 || inventory[slot] is not SObject edible) return false;
         var single = (SObject)edible.getOne(); single.Stack = 1;
         int before = edible.Stack;
-        edible.Stack--; if (edible.Stack == 0) inventory[slot] = null;
+        edible.Stack--; if (edible.Stack == 0) inventory[slot] = null!;
         try
         {
             who.eatObject(single, overrideFullness: false);

@@ -60,7 +60,7 @@ internal sealed partial class AfkFishingService
             try
             {
                 target.Stack = before + take; rod.attachments[0] = target;
-                item.Stack -= take; if (item.Stack == 0) items[slot] = null;
+                item.Stack -= take; if (item.Stack == 0) items[slot] = null!;
                 return true;
             }
             catch
