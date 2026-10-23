@@ -40,6 +40,15 @@ internal static class SpiritArt
         string key=name+"/"+size;
         if(Cache.TryGetValue(key,out var found))return found;
         var source=Helper.ModContent.Load<Texture2D>("assets/spirit/"+name+".png");
+        // Native 16x16 pixel art (vanilla style): used as-is, enlarged pixel for pixel. No HD adapter needed.
+        if(source.Width==16&&source.Height==16&&size%16==0)
+        {
+            var data=new Color[256];source.GetData(data);
+            var pixels=new Color[size*size];int k=size/16;
+            for(int y=0;y<size;y++)for(int x=0;x<size;x++)pixels[y*size+x]=data[y/k*16+x/k];
+            var native=new Texture2D(Game1.graphics.GraphicsDevice,size,size);native.SetData(pixels);
+            Cache[key]=native;return native;
+        }
         var logical=HdSprites.CreateSourceResolution(source,out var full);
         if(size==16){Cache[key]=logical;Cache[name+"/source"]=full;return logical;}
         var display=new Texture2D(Game1.graphics.GraphicsDevice,size,size);display.SetData(new Color[size*size]);
