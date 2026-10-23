@@ -159,9 +159,8 @@ internal sealed class TotemArt
         if (!ReferenceEquals(location, Game1.getFarm()) || item is not SObject o || Overlookable(o)) return;
         if (UnderTotem(location, new Vector2(x / 64, y / 64))) __result = false;
     }
-    // Seeds, fertilizer and floor paths may still go under a totem's artwork.
-    private static bool Overlookable(SObject o) => o.Category is SObject.SeedsCategory or SObject.fertilizerCategory
-        || StardewValley.TerrainFeatures.Flooring.GetFloorPathItemLookup().ContainsKey(o.ItemId);
+    // Only floors and paths may still go under a totem's artwork.
+    private static bool Overlookable(SObject o) => StardewValley.TerrainFeatures.Flooring.GetFloorPathItemLookup().ContainsKey(o.ItemId);
     internal static bool UnderTotem(GameLocation location, Vector2 tile)
     {
         foreach (var pair in location.objects.Pairs)
