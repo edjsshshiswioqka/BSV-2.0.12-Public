@@ -32,6 +32,7 @@ internal sealed class OrderTerminal
   h.Patch(DrawPatchTargets.Require(typeof(Game1),nameof(Game1.drawMouseCursor),typeof(void)),
    prefix:new HarmonyMethod(typeof(OrderTerminal),nameof(BeginCursor)),finalizer:new HarmonyMethod(typeof(OrderTerminal),nameof(EndCursor)));
   _=new TerminalWorld(helper,monitor,h);
+  _=new TerminalReplacement(helper,monitor);
   helper.Events.Content.AssetRequested+=Assets;
   helper.Events.GameLoop.SaveLoaded+=(_,_)=>ScheduleMail();
   helper.Events.GameLoop.DayStarted+=(_,_)=>ScheduleMail();
