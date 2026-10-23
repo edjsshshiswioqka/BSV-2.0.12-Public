@@ -49,15 +49,23 @@ public sealed class MachineEnvironmentJournal
     }
     public MachineEnvironmentProfile At(string token,long minute)
     {
-        if(Version!=1||!Cycles.TryGetValue(token,out var frames))throw new InvalidOperationException("No recorded environment for paid cycle.");
-        var found=frames.LastOrDefault(w=>minute>=w.From&&minute<w.Until&&w.Profile.Day==MachineTimeline.Day(minute));
+        if(Version!=1||!Cycles.TryGetValue(token,out var frames)||frames.Count==0)throw new InvalidOperationException("No recorded environment for paid cycle.");
+        int day=MachineTimeline.Day(minute);
+        var found=frames.LastOrDefault(w=>minute>=w.From&&minute<w.Until&&w.Profile.Day==day);
         if(found!=null)return found.Profile;
-        var basis=frames.LastOrDefault(w=>w.From<=minute);
-        var fallback=System.Text.Json.JsonSerializer.Deserialize<MachineEnvironmentProfile>(System.Text.Json.JsonSerializer.Serialize((basis??frames.First()).Profile))!;
-        fallback.Day=MachineTimeline.Day(minute);fallback.UnknownWeather=true;fallback.Rain=false;
-        fallback.Fish=basis?.Profile.SafeFish.GetValueOrDefault(MachineTimeline.Season(fallback.Day))??new();
-        // Missing evidence cannot license rare catches. The runtime retains a paid opportunity if no legal non-trash fallback exists.
-        if(basis==null){fallback.Jelly=null;fallback.Other=new(){"(O)168","(O)169","(O)170","(O)171","(O)172"};}
+        // The same game day was observed at another time of day: that day's weather and ecology are known,
+        // and each profile already lists the fish for every time of day.
+        var sameDay=frames.Where(w=>w.Profile.Day==day)
+            .OrderBy(w=>minute<w.From?w.From-minute:minute>=w.Until?minute-w.Until:0).FirstOrDefault();
+        if(sameDay!=null)return sameDay.Profile;
+        // A day nobody watched (catch-up before the first observation, or skipped days): use the nearest
+        // observation of the same season; another season falls back to the conservative seasonal table.
+        var basis=frames.LastOrDefault(w=>w.From<=minute)??frames.First();
+        var fallback=System.Text.Json.JsonSerializer.Deserialize<MachineEnvironmentProfile>(System.Text.Json.JsonSerializer.Serialize(basis.Profile))!;
+        fallback.Day=day;fallback.UnknownWeather=true;fallback.Rain=false;
+        int season=MachineTimeline.Season(day);
+        if(MachineTimeline.Season(basis.Profile.Day)!=season||basis.Profile.UnknownWeather)
+            fallback.Fish=basis.Profile.SafeFish.GetValueOrDefault(season)??new();
         return fallback;
     }
 }

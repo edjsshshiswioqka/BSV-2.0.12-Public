@@ -50,7 +50,7 @@ internal static class TimelineChecks
         journal.Record(state.CycleToken,112L*1440+900,Profile(112,false),true);
         check(!journal.At(state.CycleToken,start+1).Rain&&journal.At(state.CycleToken,111L*1440+721).Rain,"weather change splits observations; earlier sun remains sun");
         check(journal.At(state.CycleToken,111L*1440+1500).Rain&&!journal.At(state.CycleToken,112L*1440+1500).Rain,"sleep window uses that day's weather, never next-day weather");
-        bool missing=false;try{journal.At(state.CycleToken,113L*1440+360);}catch(InvalidOperationException){missing=true;}check(missing,"unknown skipped days are not fabricated");
+        var skipped=journal.At(state.CycleToken,113L*1440+360);check(skipped.UnknownWeather&&skipped.Day==113&&!skipped.Rain&&skipped.Fish.Any(w=>w.Fish.Count>0),"an unwatched day of the same season reuses the nearest observed ecology instead of only junk");
         var restored=JsonSerializer.Deserialize<MachineEnvironmentJournal>(JsonSerializer.Serialize(journal))!;
         check(restored.At(state.CycleToken,111L*1440+1500).Rain,"saved environmental windows survive JSON reload");
         for(int i=0;i<state.Timeline.Plan.Count;i++)

@@ -148,6 +148,8 @@ internal sealed partial class ProductionService
             if(inventory[spend.Index].Stack==0)inventory[spend.Index]=null!;
         }
         s.Level++; s.LevelCycles=0; s.BaitCredit=0;
+        // Materials are taken now, so the next cycle (at the new level) starts now, not in the past.
+        if(s.Continuity!=null)s.Continuity.NextAt=Math.Max(s.Continuity.NextAt,Math.Max(Now,s.Continuity.ObservedAt));
         Commit(c,inventory.Where(i=>i!=null).ToArray(),s);
         c.SpecialChestType=Chest.SpecialChestTypes.BigChest;
             Mod.Monitor.Log(Mod.T("diag.machine-upgraded",new{level=s.Level,location=c.Location.NameOrUniqueName+":"+c.TileLocation,cycles=s.CompletedCycles}),LogLevel.Info);
@@ -183,10 +185,12 @@ internal sealed partial class ProductionService
         {
             SettleCycleLegendary(c,state);
             if (state.Timeline==null&&!MachineLegendaryBridge.CanFinish(state) || !state.Complete(Now)) return;
-            if(state.Timeline!=null)Commit(c,null,state);
+            if(state.Timeline!=null){Commit(c,null,state);LogCycle(c,state);}
             else MachineLegendaryBridge.Finish(state,()=>Commit(c,null,state));
         }
-        if (!PreparingRecovery(c) && (state.Continuity?.NextAt??Now)>=Now) Upgrade(c,state);
+        // Upgrade between cycles whenever progress and materials are there. The old gate only allowed it when
+        // the machine was not catching up, so a machine that restarts by itself after every cycle never upgraded.
+        if (!PreparingRecovery(c)) Upgrade(c,state);
         if (state.Phase == "ready")
         {
             if (deferDelivery) return;

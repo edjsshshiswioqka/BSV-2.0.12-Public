@@ -47,7 +47,7 @@ internal static class FishPool
                     : spawn.MaxDistanceFromShore >= 0 && castDepth > spawn.MaxDistanceFromShore ? $"distance {castDepth}>{spawn.MaxDistanceFromShore}"
                     : spawn.BobberPosition.HasValue && !spawn.BobberPosition.Value.Contains((int)cast.X, (int)cast.Y) ? "bobber position"
                     : spawn.PlayerPosition.HasValue && !spawn.PlayerPosition.Value.Contains(bankTile.X, bankTile.Y) ? "player position"
-                    : !(historicalDay.HasValue?MachineTimeConditions.Historical(spawn.Condition,clock,historicalDay.Value):MachineTimeConditions.Check(spawn.Condition,clock,environment,owner)) ? "condition: "+spawn.Condition
+                    : !(historicalDay.HasValue?MachineTimeConditions.Historical(spawn.Condition,clock,historicalDay.Value,environment):MachineTimeConditions.Check(spawn.Condition,clock,environment,owner)) ? "condition: "+spawn.Condition
                     : null;
                 if (why != null) { reject?.Invoke(raw, why); continue; }
                 if (raw.StartsWith("LOCATION_FISH ", StringComparison.Ordinal))
@@ -78,7 +78,7 @@ internal static class FishPool
                     for (int i = 0; i + 1 < times.Length; i += 2)
                         if (int.TryParse(times[i], out int from) && int.TryParse(times[i + 1], out int to)
                             && clock >= from && clock < to) timeOk = true;
-                    string? whyData = !timeOk ? $"time {clock} not in {fields[5]}" : historicalDay.HasValue && fields[7] != "both" ? "weather unknown"
+                    string? whyData = !timeOk ? $"time {clock} not in {fields[5]}" : historicalDay.HasValue && fields[7] == "rainy" ? "weather unknown (rain-only fish skipped)"
                         : fields[7] == "rainy" && !environment.IsRainingHere() ? "needs rain" : fields[7] == "sunny" && environment.IsRainingHere() ? "needs sun"
                         : !int.TryParse(fields[12], out int level) || owner.fishingLevel.Value < level ? $"fish level {fields[12]} > {owner.fishingLevel.Value}" : null;
                     if (whyData != null) { reject?.Invoke(raw, whyData); continue; }

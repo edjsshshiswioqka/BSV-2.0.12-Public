@@ -35,6 +35,8 @@ internal sealed partial class ProductionService
                 {
                     int time=MachineTimeline.Time(op.At),year=MachineTimeline.Year(day);
                     var fish=env.Fish.FirstOrDefault(p=>time>=p.From&&time<p.Until)?.Fish??new();
+                    var diag=CycleDiag.GetValueOrDefault(original.CycleToken);
+                    CycleDiag[original.CycleToken]=(diag.Casts+1,diag.NoFish+(fish.Any(f=>!f.IsLegendary)?0:1),diag.Unwatched+(env.UnknownWeather?1:0));
                     fish=fish.Where(f=>!f.IsLegendary||MachineLegendaryBridge.AvailableTimeline(owner,f.Id,year,TimelineEnvironment.ObservedQuota(original.CycleToken,day,f.Id))).ToList();
                     var bait=t.FishingBait[op.Bait] with{Count=1};
                     if(t.Version>=2)legendaryCandidates=fish.Where(f=>f.IsLegendary&&f.Id!=Production.SpiritId).ToList();
@@ -111,6 +113,14 @@ internal sealed partial class ProductionService
                 return;
             }
         }
+    }
+    /// <summary>Per running cycle: casts made, casts with no fish available at that time/place, casts in unwatched time.</summary>
+    private static readonly Dictionary<string,(int Casts,int NoFish,int Unwatched)> CycleDiag=new();
+    private void LogCycle(Chest c,ProductionState s)
+    {
+        var d=CycleDiag.GetValueOrDefault(s.CycleToken);CycleDiag.Remove(s.CycleToken);
+        Mod.Monitor.Log($"[BSV fishing machine] {c.Location?.NameOrUniqueName}:{c.TileLocation} Lv{s.Level} cycle done: {s.BaitUsed} bait -> fish {s.FishCount} (+{s.CriticalFishCount+s.ChallengeExtraFish} bonus), other {s.OtherCount}, treasure {s.NormalTreasures}/{s.AdvancedTreasures}; "
+            +$"casts checked this session {d.Casts}, with no fish available {d.NoFish}, in unwatched time {d.Unwatched}; upgrade progress {MachineUpgrade.Progress(s)}/{MachineCycleRules.RequiredCycles(s)} (bait credit {s.BaitCredit}/{s.CycleBait}).",StardewModdingAPI.LogLevel.Info);
     }
     private void SettleCycleLegendary(Chest c,ProductionState state)
     {
