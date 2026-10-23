@@ -105,12 +105,14 @@ internal sealed partial class ProductionService
         if(state.Phase!="working" && state.Continuity is {Stopped:false} history && history.NextAt<=Now)return true;
         if(ModEntry.IsCrab(c))return CrabNeedsWork(c,state);
 
+        if(state.Phase=="working"&&state.Timeline!=null&&PoweredOff(c))return true;
         if(state.Phase=="working"&&state.Timeline!=null)return state.Timeline.Cursor<state.Timeline.Plan.Count?state.Timeline.Plan[state.Timeline.Cursor].At<Now:Now>=state.DueAt
             || state.Pending.Count>0 && DeliverableNow(state).Count>0 && c.Items.Count(i=>i!=null)<c.GetActualCapacity();
         if (PreparingRecovery(c)) return state.Phase == "working" ? Now >= state.DueAt : state.Pending.Count > 0;
         if (state.Phase != "working" && UpgradePlan(c,state) != null) return true;
         int required=MachineUpgrade.RequiredBait(state,Mod.Config);
         if (state.Phase == "working") return ProductionSchedule.NeedsWork(state, Now, 0, required, false);
+        if(PoweredOff(c))return state.Phase=="ready";
         long bait=0; bool other=false;
         foreach(var item in c.Items)
         {
@@ -175,6 +177,7 @@ internal sealed partial class ProductionService
         RemoveEmptyStacks(c);
         if(ModEntry.IsCrab(c)){ProcessCrab(c, deferDelivery);return;}
         AdvanceTimeline(c);
+        if (PoweredOff(c)) StopNow(c);
         // Fish appear in the machine as soon as each cast lands, not only when the whole cycle ends.
         if(!deferDelivery&&Read(c) is {Phase:"working",Timeline:not null} live&&live.Pending.Count>0)
         {var running=live.Snapshot();Deliver(c,running,DeliverableNow(running));}
@@ -202,6 +205,7 @@ internal sealed partial class ProductionService
         }
         if (PreparingRecovery(c)) {StopContinuity(c,"recovery");return;}
         if(!manualStart && c.modData.ContainsKey(CrabCommandKey))return;
+        if(PoweredOff(c)){StopContinuity(c,"switched off");return;}
         long at=StartAt(state,manualStart);if(at>Now)return;
         var policy=state.Continuity!.PolicyAt(at);
         if(!manualStart&&!policy.Auto){StopContinuity(c,"automatic restart disabled");return;}
@@ -378,6 +382,7 @@ internal sealed partial class ProductionService
                 return Mod.T("status.working", new { hours = left / 60, minutes = left % 60 });
             }
             if (s.Phase == "ready" && s.Pending.Count > 0) return Mod.T("status.full");
+            if (PoweredOff(c)) return Mod.T("status.off");
             if (!BetterStardewValley.Configuration.SharedPreferences.Current.AutoRestartProduction) return Mod.T("status.auto-off");
             long bait = c.Items.Select((i, n) => (long)(Bait(i, n,s.Level)?.Count ?? 0)).Sum();
             int required=MachineUpgrade.RequiredBait(s,Mod.Config);
@@ -443,5 +448,63 @@ internal sealed partial class ProductionService
         string status=Status(c);
         float statusScale=Math.Min(.75f,(menu.inventory.width-16)/Math.Max(1,Game1.smallFont.MeasureString(status).X));
         b.DrawString(Game1.smallFont,status,new Vector2(menu.inventory.xPositionOnScreen,menu.inventory.inventory[0].bounds.Top-34),Game1.textColor,0,Vector2.Zero,statusScale,SpriteEffects.None,1);
+    }
+
+    // ---------------- On / off switch (fishing machine) ----------------
+    internal const string PowerKey = ModEntry.Tag + "PowerOff";
+    internal static bool PoweredOff(Chest c) => c.modData.ContainsKey(PowerKey);
+    /// <summary>Flip the switch. Any player who has the machine open may do it; the host applies it.</summary>
+    internal void TogglePower(Chest c)
+    {
+        if (PoweredOff(c)) { c.modData.Remove(PowerKey); Game1.playSound("powerup"); Game1.showGlobalMessage(Mod.T("panel.power-now-on")); }
+        else { c.modData[PowerKey] = "1"; Game1.playSound("trashcanlid"); Game1.showGlobalMessage(Mod.T("panel.power-now-off")); }
+        BaitCache.Remove(c);
+    }
+    /// <summary>Switched off while fishing: the casts already made stay, the cycle ends now and every
+    /// bait that has not been cast yet goes back into the machine.</summary>
+    private void StopNow(Chest c)
+    {
+        var s = Read(c).Snapshot(); var t = s.Timeline;
+        if (s.Phase != "working" || t == null || s.Kind != MachineKinds.Fishing) return;
+        int done = t.Cursor;
+        var refund = t.Plan.Skip(done).GroupBy(o => o.Bait).Select(g => (Bait: t.FishingBait[g.Key], Count: g.Count())).ToList();
+        if (done == 0 || Now <= s.StartedAt)
+        {
+            if (s.Pending.Count > 0) return; // nothing cast yet, so nothing can be pending; never lose output
+            Commit(c, null, s.IdleCopy());
+        }
+        else
+        {
+            var kept = t.Plan.Take(done).ToList();
+            var ordinal = kept.Select((o, i) => (o.Ordinal, i)).ToDictionary(p => p.Ordinal, p => p.i);
+            var baitIndex = kept.Select(o => o.Bait).Distinct().OrderBy(b => b).Select((b, i) => (b, i)).ToDictionary(p => p.b, p => p.i);
+            t.FishingBait = baitIndex.OrderBy(p => p.Value).Select(p => t.FishingBait[p.Key] with { Count = kept.Count(o => o.Bait == p.Key) }).ToList();
+            t.Plan = kept.Select(o => o with { Ordinal = ordinal[o.Ordinal], Bait = baitIndex[o.Bait] }).ToList();
+            t.LegendaryOpportunities = t.LegendaryOpportunities.Where(o => ordinal.ContainsKey(o.Ordinal)).Select(o => o with { Ordinal = ordinal[o.Ordinal] }).ToList();
+            t.Prepared = null; t.PausedReason = null;
+            s.BaitUsed = done; s.DueAt = Math.Max(s.StartedAt + 1, Math.Max(Now, kept[^1].At + 1));
+            if (!MachineTimeline.Valid(s)) throw new InvalidOperationException("Switch-off would break the saved cycle; it keeps running.");
+            Commit(c, null, s);
+        }
+        foreach (var (bait, count) in refund)
+        {
+            Item item = bait.Kind switch
+            {
+                BaitKind.Deluxe => ItemRegistry.Create("(O)DeluxeBait", count),
+                BaitKind.Challenge => ItemRegistry.Create("(O)ChallengeBait", count),
+                BaitKind.GiantLobster => ItemRegistry.Create(GiantLobsterRules.Bait, count),
+                BaitKind.Targeted when bait.Target != null => FlavoredBait(bait.Target, count),
+                _ => ItemRegistry.Create("(O)685", count)
+            };
+            var left = c.addItem(item);
+            if (left != null) Game1.createItemDebris(left, c.TileLocation * 64f + new Vector2(32f, 32f), -1, c.Location);
+        }
+        Mod.Monitor.Log($"[BSV fishing machine] switched off at {c.Location?.NameOrUniqueName}:{c.TileLocation}; {done} casts kept, {refund.Sum(r => r.Count)} bait returned.", LogLevel.Info);
+    }
+    private static Item FlavoredBait(string fishId, int count)
+    {
+        var fish = ItemRegistry.Create<StardewValley.Object>(fishId);
+        var bait = ItemRegistry.GetObjectTypeDefinition().CreateFlavoredBait(fish);
+        bait.Stack = count; return bait;
     }
 }

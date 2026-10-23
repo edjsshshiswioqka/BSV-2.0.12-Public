@@ -632,5 +632,13 @@
   "config.horse-large": "Ngựa lớn",
   "config.horse-large.help": "Cài đặt của chủ nhà. Ngựa được vẽ lớn hơn 15%; người cưỡi giữ nguyên kích thước. Chỉ thay đổi hình ảnh.",
   "horse.call.cross_map_unavailable": "Chưa hỗ trợ gọi ngựa từ bản đồ khác. Hãy đến bản đồ có ngựa để gọi.",
-  "horse.call.withdrawal_unavailable": "Ngựa đã ra khỏi tầm nhìn. Trong bản thử nghiệm này, ngựa vẫn ở trên bản đồ để bảo đảm an toàn."
+  "horse.call.withdrawal_unavailable": "Ngựa đã ra khỏi tầm nhìn. Trong bản thử nghiệm này, ngựa vẫn ở trên bản đồ để bảo đảm an toàn.",
+  "panel.power-on": "ON",
+  "panel.power-off": "OFF",
+  "panel.power-on-help": "The machine is on. Click to switch it off: it stops fishing now, keeps what it already caught and gives back every bait it has not used.",
+  "panel.power-off-help": "The machine is off. Click to switch it on: it starts fishing again with the bait inside.",
+  "panel.power-now-on": "Fishing machine switched on.",
+  "panel.power-now-off": "Fishing machine switched off. Unused bait is back in the machine.",
+  "panel.off": "Switched off",
+  "status.off": "Switched off. Click ON to fish again."
 }

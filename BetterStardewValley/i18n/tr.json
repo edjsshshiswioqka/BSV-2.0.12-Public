@@ -632,5 +632,13 @@
   "config.horse-large": "Büyük atlar",
   "config.horse-large.help": "Ev sahibi ayarı. Atlar %15 daha büyük çizilir; biniciler boyutunu korur. Yalnızca görsel.",
   "horse.call.cross_map_unavailable": "Başka bir haritadan çağırma kullanılamıyor. Atın bulunduğu haritada çağırın.",
-  "horse.call.withdrawal_unavailable": "At görüş alanından çıktı. Bu test sürümünde güvenlik için dünyada kalır."
+  "horse.call.withdrawal_unavailable": "At görüş alanından çıktı. Bu test sürümünde güvenlik için dünyada kalır.",
+  "panel.power-on": "ON",
+  "panel.power-off": "OFF",
+  "panel.power-on-help": "The machine is on. Click to switch it off: it stops fishing now, keeps what it already caught and gives back every bait it has not used.",
+  "panel.power-off-help": "The machine is off. Click to switch it on: it starts fishing again with the bait inside.",
+  "panel.power-now-on": "Fishing machine switched on.",
+  "panel.power-now-off": "Fishing machine switched off. Unused bait is back in the machine.",
+  "panel.off": "Switched off",
+  "status.off": "Switched off. Click ON to fish again."
 }

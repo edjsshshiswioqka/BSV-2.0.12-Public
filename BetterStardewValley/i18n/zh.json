@@ -632,5 +632,13 @@
   "config.horse-large": "大体型马匹",
   "config.horse-large.help": "房主设置。马匹显示放大 15%，骑手保持原来大小。仅影响外观。",
   "horse.call.cross_map_unavailable": "暂不支持跨地图召回，请到马匹所在地图召唤。",
-  "horse.call.withdrawal_unavailable": "马匹已走出视野。本测试版暂不撤除持久马匹实体，马仍留在地图中。"
+  "horse.call.withdrawal_unavailable": "马匹已走出视野。本测试版暂不撤除持久马匹实体，马仍留在地图中。",
+  "panel.power-on": "开机",
+  "panel.power-off": "关机",
+  "panel.power-on-help": "机器正在运行。点一下关机：马上停止钓鱼，已经钓到的鱼留着，没用掉的鱼饵全部退回机器里。",
+  "panel.power-off-help": "机器已关机。点一下开机：用机器里的鱼饵继续钓鱼。",
+  "panel.power-now-on": "钓鱼机已开机。",
+  "panel.power-now-off": "钓鱼机已关机，没用掉的鱼饵已退回机器。",
+  "panel.off": "已关机",
+  "status.off": "已关机。点「开机」继续钓鱼。"
 }

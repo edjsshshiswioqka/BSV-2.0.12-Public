@@ -632,5 +632,13 @@
   "config.horse-large": "Caballos grandes",
   "config.horse-large.help": "Ajuste del anfitrión. Los caballos se dibujan un 15 % más grandes; los jinetes mantienen su tamaño. Solo visual.",
   "horse.call.cross_map_unavailable": "No se puede llamar desde otro mapa. Ve al mapa donde está tu caballo.",
-  "horse.call.withdrawal_unavailable": "El caballo ha salido del campo de visión. En esta versión de prueba permanece en el mundo por seguridad."
+  "horse.call.withdrawal_unavailable": "El caballo ha salido del campo de visión. En esta versión de prueba permanece en el mundo por seguridad.",
+  "panel.power-on": "ON",
+  "panel.power-off": "OFF",
+  "panel.power-on-help": "The machine is on. Click to switch it off: it stops fishing now, keeps what it already caught and gives back every bait it has not used.",
+  "panel.power-off-help": "The machine is off. Click to switch it on: it starts fishing again with the bait inside.",
+  "panel.power-now-on": "Fishing machine switched on.",
+  "panel.power-now-off": "Fishing machine switched off. Unused bait is back in the machine.",
+  "panel.off": "Switched off",
+  "status.off": "Switched off. Click ON to fish again."
 }

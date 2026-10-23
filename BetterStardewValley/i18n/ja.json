@@ -632,5 +632,13 @@
   "config.horse-large": "大きな馬",
   "config.horse-large.help": "ホスト設定。馬を15%大きく表示します。乗り手の大きさは変わりません。見た目のみ。",
   "horse.call.cross_map_unavailable": "別のマップからは呼べません。馬と同じマップで呼んでください。",
-  "horse.call.withdrawal_unavailable": "馬は視界の外へ移動しました。このテスト版では安全のため、馬の実体はマップに残ります。"
+  "horse.call.withdrawal_unavailable": "馬は視界の外へ移動しました。このテスト版では安全のため、馬の実体はマップに残ります。",
+  "panel.power-on": "ON",
+  "panel.power-off": "OFF",
+  "panel.power-on-help": "The machine is on. Click to switch it off: it stops fishing now, keeps what it already caught and gives back every bait it has not used.",
+  "panel.power-off-help": "The machine is off. Click to switch it on: it starts fishing again with the bait inside.",
+  "panel.power-now-on": "Fishing machine switched on.",
+  "panel.power-now-off": "Fishing machine switched off. Unused bait is back in the machine.",
+  "panel.off": "Switched off",
+  "status.off": "Switched off. Click ON to fish again."
 }

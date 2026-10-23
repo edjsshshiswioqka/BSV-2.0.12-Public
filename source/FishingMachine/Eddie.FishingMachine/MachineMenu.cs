@@ -33,7 +33,7 @@ internal sealed partial class ProductionService
 {
     internal sealed class FullLayout
     {
-        public Rectangle Window,BagWindow,Title,Badge,ColorButton,Status,Bar,Stats,Catch,Take,UpgradeTitle,Button,Note,Locked;
+        public Rectangle Window,BagWindow,Title,Badge,ColorButton,Power,Status,Bar,Stats,Catch,Take,UpgradeTitle,Button,Note,Locked;
         public Rectangle[] Conditions=Array.Empty<Rectangle>();
         public int[] Dividers=Array.Empty<int>();
         public Point Grid,Bag;
@@ -237,7 +237,22 @@ internal sealed partial class ProductionService
         b.DrawString(Game1.smallFont,badge,new Vector2(g.Badge.X+14,g.Badge.Y+(g.Badge.Height-badgeSize.Y)/2+2),ButtonInk);
         if(!crab&&g.Badge.Contains(mx,my))tip=FishingBalanceTip(s);
         int titleRight=g.Badge.X-12;
-        if(!g.Labels){g.Take=new Rectangle(g.Badge.X-12-g.Take.Width,colorButton.Y,g.Take.Width,colorButton.Height);titleRight=g.Take.X-12;}
+        if(!crab)
+        {
+            // On / off switch: green while on, red while off.
+            bool off=PoweredOff(c);
+            string label=Mod.T(off?"panel.power-off":"panel.power-on");
+            var labelSize=Game1.smallFont.MeasureString(label);
+            g.Power=new Rectangle(titleRight-((int)labelSize.X+36),colorButton.Y,(int)labelSize.X+36,colorButton.Height);
+            bool hover=g.Power.Contains(mx,my);
+            Box(b,g.Power,off?(hover?new Color(214,96,96):new Color(196,72,72)):(hover?new Color(120,196,96):CheckFill),off?new Color(120,30,30):Good);
+            var dot=new Rectangle(g.Power.X+10,g.Power.Center.Y-5,10,10);
+            b.Draw(Game1.staminaRect,dot,off?new Color(90,20,20):new Color(214,255,170));
+            b.DrawString(Game1.smallFont,label,new Vector2(dot.Right+6,g.Power.Y+(g.Power.Height-labelSize.Y)/2+2),Color.White);
+            if(hover)tip=Mod.T(off?"panel.power-off-help":"panel.power-on-help");
+            titleRight=g.Power.X-12;
+        }
+        if(!g.Labels){g.Take=new Rectangle(titleRight-g.Take.Width,colorButton.Y,g.Take.Width,colorButton.Height);titleRight=g.Take.X-12;}
         // The level lives in the badge; drop a trailing "Lv1"-style suffix from the item name.
         string name=System.Text.RegularExpressions.Regex.Replace(Mod.T(crab?"crab.name":"machine.name"),@"\s*[Ll][Vv]\.?\s*\d+$","");
         Heading(b,name,new Vector2(g.Title.X,g.Title.Y+4),titleRight-g.Title.X);
@@ -253,7 +268,7 @@ internal sealed partial class ProductionService
             if(!paused)timeLeft=Mod.T("panel.time-left",new{hours=remaining/60,minutes=remaining%60});
         }
         else if(s.Phase=="ready"){fraction=1;phase=s.Pending.Count>0?Mod.T("status.full"):Mod.T("panel.ready");}
-        else phase=Mod.T("panel.idle");
+        else phase=Mod.T(!crab&&PoweredOff(c)?"panel.off":"panel.idle");
         float timeWidth=timeLeft.Length>0?Game1.smallFont.MeasureString(timeLeft).X:0;
         PanelText(b,phase,new Vector2(g.Status.X,g.Status.Y),paused?Bad:Ink,g.Status.Width-timeWidth-16,1f);
         if(timeLeft.Length>0)b.DrawString(Game1.smallFont,timeLeft,new Vector2(g.Status.Right-timeWidth,g.Status.Y),Ink);

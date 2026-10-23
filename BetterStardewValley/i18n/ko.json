@@ -632,5 +632,13 @@
   "config.horse-large": "큰 말",
   "config.horse-large.help": "호스트 설정. 말을 15% 크게 그립니다. 탄 사람의 크기는 그대로입니다. 외형만 바뀝니다.",
   "horse.call.cross_map_unavailable": "다른 지도에서는 부를 수 없습니다. 말이 있는 지도에서 불러 주세요.",
-  "horse.call.withdrawal_unavailable": "말이 시야 밖으로 이동했습니다. 이 테스트 버전에서는 안전을 위해 말을 지도에 그대로 둡니다."
+  "horse.call.withdrawal_unavailable": "말이 시야 밖으로 이동했습니다. 이 테스트 버전에서는 안전을 위해 말을 지도에 그대로 둡니다.",
+  "panel.power-on": "ON",
+  "panel.power-off": "OFF",
+  "panel.power-on-help": "The machine is on. Click to switch it off: it stops fishing now, keeps what it already caught and gives back every bait it has not used.",
+  "panel.power-off-help": "The machine is off. Click to switch it on: it starts fishing again with the bait inside.",
+  "panel.power-now-on": "Fishing machine switched on.",
+  "panel.power-now-off": "Fishing machine switched off. Unused bait is back in the machine.",
+  "panel.off": "Switched off",
+  "status.off": "Switched off. Click ON to fish again."
 }
