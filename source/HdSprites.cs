@@ -27,8 +27,8 @@ internal static class HdSprites
     internal static bool Initialized => Enabled;
     private static readonly (string Id,string File)[] Items={
         // Grape Wine and Ruby Reserve (id BloodOfJesus, kept for saves) now use their own vanilla-style 16x16 sprites (no HD replacement).
-        // A Cup of Green Tea and Tea Cake use hand-drawn 16x16 sprites too (approved 2026-10-24).
-        (TeaAppleRules.GoldenApple,"golden_apple")};
+        // A Cup of Green Tea and Tea Cake are hand-drawn 16x16; the Golden Apple is the game's apple recoloured at runtime.
+        };
     private static readonly HashSet<Texture2D> ItemSources=new();
     internal static void Install(IModHelper helper,IMonitor monitor,string id)
     {

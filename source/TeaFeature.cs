@@ -62,6 +62,8 @@ internal sealed partial class TeaFeature
 
     private void Assets(object? sender, AssetRequestedEventArgs e)
     {
+        if (e.NameWithoutLocale.IsEquivalentTo(TeaAppleData.TextureRoot + "Apple"))
+        { e.LoadFrom(GoldenAppleTexture, AssetLoadPriority.Exclusive); return; }
         foreach (var texture in TeaAppleData.Textures)
             if (e.NameWithoutLocale.IsEquivalentTo(TeaAppleData.TextureRoot + texture.Key))
             { e.LoadFromModFile<Texture2D>(texture.Value, AssetLoadPriority.Exclusive); return; }
@@ -75,6 +77,41 @@ internal sealed partial class TeaFeature
         else if (e.NameWithoutLocale.IsEquivalentTo("Data/mail")) e.Edit(a => TeaAppleData.Mail(a.AsDictionary<string, string>().Data, Tr), AssetEditPriority.Late);
     }
 
+    /// <summary>
+    /// The Golden Apple is the player's own game apple sprite recoloured to gold at runtime, with a brighter highlight.
+    /// No game art is shipped with BSV; if the apple sprite can't be read, BSV's own drawing is used instead.
+    /// </summary>
+    private Texture2D GoldenAppleTexture()
+    {
+        try
+        {
+            var data = ItemRegistry.GetDataOrErrorItem("(O)613");
+            var source = data.GetSourceRect();var sheet = data.GetTexture();
+            var px = new Color[source.Width * source.Height];
+            sheet.GetData(0, source, px, 0, px.Length);
+            var shades = px.Where(c => c.A > 0).Select(c => c with { A = 255 }).Distinct().OrderBy(Luma).ToList();
+            Color[] ramp = { new(110, 52, 0), new(214, 128, 0), new(255, 190, 20), new(255, 228, 96), new(255, 255, 224) };
+            for (int i = 0; i < px.Length; i++)
+            {
+                if (px[i].A == 0) continue;
+                int rank = shades.IndexOf(px[i] with { A = 255 });
+                var gold = ramp[(int)Math.Round(rank * (ramp.Length - 1) / (double)Math.Max(1, shades.Count - 1))];
+                px[i] = new Color(gold.R, gold.G, gold.B, px[i].A);
+            }
+            if (source.Width == 16 && source.Height == 16) // extra highlight on the upper left of the fruit
+                foreach (var (x, y) in new[] { (4, 6), (4, 7), (3, 8), (5, 6) })
+                    if (px[y * 16 + x].A > 0 && px[y * 16 + x] != new Color(110, 52, 0)) px[y * 16 + x] = ramp[^1];
+            var result = new Texture2D(Game1.graphics.GraphicsDevice, source.Width, source.Height);
+            result.SetData(px);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Monitor.Log("BSV Golden Apple: using the bundled sprite (" + ex.Message + ").", LogLevel.Trace);
+            return Helper.ModContent.Load<Texture2D>(TeaAppleData.Textures["Apple"]);
+        }
+        static float Luma(Color c) => .3f * c.R + .59f * c.G + .11f * c.B;
+    }
     private void Unlock()
     {
         if (!Context.IsWorldReady) return;

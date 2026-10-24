@@ -118,7 +118,7 @@
   "tea.wrong-season": "Ngoài trời chỉ có thể trồng cây trà giống vào xuân hoặc hè.",
   "tea.buy-saplings": "Mua cây trà giống từ Pierre sau khi học từ Caroline.",
   "apple.name": "Táo Vàng",
-  "apple.description": "Quả táo đắt giá chứa sức mạnh bảo hộ. Có thể cứu bạn một lần khỏi đòn chí mạng. Mỗi ngày ăn tối đa một quả. Kiên Cường hết lúc 2:00 sáng. Chỉ làm được trong bếp nhà nông đã nâng cấp của chính bạn.",
+  "apple.description": "Quả táo đắt giá được truyền sức mạnh bảo hộ. Có thể chặn một đòn chí mạng.",
   "apple.already-eaten": "Hôm nay bạn đã ăn Táo Vàng rồi.",
   "apple.kitchen-required": "Làm Táo Vàng trong bếp nhà nông đã nâng cấp của chính bạn. Bộ Nấu Ăn Ngoài Trời không làm được.",
   "apple.unavailable": "Không thể tải bảo hộ Táo Vàng. Hãy kiểm tra nhật ký SMAPI trước khi ăn.",

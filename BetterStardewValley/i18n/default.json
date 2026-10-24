@@ -118,7 +118,7 @@
   "tea.wrong-season": "Outdoors, tea saplings can only be planted in spring or summer.",
   "tea.buy-saplings": "Buy tea saplings from Pierre after learning from Caroline.",
   "apple.name": "Golden Apple",
-  "apple.description": "A costly apple infused with protective power. It may save you once from a lethal blow. Eat at most one per day. Tenacity expires at 2:00 AM. Made only in your upgraded farmhouse kitchen.",
+  "apple.description": "A costly apple infused with protective power. It can save you from one lethal blow.",
   "apple.already-eaten": "You have already eaten a Golden Apple today.",
   "apple.kitchen-required": "Make Golden Apples in your own upgraded farmhouse kitchen. A Cookout Kit cannot make them.",
   "apple.unavailable": "Golden Apple protection could not load. Please check the SMAPI log before eating it.",

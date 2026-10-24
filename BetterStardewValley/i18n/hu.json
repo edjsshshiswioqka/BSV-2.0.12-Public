@@ -118,7 +118,7 @@
   "tea.wrong-season": "A szabadban teacsemetét csak tavasszal vagy nyáron ültethetsz.",
   "tea.buy-saplings": "Miután tanultál Caroline-tól, vegyél teacsemetét Pierre-től.",
   "apple.name": "Aranyalma",
-  "apple.description": "Drága, védelmező erővel átitatott alma. Egyszer megmenthet egy halálos ütéstől. Naponta legfeljebb egyet ehetsz. A Szívósság hajnali 2-kor lejár. Csak a saját, fejlesztett tanyaházad konyhájában készülhet.",
+  "apple.description": "Védelmező erővel átitatott drága alma. Egyszer megóvhat egy halálos csapástól.",
   "apple.already-eaten": "Ma már ettél aranyalmát.",
   "apple.kitchen-required": "Aranyalmát a saját, fejlesztett tanyaházad konyhájában készíts. Szabadtéri főzőkészlettel nem készíthető.",
   "apple.unavailable": "Az aranyalma védelme nem töltődött be. Evés előtt ellenőrizd az SMAPI-naplót.",

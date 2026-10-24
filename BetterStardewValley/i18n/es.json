@@ -118,7 +118,7 @@
   "tea.wrong-season": "Al aire libre, los brotes de té solo se plantan en primavera o verano.",
   "tea.buy-saplings": "Compra brotes de té a Pierre después de aprender con Caroline.",
   "apple.name": "Manzana dorada",
-  "apple.description": "Una costosa manzana con poder protector. Puede salvarte una vez de un golpe mortal. Máximo una al día. Tenacidad caduca a las 2:00. Solo se prepara en tu propia cocina de granja mejorada.",
+  "apple.description": "Una manzana costosa imbuida de poder protector. Puede salvarte de un golpe mortal.",
   "apple.already-eaten": "Ya has comido una manzana dorada hoy.",
   "apple.kitchen-required": "Prepara manzanas doradas en tu propia cocina de granja mejorada. No se pueden hacer con un kit de cocina.",
   "apple.unavailable": "No se pudo cargar la protección de la manzana dorada. Revisa el registro de SMAPI antes de comerla.",

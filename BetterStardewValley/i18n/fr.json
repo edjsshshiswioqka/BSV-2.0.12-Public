@@ -118,7 +118,7 @@
   "tea.wrong-season": "En plein air, les pousses de thé ne se plantent qu’au printemps ou en été.",
   "tea.buy-saplings": "Achetez des pousses de thé chez Pierre après avoir appris auprès de Caroline.",
   "apple.name": "Pomme dorée",
-  "apple.description": "Une pomme coûteuse imprégnée de protection. Peut vous sauver une fois d’un coup fatal. Une seule par jour. Ténacité expire à 2 h. Fabrication uniquement dans votre propre cuisine de ferme améliorée.",
+  "apple.description": "Une pomme coûteuse imprégnée d’un pouvoir protecteur. Elle peut te sauver d’un coup mortel.",
   "apple.already-eaten": "Vous avez déjà mangé une pomme dorée aujourd’hui.",
   "apple.kitchen-required": "Préparez les pommes dorées dans votre propre cuisine de ferme améliorée. Un kit de cuisine ne suffit pas.",
   "apple.unavailable": "La protection de la pomme dorée n’a pas pu charger. Consultez le journal SMAPI avant de la manger.",

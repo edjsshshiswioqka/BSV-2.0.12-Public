@@ -118,7 +118,7 @@
   "tea.wrong-season": "Açık havada çay fidanı yalnızca ilkbahar veya yazın dikilebilir.",
   "tea.buy-saplings": "Caroline'dan öğrendikten sonra Pierre'den çay fidanı alın.",
   "apple.name": "Altın Elma",
-  "apple.description": "Koruyucu güçle dolu, pahalı bir elma. Ölümcül bir darbeye karşı sizi bir kez kurtarabilir. Günde en fazla bir tane yenir. Direnç gece 02.00'de biter. Yalnızca kendi yükseltilmiş çiftlik evinizin mutfağında yapılır.",
+  "apple.description": "Koruyucu güçle dolu pahalı bir elma. Seni bir kez ölümcül bir darbeden kurtarabilir.",
   "apple.already-eaten": "Bugün zaten bir Altın Elma yediniz.",
   "apple.kitchen-required": "Altın Elmayı kendi yükseltilmiş çiftlik evinizin mutfağında yapın. Açık Hava Yemek Kiti ile yapılamaz.",
   "apple.unavailable": "Altın Elma koruması yüklenemedi. Yemeden önce SMAPI günlüğünü kontrol edin.",

@@ -118,7 +118,7 @@
   "tea.wrong-season": "露天只能在春季或夏季种植茶苗。",
   "tea.buy-saplings": "向卡罗琳学习后，请在皮埃尔商店购买茶苗。",
   "apple.name": "金苹果",
-  "apple.description": "注入守护力量的昂贵苹果，可抵挡一次致命伤害。每天最多食用一个；坚韧在凌晨 2:00 失效。只能在自己升级后的农舍厨房制作。",
+  "apple.description": "注入守护力量的昂贵苹果，可以抵挡一次致命伤害。",
   "apple.already-eaten": "你今天已经吃过金苹果了。",
   "apple.kitchen-required": "请在自己升级后的农舍厨房制作金苹果，野炊工具包无法制作。",
   "apple.unavailable": "金苹果保护未能加载，请先检查 SMAPI 日志。",

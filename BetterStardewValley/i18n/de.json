@@ -118,7 +118,7 @@
   "tea.wrong-season": "Im Freien können Teesetzlinge nur im Frühling oder Sommer gepflanzt werden.",
   "tea.buy-saplings": "Kaufe Teesetzlinge bei Pierre, nachdem du bei Caroline gelernt hast.",
   "apple.name": "Goldener Apfel",
-  "apple.description": "Ein kostbarer Apfel voller Schutzkraft. Kann dich einmal vor einem tödlichen Treffer retten. Höchstens einer pro Tag. Standhaftigkeit endet um 2:00 Uhr. Nur in deiner ausgebauten Bauernhausküche herstellbar.",
+  "apple.description": "Ein kostbarer Apfel voller schützender Kraft. Er bewahrt dich einmal vor einem tödlichen Treffer.",
   "apple.already-eaten": "Du hast heute bereits einen Goldenen Apfel gegessen.",
   "apple.kitchen-required": "Bereite Goldene Äpfel in deiner eigenen ausgebauten Bauernhausküche zu. Mit einem Kochset geht das nicht.",
   "apple.unavailable": "Der Schutz des Goldenen Apfels konnte nicht geladen werden. Prüfe vor dem Essen das SMAPI-Protokoll.",

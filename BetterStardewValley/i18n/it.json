@@ -118,7 +118,7 @@
   "tea.wrong-season": "All'aperto, gli alberelli di tè si possono piantare solo in primavera o estate.",
   "tea.buy-saplings": "Compra alberelli di tè da Pierre dopo aver imparato da Caroline.",
   "apple.name": "Mela d'oro",
-  "apple.description": "Una mela costosa infusa di potere protettivo. Può salvarti una volta da un colpo letale. Mangiane al massimo una al giorno. Tenacia scade alle 02:00. Si prepara solo nella cucina migliorata della tua fattoria.",
+  "apple.description": "Una mela costosa intrisa di potere protettivo. Può salvarti da un colpo mortale.",
   "apple.already-eaten": "Hai già mangiato una mela d'oro oggi.",
   "apple.kitchen-required": "Prepara le mele d'oro nella cucina migliorata della tua fattoria. Il kit da cucina all'aperto non può prepararle.",
   "apple.unavailable": "Impossibile caricare la protezione della mela d'oro. Controlla il registro SMAPI prima di mangiarla.",
