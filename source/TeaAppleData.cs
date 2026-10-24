@@ -83,8 +83,9 @@ internal static class TeaAppleData
         // Only the native tea-unlock letter belongs to this existing BSV change.
         // Other authors may mention or award the same recipe in unrelated story mail.
         // Keep even the native letter's current text, title and unrelated attachments.
-        const string key = "carolineTea";
-        if (!data.TryGetValue(key, out string? letter)) return;
+        // The game's key is "CarolineTea"; match it case-insensitively so a differently cased copy still counts.
+        string? key = data.Keys.FirstOrDefault(k => string.Equals(k, "CarolineTea", StringComparison.OrdinalIgnoreCase));
+        if (key == null || !data.TryGetValue(key, out string? letter)) return;
         data[key] = System.Text.RegularExpressions.Regex.Replace(letter,
             @"%item\s+craftingRecipe\s+Tea[ _]Sapling\s*%%", _ => tr("tea.mail.body"),
             System.Text.RegularExpressions.RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));

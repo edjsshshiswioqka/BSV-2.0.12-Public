@@ -46,6 +46,8 @@ class Program
   Run("Caroline native event retained with one localized final line",()=>{
    string key=R.CarolineEvent+"/f Caroline 500/t 900 1700/w sunny";var events=new Dictionary<string,string>{{key,"music/actors/speak Caroline \"Original\"/end"},{"other","unchanged"}};
    TeaAppleData.Events(events,k=>"Pierre sells tea saplings.");TeaAppleData.Events(events,k=>"Pierre sells tea saplings.");Check(events[key].Split("Pierre sells").Length==2,"one added line");Check(events[key].EndsWith("/end")&&events[key].Contains("Original"),"native script retained");Check(events.ContainsKey(key)&&events["other"]=="unchanged","native conditions and other event unchanged");
+   {var native=new Dictionary<string,string>{{"CarolineTea","Native %item craftingRecipe Tea_Sapling %%[#]Caroline's Tea Note"}};TeaAppleData.Mail(native,k=>k);
+    Check(!native["CarolineTea"].Contains("craftingRecipe")&&native["CarolineTea"].EndsWith("[#]Caroline's Tea Note"),"game's own CarolineTea key is rewritten");}
    foreach(string reward in new[]{"Tea Sapling","Tea_Sapling"}){
     string foreign="Foreign NPC story %item craftingRecipe "+reward+" %%[#]Foreign title";
     var mail=new Dictionary<string,string>{{"carolineTea","Original %item craftingRecipe "+reward+" %% %item money 100 100 %%[#]Original title"},{"other",foreign},{"carolineTeaUnderscore",foreign}};
