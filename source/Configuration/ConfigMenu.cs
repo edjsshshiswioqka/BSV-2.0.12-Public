@@ -56,6 +56,7 @@ internal sealed class ConfigMenu
         draft.AfkFishing.ReturnStaminaThreshold=defaults.AfkFishing.ReturnStaminaThreshold;
         draft.AfkFishing.ReturnToFishingSpotNextDay=defaults.AfkFishing.ReturnToFishingSpotNextDay;
         draft.AfkFishing.EnableChestConnection=defaults.AfkFishing.EnableChestConnection;
+        draft.CallHorseKey=defaults.CallHorseKey;draft.EnableLargeHorses=defaults.EnableLargeHorses;
         if(!HostEditable)return;
         draft.EnableHarvestSeeds=false;draft.SeedChance=.50;draft.HarvestBonus.Enabled=true;
         draft.EnableBsvSpeedGro=true;draft.HarvestBonus.EnableFertilizerYieldBonus=true;draft.AutoRestartProduction=true;
@@ -74,6 +75,7 @@ internal sealed class ConfigMenu
             next.AfkFishing.ReturnStaminaThreshold=draft.AfkFishing.ReturnStaminaThreshold;
             next.AfkFishing.ReturnToFishingSpotNextDay=draft.AfkFishing.ReturnToFishingSpotNextDay;
             next.AfkFishing.EnableChestConnection=draft.AfkFishing.EnableChestConnection;
+            next.CallHorseKey=draft.CallHorseKey;
             next.EnableLargeHorses=draft.EnableLargeHorses; // visual only, drawn locally: a personal setting
             if(HostEditable)
             {
@@ -190,6 +192,7 @@ internal sealed class ConfigMenu
             Flag("cellar-expansion",()=>draft.EnableCellarExpansion,v=>draft.EnableCellarExpansion=v);
             Flag("cellar-appearance",()=>draft.EnableCellarAppearance,v=>draft.EnableCellarAppearance=v);
             Page("other");
+            api.AddKeybind(manifest,()=>draft.CallHorseKey,v=>draft.CallHorseKey=v,()=>T("horse-key"),()=>T("horse-key.help"),"horse-key");
             Flag("horse-enabled",()=>draft.EnableHorseSpeedBonus,v=>draft.EnableHorseSpeedBonus=v);
             Step("horse-speed",()=>draft.HorseSpeedBonus,v=>draft.HorseSpeedBonus=v,0,50,5);
             Flag("horse-large",()=>draft.EnableLargeHorses,v=>draft.EnableLargeHorses=v,true);

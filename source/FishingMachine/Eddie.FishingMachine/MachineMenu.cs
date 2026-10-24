@@ -47,6 +47,7 @@ internal sealed partial class ProductionService
     internal FullLayout? FullGeometry{get=>fullGeometry.Value;set=>fullGeometry.Value=value;}
     private static readonly ConditionalWeakTable<ItemGrabMenu,object> Prepared=new();
     private static readonly ConditionalWeakTable<ItemGrabMenu,object> Diagnosed=new();
+    private static string? LastPoolLog;
 
     /// <summary>Logs the fish pool of every fishing machine (on load / new day), so catch problems show up in the SMAPI log.</summary>
     internal void LogAllFishPools()
@@ -214,7 +215,8 @@ internal sealed partial class ProductionService
         if(g==null){FullMenu=null;FullGeometry=null;return false;}
         Prepare(menu);Apply(menu,g);
         FullMenu=menu;FullGeometry=g;
-        if(!crab&&!Diagnosed.TryGetValue(menu,out _)){Diagnosed.Add(menu,new object());LogFishPool(c,s);}
+        // Chest transfers rebuild the menu: log the pool once per machine and game time, not once per rebuild.
+        if(!crab&&!Diagnosed.TryGetValue(menu,out _)){Diagnosed.Add(menu,new object());string mark=c.Location?.NameOrUniqueName+c.TileLocation+Game1.timeOfDay;if(mark!=LastPoolLog){LastPoolLog=mark;LogFishPool(c,s);}}
 
         int mx=Game1.getMouseX(),my=Game1.getMouseY();string tip="";
         if(menu.drawBG&&!Game1.options.showClearBackgrounds)

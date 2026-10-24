@@ -95,6 +95,13 @@ internal sealed partial class HorseFeature
         };
         helper.Events.GameLoop.SaveLoaded += (_, _) => { ResetLocal(); if (Context.IsMainPlayer) RecoverAll(); };
         helper.Events.GameLoop.DayStarted += (_, _) => { if (Context.IsMainPlayer) RecoverAll(); Local.Value.CoatOffered.Clear(); };
+        // One-time notice after the 2.0.13 key change (H was also UI Info Suite 2's quest board key).
+        helper.Events.GameLoop.DayStarted += (_, _) =>
+        {
+            if (!Configuration.ConfigFiles.HorseKeyMoved) return;
+            Configuration.ConfigFiles.HorseKeyMoved = false;
+            Game1.drawObjectDialogue(T("horse.key-moved"));
+        };
         helper.Events.GameLoop.Saving += (_, _) => { if (Context.IsMainPlayer) StopAll(); };
         helper.Events.GameLoop.ReturnedToTitle += (_, _) => { ResetLocal(); if (Context.IsMainPlayer) ClearHost(); };
         helper.Events.Multiplayer.PeerDisconnected += (_, e) =>

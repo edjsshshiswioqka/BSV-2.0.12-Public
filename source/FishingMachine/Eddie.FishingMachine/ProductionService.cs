@@ -174,7 +174,7 @@ internal sealed partial class ProductionService
         {
             var migrated = MachineStateMigration.Prepare(original);
             Commit(c, null, migrated);
-            Mod.Monitor.Log($"Machine cycle migrated at {c.Location?.NameOrUniqueName}:{c.TileLocation}; phase={migrated.Phase}, legacyPrecomputed={migrated.LegacyPrecomputed}, originalMinutes={migrated.OriginalCycleMinutes}, due={migrated.DueAt}. Output/quota identity preserved.", LogLevel.Debug);
+            Mod.Monitor.Log($"Machine cycle migrated at {c.Location?.NameOrUniqueName}:{c.TileLocation}; phase={migrated.Phase}, legacyPrecomputed={migrated.LegacyPrecomputed}, originalMinutes={migrated.OriginalCycleMinutes}, due={migrated.DueAt}. Output/quota identity preserved.", LogLevel.Trace);
         }
     }
     private void Process(Chest c, bool deferDelivery = false,bool manualStart=false)

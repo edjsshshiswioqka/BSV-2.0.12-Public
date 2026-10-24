@@ -58,6 +58,7 @@ internal static class ConfigFiles
         // If cleanup fails, the committed journal is harmless and recovered next time.
         try{File.Delete(journal);}catch(IOException){}catch(UnauthorizedAccessException){}
     }
+    internal static bool HorseKeyMoved;
     internal static ModConfig Load(IModHelper helper,IMonitor monitor)
     {
         try
@@ -67,7 +68,7 @@ internal static class ConfigFiles
             if(!File.Exists(path))
             {
                 // First start: the package ships no config.json (so updates never reset players' settings); create it now.
-                var fresh=new ModConfig{ConfigSchemaVersion=2};
+                var fresh=new ModConfig{ConfigSchemaVersion=3};
                 try{Commit(helper.DirectoryPath,new Dictionary<string,object>{["config.json"]=fresh});}catch(Exception ex){monitor.Log("BSV could not create config.json: "+ex.Message,LogLevel.Warn);}
                 return fresh;
             }
@@ -75,7 +76,12 @@ internal static class ConfigFiles
             var config=raw.ToObject<ModConfig>()??throw new InvalidDataException("Empty BSV config.");
             if(raw.GetValue(nameof(ModConfig.EnableHarvestSeeds),StringComparison.OrdinalIgnoreCase)==null
                 && (raw.Value<int?>(nameof(ModConfig.ConfigSchemaVersion))??0)<2)config.EnableHarvestSeeds=true;
-            config.ConfigSchemaVersion=2;return config;
+            int schema=raw.Value<int?>(nameof(ModConfig.ConfigSchemaVersion))??0;
+            // 2.0.13: the call-horse key moves from H (taken by UI Info Suite 2) to J; players are told once.
+            if(schema<3&&config.CallHorseKey==StardewModdingAPI.SButton.H){config.CallHorseKey=StardewModdingAPI.SButton.J;HorseKeyMoved=true;}
+            config.ConfigSchemaVersion=3;
+            if(schema<3)try{Commit(helper.DirectoryPath,new Dictionary<string,object>{["config.json"]=config});}catch(Exception ex){monitor.Log("BSV could not update config.json: "+ex.Message,LogLevel.Warn);}
+            return config;
         }
         catch(Exception ex)
         {

@@ -2,7 +2,7 @@ namespace BetterStardewValley;
 
 public sealed class ModConfig
 {
-    public int ConfigSchemaVersion { get; set; } = 2;
+    public int ConfigSchemaVersion { get; set; } = 3;
     public bool AutoRestartProduction { get; set; } = true;
     public bool EnableAllProfessions { get; set; } = true;
     public bool EnableHorseSpeedBonus { get; set; } = true;
@@ -21,7 +21,7 @@ public sealed class ModConfig
     public bool EnableHarvestSeeds { get; set; } = false;
     public double SeedChance { get; set; } = 0.5;
     public bool EnableAnnualLegendaryFish { get; set; } = true;
-    public StardewModdingAPI.SButton CallHorseKey { get; set; } = StardewModdingAPI.SButton.H;
+    public StardewModdingAPI.SButton CallHorseKey { get; set; } = StardewModdingAPI.SButton.J; // H clashed with UI Info Suite 2
     public double CallHorseCooldownSeconds { get; set; } = 1;
     public int HorseStopDistance { get; set; } = 3;
     public int HorseSpawnOutsideViewportMinTiles { get; set; } = 2;
