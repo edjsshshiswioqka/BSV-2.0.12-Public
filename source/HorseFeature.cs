@@ -71,6 +71,7 @@ internal sealed partial class HorseFeature
             Patch(typeof(Stable), nameof(Stable.updateHorseOwnership), nameof(BeforeOwnership), nameof(AfterOwnership));
             Patch(typeof(Stable), nameof(Stable.grabHorse), nameof(BeforeGrab), nameof(AfterOwnership));
             Patch(typeof(Stable), nameof(Stable.performActionOnDemolition), nameof(BeforeDemolition));
+            Patch(typeof(Building), nameof(Building.doAction), nameof(BeforeStableAction), args: new[] { typeof(Vector2), typeof(Farmer) });
             HorseSkins.Register(helper, monitor);
             HorseScale.Install(harmony, monitor);
             Ready = true;

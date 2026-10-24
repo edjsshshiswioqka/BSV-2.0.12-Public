@@ -20,6 +20,9 @@ internal sealed class FertilizerNetwork
         Reservation=FertilizerService.Prefix+"Reservation",ReceiptPrefix=FertilizerService.Prefix+"ApplyReceipt/";
     private readonly FertilizerService Service;
     internal FertilizerNetwork(FertilizerService service)=>Service=service;
+    // Holding the button over a row sends one request per tile. While one is still waiting for the host,
+    // the next tiles wait here (per screen) instead of being skipped.
+    private readonly StardewModdingAPI.Utilities.PerScreen<List<(string Location,Vector2 Tile,string Item)>> Waiting=new(()=>new());
     private static string ReceiptKey(long who)=>ReceiptPrefix+who.ToString(CultureInfo.InvariantCulture);
     internal static FertilizerRequest? Read(Farmer who)
     {
@@ -37,10 +40,16 @@ internal sealed class FertilizerNetwork
     private bool PeerMatches(long actor)=>actor==Game1.MasterPlayer.UniqueMultiplayerID&&Context.IsMainPlayer||Context.IsSplitScreen
         ||Service.Helper.Multiplayer.GetConnectedPlayer(actor)?.GetMod("Eddie.BetterStardewValley")?.Version.ToString()==Service.Helper.ModRegistry.Get("Eddie.BetterStardewValley")?.Manifest.Version.ToString();
     internal static bool Plain(SObject item)=>FertilizerRules.Known(item.QualifiedItemId)&&item.GetType()==typeof(SObject)&&!item.questItem.Value
-        &&item.Stack>0&&item.Quality==0&&!item.modData.Any()&&item.heldObject.Value==null;
+        &&item.Stack>0&&item.Quality==0&&item.heldObject.Value==null; // other mods' tags (e.g. favourites) are fine
     internal void Request(HoeDirt soil,Farmer who,SObject item)
     {
-        if(!Context.IsWorldReady||IntegrationHost.Saving||who.modData.ContainsKey(Pending)||!who.IsLocalPlayer)return;
+        if(!Context.IsWorldReady||IntegrationHost.Saving||!who.IsLocalPlayer)return;
+        if(who.modData.ContainsKey(Pending))
+        {
+            var entry=(soil.Location.NameOrUniqueName,soil.Tile,item.QualifiedItemId);
+            if(Waiting.Value.Count<16&&!Waiting.Value.Contains(entry))Waiting.Value.Add(entry);
+            return;
+        }
         if(!PeerMatches(Game1.MasterPlayer.UniqueMultiplayerID)){Service.Notice("farming.version");return;}
         if(!Plain(item)||!FertilizerService.Healthy(soil)||!FertilizerRules.CanAdd(FertilizerService.Read(soil),item.QualifiedItemId,soil.crop?.currentPhase.Value))
         {Service.Notice("farming.rejected");return;}
@@ -59,6 +68,20 @@ internal sealed class FertilizerNetwork
             foreach(var who in Game1.getAllFarmers().ToArray())
                 try{Process(who);}catch(Exception ex){Service.Error(ex);}
         try{Receive(Game1.player);}catch(Exception ex){Service.Error(ex);}
+        try{Next();}catch(Exception ex){Waiting.Value.Clear();Service.Error(ex);}
+    }
+    private void Next()
+    {
+        var who=Game1.player;var queue=Waiting.Value;
+        while(queue.Count>0&&!who.modData.ContainsKey(Pending))
+        {
+            var (location,tile,id)=queue[0];queue.RemoveAt(0);
+            if(who.currentLocation?.NameOrUniqueName!=location||who.ActiveObject is not {} held||held.QualifiedItemId!=id){queue.Clear();return;}
+            var soil=who.currentLocation.GetHoeDirtAtTile(tile);
+            if(soil==null||!FertilizerService.Healthy(soil)||!FertilizerRules.CanAdd(FertilizerService.Read(soil),id,soil.crop?.currentPhase.Value)
+                ||Vector2.Distance(who.Tile,tile)>2.5f)continue; // already fertilized, or walked out of reach: skip quietly
+            Request(soil,who,held);
+        }
     }
     internal void Process(Farmer who)
     {

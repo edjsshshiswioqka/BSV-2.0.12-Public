@@ -30,10 +30,40 @@ internal static class SpiritLuck
         h.Patch(DrawPatchTargets.Require(typeof(CalicoJack), "tick", typeof(bool), typeof(Microsoft.Xna.Framework.GameTime)),
             transpiler: new HarmonyMethod(typeof(SpiritLuck), nameof(CalicoIL)));
         var module=typeof(Farmer).Module;
-        if(module.ModuleVersionId.ToString()!=SpiritLuckTargets.Mvid)
-            throw new NotSupportedException("Spirit luck call-site audit does not match this Stardew Valley assembly; no guessed target patches will be installed.");
-        foreach(var site in SpiritLuckTargets.Sites)
-            h.Patch(module.ResolveMethod(site.Token)!,transpiler:new HarmonyMethod(typeof(SpiritLuck),nameof(InputsIL)));
+        if(module.ModuleVersionId.ToString()==SpiritLuckTargets.Mvid)
+        {
+            // The audited game build: exact metadata tokens.
+            int same=0;
+            foreach(var site in SpiritLuckTargets.Sites)
+            {
+                var method=module.ResolveMethod(site.Token)!;Targets[method]=site;
+                if(Signature(method)==site.Signature)same++;
+                h.Patch(method,transpiler:new HarmonyMethod(typeof(SpiritLuck),nameof(InputsIL)));
+            }
+            // Self-check of the signature fallback used after a game patch (it must match all sites here).
+            monitor.Log($"Spirit's Blessing signature self-check: {same}/{SpiritLuckTargets.Sites.Length}.",LogLevel.Trace);
+        }
+        else
+        {
+            // A game patch changed the assembly. Find each audited method by its full signature instead; a site is
+            // patched only if it still has exactly the audited number of luck reads, otherwise it keeps vanilla luck.
+            var bySignature=new Dictionary<string,MethodBase>(StringComparer.Ordinal);
+            Type[] types;try{types=module.GetTypes();}catch(ReflectionTypeLoadException e){types=e.Types.Where(t=>t!=null).ToArray()!;}
+            foreach(var type in types)
+                foreach(var m in type.GetMethods(BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.Instance|BindingFlags.Static|BindingFlags.DeclaredOnly).Cast<MethodBase>()
+                    .Concat(type.GetConstructors(BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.Instance|BindingFlags.DeclaredOnly)))
+                    bySignature.TryAdd(Signature(m),m);
+            int skipped=0;
+            foreach(var site in SpiritLuckTargets.Sites)
+            {
+                if(!bySignature.TryGetValue(site.Signature,out var method)){skipped++;continue;}
+                Targets[method]=site;
+                try{h.Patch(method,transpiler:new HarmonyMethod(typeof(SpiritLuck),nameof(InputsIL)));}
+                catch{Targets.Remove(method);skipped++;}
+            }
+            monitor.Log($"Spirit's Blessing: this Stardew Valley build differs from the audited one; {SpiritLuckTargets.Sites.Length-skipped}/{SpiritLuckTargets.Sites.Length} luck checks matched exactly and use the blessing, the rest keep vanilla luck.",
+                skipped==0?LogLevel.Trace:LogLevel.Info);
+        }
         helper.Events.GameLoop.DayEnding += (_, _) =>
         {
             if (!Context.IsWorldReady) return;
@@ -44,6 +74,17 @@ internal static class SpiritLuck
         helper.Events.GameLoop.ReturnedToTitle += (_, _) => Bypass = null;
     }
 
+    private static readonly Dictionary<MethodBase,SpiritLuckTargets.Site> Targets=new();
+    /// <summary>"ReturnType Namespace.Type/Nested::Name(ParamType,...)", the format the audited site list uses.</summary>
+    private static string Signature(MethodBase m)
+    {
+        static string Name(Type t)=>t.IsNested?Name(t.DeclaringType!)+"/"+t.Name:(t.Namespace==null?"":t.Namespace+".")+t.Name;
+        static string Full(Type t)=>t.IsByRef?Full(t.GetElementType()!)+"&":t.IsArray?Full(t.GetElementType()!)+"[]"
+            :t.IsGenericType&&!t.IsGenericTypeDefinition?Name(t.GetGenericTypeDefinition())+"<"+string.Join(",",t.GetGenericArguments().Select(Full))+">"
+            :t.IsGenericParameter?t.Name:Name(t);
+        var returns=m is MethodInfo info?info.ReturnType:typeof(void);
+        return Full(returns)+" "+Name(m.DeclaringType!)+"::"+m.Name+"("+string.Join(",",m.GetParameters().Select(p=>Full(p.ParameterType)))+")";
+    }
     internal static void End(Farmer who) => who.modData.Remove(SpiritRules.LuckKey);
     private static void Damage(Farmer __instance) { if (__instance.health <= 0) End(__instance); }
     private static void Daily(Farmer __instance, ref double __result) { if (Active(__instance)) __result = SpiritRules.DailyLuck; }
@@ -65,7 +106,8 @@ internal static class SpiritLuck
         ReplaceReads(input, true);
     internal static IEnumerable<CodeInstruction> InputsIL(IEnumerable<CodeInstruction> input, MethodBase __originalMethod)
     {
-        var site=SpiritLuckTargets.Sites.Single(s=>s.Token==__originalMethod.MetadataToken);
+        var site=Targets.TryGetValue(__originalMethod,out var found)?found
+            :SpiritLuckTargets.Sites.Single(s=>s.Token==__originalMethod.MetadataToken);
         var result=Replace(input,site.Daily,site.Level,nameof(EffectiveDaily),nameof(EffectiveLevel),__originalMethod.ToString()!).ToList();
         if(__originalMethod.DeclaringType==typeof(StardewValley.Tools.FishingRod)&&__originalMethod.Name=="startMinigameEndFunction")
             return TreasureIL(result);

@@ -52,7 +52,8 @@ internal static class MachineBalanceMigration
                 if (!File.Exists(backup)) File.Copy(path, backup, false);
             }
             ConfigFiles.Commit(helper.DirectoryPath, new Dictionary<string, object> { [name] = next });
-            monitor.Log("BSV R15 machine configuration migrated once; backup retained. Changed fields: "
+            if (!exists) monitor.Log($"BSV created {name} with the default settings.", LogLevel.Trace);
+            else monitor.Log("BSV R15 machine configuration migrated once; backup retained. Changed fields: "
                 + string.Join(", ", next.Properties().Where(p => !JToken.DeepEquals(raw[p.Name], p.Value)).Select(p => p.Name))
                 + ". Review per-level durations; active paid cycles retain their stored deadlines.", LogLevel.Info);
         }

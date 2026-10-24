@@ -101,13 +101,18 @@ internal sealed partial class TeaFeature
         {
             if (!Managed(b)) return;
             Initialize(b, false);
-            if (!TeaAppleRules.GrowingSeason((int)Game1.season))
+            if (!InSeason(b))
                 Write(b, Read(b) with { Dead = true, Ready = false, LastDay = Today });
+            else if (Sheltered(b) && Read(b).Dead)
+                Write(b, Read(b) with { Dead = false, LastDay = Today }); // sheltered tea killed by an older BSV winter comes back
             if (b.Location.IsOutdoors && b.Location.IsRainingHere()) Water(b);
             b.setUpSourceRect();
         }
     }
     internal static int Today => Game1.Date.TotalDays;
+    /// <summary>Greenhouse, Ginger Island, indoors and any garden pot: tea there ignores the seasons and never dies.</summary>
+    internal static bool Sheltered(Bush b) => b.inPot.Value || b.Location is { } l && (!l.IsOutdoors || l.SeedsIgnoreSeasonsHere());
+    internal static bool InSeason(Bush b) => Sheltered(b) || TeaAppleRules.GrowingSeason((int)Game1.season);
     internal static bool Managed(Bush? b) => b != null && b.size.Value == Bush.greenTeaBush
         && b.Location != null && b.Location.Name != "Sunroom";
     internal static int Get(Bush b, string key, int fallback = -1) =>
@@ -130,7 +135,7 @@ internal sealed partial class TeaFeature
         int growth = newlyPlanted ? 0 : TeaAppleRules.MigratedGrowth(originalAge);
         Write(b, new(growth, growth >= TeaAppleRules.GrowthDays ? TeaAppleRules.RegrowDays : 0,
             !newlyPlanted && b.tileSheetOffset.Value == 1 && growth >= TeaAppleRules.GrowthDays,
-            !TeaAppleRules.GrowingSeason((int)Game1.season), Today));
+            !InSeason(b), Today));
         b.modData[TeaAppleRules.VersionKey] = "1";
         if (b.Location.IsOutdoors && b.Location.IsRainingHere()) Water(b);
     }
@@ -141,7 +146,7 @@ internal sealed partial class TeaFeature
         if (!Context.IsMainPlayer) return false; // host advances each planted entity once, independently of visitors
         Initialize(__instance, false);
         int watered = Get(__instance, TeaAppleRules.WaterKey) == Today - 1 || Get(__instance, TeaAppleRules.PreviousWaterKey) == Today - 1 ? Today - 1 : -999;
-        Write(__instance, TeaAppleRules.Advance(Read(__instance), Today, (int)Game1.season, watered));
+        Write(__instance, TeaAppleRules.Advance(Read(__instance), Today, Sheltered(__instance) ? 0 : (int)Game1.season, watered));
         __instance.health = 0;
         __instance.setUpSourceRect();
         return false;
@@ -149,7 +154,7 @@ internal sealed partial class TeaFeature
     private static bool Bloom(Bush __instance, ref bool __result)
     {
         if (!Managed(__instance)) return true;
-        __result = !Dead(__instance) && TeaAppleRules.GrowingSeason((int)Game1.season) && __instance.tileSheetOffset.Value == 1;
+        __result = !Dead(__instance) && InSeason(__instance) && __instance.tileSheetOffset.Value == 1;
         return false;
     }
     private static void Age(Bush __instance, ref int __result)
@@ -162,7 +167,7 @@ internal sealed partial class TeaFeature
     private static bool SeasonUpdate(Bush __instance, ref bool __result)
     {
         if (!Managed(__instance)) return true;
-        if (Context.IsMainPlayer && !TeaAppleRules.GrowingSeason((int)Game1.season))
+        if (Context.IsMainPlayer && !InSeason(__instance))
             Write(__instance, Read(__instance) with { Dead = true, Ready = false, LastDay = Today });
         // Vanilla resets tileSheetOffset on every season transition. Preserve a ready leaf
         // across spring -> summer, and preserve the permanent dead marker across winter -> spring.
@@ -202,19 +207,16 @@ internal sealed partial class TeaFeature
     {
         __state = __instance.QualifiedItemId == TeaAppleRules.Sapling
             && location.terrainFeatures.TryGetValue(new Vector2(x / 64, y / 64), out var soil) && soil is HoeDirt dirt && dirt.isWatered();
-        if (__instance.QualifiedItemId != TeaAppleRules.Sapling || TeaAppleRules.GrowingSeason((int)Game1.season)) return true;
+        if (__instance.QualifiedItemId != TeaAppleRules.Sapling || TeaAppleRules.GrowingSeason((int)Game1.season)
+            || !location.IsOutdoors || location.SeedsIgnoreSeasonsHere()) return true;
         Game1.showRedMessage(BetterStardewValley.BsvI18n.Get(Instance.Helper, "tea.wrong-season")); __result = false; return false;
     }
     private static void PlacedOutside(SObject __instance, GameLocation location, int x, int y, bool __state, bool __result)
     {
         if (__result && __state && location.terrainFeatures.TryGetValue(new Vector2(x / 64, y / 64), out var f) && f is Bush b) Water(b);
     }
-    private static bool PlantPot(Item dropInItem, bool probe, ref bool __result)
-    {
-        if (dropInItem?.QualifiedItemId != TeaAppleRules.Sapling || TeaAppleRules.GrowingSeason((int)Game1.season)) return true;
-        if (!probe) Game1.showRedMessage(BetterStardewValley.BsvI18n.Get(Instance.Helper, "tea.wrong-season"));
-        __result = false; return false;
-    }
+    // Garden pots are sheltered: a tea sapling may go into a pot in any season, exactly like vanilla.
+    private static bool PlantPot(Item dropInItem, bool probe, ref bool __result) => true;
     private static void PlacedPot(IndoorPot __instance, Item dropInItem, bool probe, bool __result)
     {
         if (!probe && __result && dropInItem.QualifiedItemId == TeaAppleRules.Sapling

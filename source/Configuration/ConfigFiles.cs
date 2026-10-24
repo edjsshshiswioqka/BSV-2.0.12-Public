@@ -64,7 +64,13 @@ internal static class ConfigFiles
         {
             Recover(helper.DirectoryPath);
             string path=Path.Combine(helper.DirectoryPath,"config.json");
-            if(!File.Exists(path))return new();
+            if(!File.Exists(path))
+            {
+                // First start: the package ships no config.json (so updates never reset players' settings); create it now.
+                var fresh=new ModConfig{ConfigSchemaVersion=2};
+                try{Commit(helper.DirectoryPath,new Dictionary<string,object>{["config.json"]=fresh});}catch(Exception ex){monitor.Log("BSV could not create config.json: "+ex.Message,LogLevel.Warn);}
+                return fresh;
+            }
             var raw=JObject.Parse(File.ReadAllText(path));
             var config=raw.ToObject<ModConfig>()??throw new InvalidDataException("Empty BSV config.");
             if(raw.GetValue(nameof(ModConfig.EnableHarvestSeeds),StringComparison.OrdinalIgnoreCase)==null

@@ -181,8 +181,8 @@ internal sealed partial class ProductionService
     {
         MigrateCycle(c);
         HandleRewind(c);
-        // Machines from before the switch: a running machine is on, an idle one waits for ON.
-        if(!c.modData.ContainsKey(PowerKey))c.modData[PowerKey]=Read(c).Phase=="working"?"on":"off";
+        // Machines from before the power switch (BSV 1.0 saves) keep working as they did: switched on.
+        if(!c.modData.ContainsKey(PowerKey))c.modData[PowerKey]="on";
         if(!Scheduling)ObserveContinuity(c);
         RemoveEmptyStacks(c);
         if(ModEntry.IsCrab(c)){ProcessCrab(c, deferDelivery);return;}

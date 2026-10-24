@@ -191,12 +191,32 @@ internal sealed partial class HorseFeature
         Utility.ForEachLocation(location => { waiting.AddRange(location.buildings.OfType<Stable>().Where(s => !s.modData.ContainsKey(HorseSkins.SkinKey))); return true; });
         foreach (var stable in waiting)
         {
-            if (local.CoatOffered.Contains(stable.HorseId) || !PicksCoat(stable, Game1.player.UniqueMultiplayerID)) continue;
+            // The picker opens by itself only once per player and stable; after that, click the stable.
+            string offered = CoatOfferedPrefix + stable.HorseId.ToString("N");
+            if (local.CoatOffered.Contains(stable.HorseId) || Game1.player.modData.ContainsKey(offered)
+                || !PicksCoat(stable, Game1.player.UniqueMultiplayerID)) continue;
             if (!IsRealManagedHorse(stable.getStableHorse())) continue;
-            local.CoatOffered.Add(stable.HorseId); // closed without choosing: offered again tomorrow
-            Game1.activeClickableMenu = new HorseSkinMenu(Helper, key => T(key), id => SendStableAction(stable, "Skin", id));
+            local.CoatOffered.Add(stable.HorseId);
+            Game1.player.modData[offered] = "1";
+            OpenCoat(stable);
             return;
         }
+    }
+    private const string CoatOfferedPrefix = "Eddie.BetterStardewValley/HorseCoatOffered/";
+    private void OpenCoat(Stable stable)
+    {
+        bool chosen = false;
+        Game1.activeClickableMenu = new HorseSkinMenu(Helper, key => T(key), id => { chosen = true; SendStableAction(stable, "Skin", id); })
+        {
+            exitFunction = () => { if (!chosen) Game1.addHUDMessage(new HUDMessage(T("horse.skin.later")) { noIcon = true }); }
+        };
+    }
+    /// <summary>Clicking your own stable opens the coat picker while no coat has been chosen. Once chosen it is final.</summary>
+    private static bool BeforeStableAction(Building __instance, Farmer who, ref bool __result)
+    {
+        if (__instance is not Stable stable || Instance is not { Ready: true } mod || !who.IsLocalPlayer || Game1.activeClickableMenu != null) return true;
+        if (stable.modData.ContainsKey(HorseSkins.SkinKey) || !PicksCoat(stable, who.UniqueMultiplayerID) || !IsRealManagedHorse(stable.getStableHorse())) return true;
+        mod.OpenCoat(stable); __result = true; return false;
     }
     private void SendStableAction(Stable stable, string action, string value)
     {

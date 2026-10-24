@@ -154,12 +154,14 @@ internal sealed class WorldService
                 {
                     // Host-owned maintenance latch: finish already-paid production, but no
                     // refuelling/restart/upgrade can race the player's attempt to empty it.
+                    // The first hit switches the machine into "preparing pickup": tell the player in a dialog box
+                    // (not a brief red line) so an accidental hit is noticed and can be undone with R / Y.
+                    bool latched = !c.modData.ContainsKey(ProductionService.RecoveryKey);
                     c.modData[ProductionService.RecoveryKey] = "true";
-                    if (Mod.Production.BlocksRemoval(c)) { result="remove.finishing"; return; }
-                    if (!c.isEmpty()) { result="remove.empty-first"; return; }
+                    if (Mod.Production.BlocksRemoval(c)) { result=(latched?"dialog:":"")+"remove.finishing"; return; }
+                    if (!c.isEmpty()) { result=(latched?"dialog:":"")+"remove.empty-first"; return; }
                     var returned = ItemRegistry.Create(c.QualifiedItemId);
                     returned.modData[ProductionService.StateKey] = Mod.Production.Portable(c);
-                    if (!who.couldInventoryAcceptThisItem(returned)) { result="remove.full"; return; }
                     var entries=new List<(Vector2 Tile,SObject Object)>();
                     foreach(var p in Footprint(c))
                     {

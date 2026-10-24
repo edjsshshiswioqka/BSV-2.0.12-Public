@@ -143,7 +143,20 @@ internal sealed partial class ProductionService
         bool clicked=false;if(button==SButton.MouseLeft){Game1.PushUIMode();try{clicked=TrashButton(menu).Contains(Game1.getMouseX(),Game1.getMouseY());}finally{Game1.PopUIMode();}}
         if(!clicked&&button is not(SButton.T or SButton.ControllerX))return false;
         var s=Read(c);if(s.Level!=1||s.CompletedCycles<MachineCycleRules.RequiredCycles(s)||s.Phase=="working"){Mod.Message("crab.upgrade-unavailable");return true;}
-        Mod.Actions.Control(c,ActionKind.Upgrade);Mod.ReleaseChest(startCrab:false);Game1.exitActiveMenu();return true;
+        ConfirmCrabUpgrade(c);return true;
+    }
+    /// <summary>Upgrading uses up the materials, so it always asks first (a stray controller X must not upgrade).</summary>
+    private void ConfirmCrabUpgrade(Chest c)
+    {
+        Mod.ReleaseChest(startCrab:false);
+        Game1.activeClickableMenu=new ConfirmationDialog(Mod.T("crab.upgrade-confirm"),_=>
+        {
+            Game1.exitActiveMenu();
+            if(Mod.Actions.HasPending||Game1.currentLocation!=c.Location)return;
+            var mutex=c.GetMutex();
+            // The machine menu (and its lock) closed when the dialog opened: take the lock again just for the request.
+            mutex.RequestLock(()=>{try{Mod.Actions.Control(c,ActionKind.Upgrade);}finally{mutex.ReleaseLock();}});
+        },_=>Game1.exitActiveMenu());
     }
     private void DrawCrabMenu(SpriteBatch b,Chest c,ItemGrabMenu menu)
     {

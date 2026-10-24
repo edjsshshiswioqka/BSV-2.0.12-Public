@@ -57,8 +57,6 @@ internal sealed class NetworkActions
         if(!HostAvailable()){Mod.Message("network.host-version");return;}
         var returned=ItemRegistry.Create(chest.QualifiedItemId);
         returned.modData[ProductionService.StateKey]=Mod.Production.Portable(chest);
-        if(!Game1.player.couldInventoryAcceptThisItem(returned))
-        {Mod.Message("remove.full");return;}
         if(!Mod.World.InReach(Game1.player,chest))
         {Mod.Message("access.bank");return;}
         var request=NewRequest(ActionKind.Remove,chest.Location,chest.TileLocation,WorldService.GetFacing(chest),chest.modData[ModEntry.Tag+"MachineId"]) with {ItemId=chest.ItemId};
@@ -299,6 +297,15 @@ internal sealed class NetworkActions
             if(!MachineUpgrade.ValidPortable(state)){Notice(receipt.Id,"network.error");return;}
             var item=ItemRegistry.Create("(BC)"+receipt.ItemId);
             if(state!=null)item.modData[ProductionService.StateKey]=state;
+            if(pending!.Kind==ActionKind.Remove)
+            {
+                // Like a vanilla machine knocked loose: the item pops out as a small icon at the player's
+                // feet (never over the water the machine stood in) and is picked up by walking over it.
+                Game1.player.modData.Remove(PendingKey);
+                try{Game1.createItemDebris(item,Game1.player.getStandingPosition(),(Game1.player.FacingDirection+2)%4,Game1.player.currentLocation);}
+                catch{Game1.player.modData[PendingKey]=pending.Save();throw;}
+                LastNotice.Value="";Game1.playSound("axchop");return;
+            }
             if(!Game1.player.couldInventoryAcceptThisItem(item)){Notice(receipt.Id,"network.return-space");return;}
             // Inventory and pending marker change synchronously on their owning client.
             var before=Game1.player.Items.Select(i=>{if(i==null)return null!;var copy=i.getOne();copy.Stack=i.Stack;return copy;}).ToArray();
@@ -315,7 +322,9 @@ internal sealed class NetworkActions
         }
         else Game1.player.modData.Remove(PendingKey);
         LastNotice.Value="";
-        if(receipt.Result==ReceiptResult.Rejected && !string.IsNullOrEmpty(receipt.Reason))Mod.Message(receipt.Reason);
+        if(receipt.Result==ReceiptResult.Rejected && receipt.Reason?.StartsWith("dialog:",StringComparison.Ordinal)==true)
+            Game1.drawObjectDialogue(Mod.T(receipt.Reason["dialog:".Length..]));
+        else if(receipt.Result==ReceiptResult.Rejected && !string.IsNullOrEmpty(receipt.Reason))Mod.Message(receipt.Reason);
         else if(receipt.Result==ReceiptResult.Accepted)Game1.playSound(receipt.Kind==ActionKind.Place?"waterSlosh":"axchop");
     }
     private void Notice(string id,string key)

@@ -299,6 +299,6 @@ internal sealed partial class ProductionService
             return true;
         }
         if(!Upgradable(c,s,materials)){UpgradeFeedback(c,s,materials);return true;}
-        Mod.Actions.Control(c,ActionKind.Upgrade);Mod.ReleaseChest(startCrab:false);Game1.exitActiveMenu();return true;
+        ConfirmCrabUpgrade(c);return true;
     }
 }

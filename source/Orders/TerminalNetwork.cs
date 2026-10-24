@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using Microsoft.Xna.Framework;
 using BetterStardewValley.Transactions;
 using StardewModdingAPI;
 using StardewModdingAPI.Utilities;
@@ -66,7 +67,6 @@ internal sealed class TerminalNetwork
         SObject? item = place ? who.ActiveObject : anchor;
         if (item == null || !OrderTerminal.IsTerminal(item) || item.Stack < 1 || TerminalEntity.IsPart(item)) return;
         string packed = TerminalItem.Pack(item);
-        if (!place && !CanReceive(who, TerminalItem.Read(packed))) { World.Notice("orders.terminal-space"); return; }
         long.TryParse(who.modData.GetValueOrDefault(SequenceKey), out long previous);
         var request = new TerminalRequest(1, Guid.NewGuid().ToString("N"), checked(Math.Max(previous, Receipt(who.UniqueMultiplayerID)?.Sequence ?? 0) + 1),
             who.UniqueMultiplayerID, place ? "place" : "pickup", location.NameOrUniqueName, (int)tile.X, (int)tile.Y,
@@ -129,9 +129,17 @@ internal sealed class TerminalNetwork
         string raw = who.modData[PendingKey];
         try
         {
-            if (give)
+            if (give && pending.Action == "pickup")
             {
-                var item = TerminalItem.Read(pending.Action == "place" ? pending.Item : receipt.Item);
+                // Like vanilla furniture and machines: the terminal pops out as a small icon on the floor
+                // and is picked up by walking over it, even when the backpack is full.
+                var dropped = TerminalItem.Read(receipt.Item);
+                var location = Game1.getLocationFromName(pending.Location) ?? who.currentLocation;
+                Game1.createItemDebris(dropped, new Vector2(pending.X * 64 + 32, pending.Y * 64 + 32), who.FacingDirection, location);
+            }
+            else if (give)
+            {
+                var item = TerminalItem.Read(pending.Item);
                 if (!CanReceive(who, item))
                 {
                     if (LastNotice.Value != pending.Id) { World.Notice("orders.terminal-space"); LastNotice.Value = pending.Id; }
