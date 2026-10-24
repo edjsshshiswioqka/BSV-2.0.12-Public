@@ -29,8 +29,13 @@ internal static class HorseSkins
     internal readonly struct Ctx
     {
         internal readonly int X, Y, Row, Column, Level, Top;
+        /// <summary>Body coordinates: the pixel's place on the side-view body (head right, tail left), so a patch on the
+        /// chest, flank or rump is the same patch from the front, the back and the side.</summary>
+        internal readonly double BX, BY;
         internal bool Side => Row is 1 or 3;
-        internal Ctx(int x, int y, int row, int column, int level, int top) { X = x; Y = y; Row = row; Column = column; Level = level; Top = top; }
+        internal Ctx(int x, int y, int row, int column, int level, int top) : this(x, y, row, column, level, top, x, y) { }
+        internal Ctx(int x, int y, int row, int column, int level, int top, double bx, double by)
+        { X = x; Y = y; Row = row; Column = column; Level = level; Top = top; BX = bx; BY = by; }
     }
     internal sealed class Skin
     {
@@ -107,9 +112,9 @@ internal static class HorseSkins
             new() { Id = "strawberry_roan", Coat = Chestnut, Mane = C(140, 54, 26), ManeLight = C(186, 90, 48), Pattern = Roan, Alternates = new[] { R(C(255, 240, 232), C(246, 214, 200), C(230, 188, 172), C(206, 160, 146), C(176, 130, 118)) } },
             new() { Id = "blue_roan", Coat = BlackCoat, Mane = C(18, 16, 20), ManeLight = C(52, 48, 58), Outline = C(14, 12, 16), Pattern = Roan, Alternates = new[] { R(C(236, 240, 248), C(206, 212, 226), C(176, 184, 202), C(146, 154, 174), C(118, 126, 148)) } },
             new() { Id = "appaloosa", Coat = Bay, Mane = C(52, 34, 26), ManeLight = C(96, 66, 48), Outline = C(60, 34, 18), Pattern = Appaloosa, Alternates = new[] { White, R(C(112, 72, 48), C(98, 60, 40), C(84, 50, 32), C(70, 40, 26), C(56, 32, 20)) } },
-            new() { Id = "leopard", Coat = White, Mane = C(60, 48, 44), ManeLight = C(110, 96, 90), Outline = C(66, 54, 48), Pattern = c => Spots(c.X + c.Row, c.Y, 9, .45), Alternates = new[] { R(C(70, 56, 52), C(60, 48, 44), C(52, 40, 36), C(44, 34, 30), C(36, 28, 24)) } },
-            new() { Id = "pinto", Coat = R(C(236, 173, 97), C(214, 140, 70), C(184, 108, 46), C(150, 82, 30), C(116, 60, 22)), Mane = C(60, 36, 24), ManeLight = C(110, 72, 46), Pattern = c => Noise(c.X + 3 * c.Row, c.Y, 11, 6) > .55 ? 0 : -1, Alternates = new[] { White } },
-            new() { Id = "piebald", Coat = BlackCoat, Mane = C(22, 20, 24), ManeLight = C(240, 240, 236), Outline = C(18, 16, 20), Pattern = c => Noise(c.X + 5 * c.Row, c.Y + 2, 23, 5) > .5 ? 0 : -1, Alternates = new[] { White } },
+            new() { Id = "leopard", Coat = White, Mane = C(60, 48, 44), ManeLight = C(110, 96, 90), Outline = C(66, 54, 48), Pattern = c => Spots((int)Math.Round(c.BX) + 1, (int)c.BY, 9, .45), Alternates = new[] { R(C(70, 56, 52), C(60, 48, 44), C(52, 40, 36), C(44, 34, 30), C(36, 28, 24)) } },
+            new() { Id = "pinto", Coat = R(C(236, 173, 97), C(214, 140, 70), C(184, 108, 46), C(150, 82, 30), C(116, 60, 22)), Mane = C(60, 36, 24), ManeLight = C(110, 72, 46), Pattern = c => Noise(c.BX + 3, c.BY, 11, 6) > .55 ? 0 : -1, Alternates = new[] { White } },
+            new() { Id = "piebald", Coat = BlackCoat, Mane = C(22, 20, 24), ManeLight = C(240, 240, 236), Outline = C(18, 16, 20), Pattern = c => Noise(c.BX + 5, c.BY + 2, 23, 5) > .5 ? 0 : -1, Alternates = new[] { White } },
             new() { Id = "dapple", Coat = R(C(214, 218, 226), C(170, 176, 188), C(130, 136, 150), C(100, 106, 120), C(74, 78, 92)), Mane = C(44, 44, 52), ManeLight = C(90, 92, 104), Outline = C(36, 36, 44), Pattern = c => Noise(c.X + c.Row * 9, c.Y, 31, 2.2) > .62 && c.Level >= 2 ? 0 : -1, Alternates = new[] { R(C(236, 238, 242), C(214, 218, 226), C(196, 200, 210), C(170, 176, 188), C(140, 146, 160)) } },
             new() { Id = "silver_dapple", Coat = R(C(176, 120, 96), C(140, 90, 70), C(110, 66, 50), C(86, 50, 38), C(64, 36, 28)), Mane = C(222, 214, 200), ManeLight = C(250, 246, 236), Outline = C(44, 26, 20) },
             new() { Id = "tiger", Coat = R(C(255, 196, 120), C(244, 160, 70), C(220, 124, 40), C(184, 92, 24), C(146, 66, 16)), Mane = C(40, 26, 18), ManeLight = C(80, 52, 32), Outline = C(60, 30, 10), Pattern = Stripes(5, 2, 1), Alternates = new[] { R(C(80, 44, 22), C(64, 34, 16), C(52, 28, 14), C(44, 24, 12), C(36, 20, 10)) } },
@@ -147,7 +152,8 @@ internal static class HorseSkins
             for (int fx = 0; fx < 224; fx += 32)
             {
                 int row = fy / 32, column = fx / 32;
-                var saddle = SaddleMask(Px, fx, fy);
+                var frame = Frame(Px, row, column);
+                var saddle = frame.Saddle ? SaddleMask(Px, fx, fy) : new HashSet<(int, int)>();
                 var top = new int[32];
                 for (int x = 0; x < 32; x++) { top[x] = 99; for (int y = 0; y < 32; y++) if (Px(fx + x, fy + y).A == 255) { top[x] = y; break; } }
                 for (int x = 0; x < 32; x++)
@@ -168,7 +174,13 @@ internal static class HorseSkins
                             var ramp = skin.Coat;
                             if (skin.Pattern != null)
                             {
-                                int alt = skin.Pattern(new Ctx(x, y, row, column, level, top[x]));
+                                // Patterns follow the body: frames are aligned on the saddle with the view's first frame,
+                                // and a grazing horse's lowered head keeps the colours of its raised head.
+                                bool moved = frame.Head != null && frame.Head.TryGetValue((x, y), out var from);
+                                int qx = moved ? from.X : x + frame.Dx, qy = moved ? from.Y : y + frame.Dy;
+                                int t = moved ? top[x] : top[x] + frame.Dy;
+                                var (bx, by) = Body(qx, qy, frame.View);
+                                int alt = skin.Pattern(new Ctx(qx, qy, frame.View, column, level, t, bx, by));
                                 if (alt >= 0 && alt < skin.Alternates.Length) ramp = skin.Alternates[alt];
                             }
                             output[i] = ramp[level];
@@ -187,6 +199,59 @@ internal static class HorseSkins
             }
         return output;
     }
+
+    private sealed record FrameInfo(int View, int Dx, int Dy, bool Saddle, Dictionary<(int, int), (int X, int Y)>? Head);
+    /// <summary>
+    /// Which view a frame of the native sheet shows (0 front, 1 side, 2 back) and how it lines up with that view's first
+    /// frame. Row 3 holds the grazing frames (side, 0-3), one back frame (4) and the carrot head pieces (5-6, no saddle).
+    /// </summary>
+    private static FrameInfo Frame(Func<int, int, Color> px, int row, int column)
+    {
+        if (row == 3 && column >= 5) return new(1, 0, 0, false, null);
+        int view = row < 3 ? row : column < 4 ? 1 : 2;
+        var here = Anchor(px, column * 32, row * 32);
+        var reference = Anchor(px, 0, view * 32);
+        int dx = here != null && reference != null ? reference.Value.X - here.Value.X : 0;
+        int dy = here != null && reference != null ? reference.Value.Y - here.Value.Y : 0;
+        Dictionary<(int, int), (int X, int Y)>? head = null;
+        if (row == 3 && column < 4)
+        {
+            Color Ref(int x, int y) => x >= 0 && x < 32 && y >= 0 && y < 32 ? px(x, view * 32 + y) : Color.Transparent;
+            Color Cur(int x, int y) => px(column * 32 + x, row * 32 + y);
+            var moved = new List<(int X, int Y)>();
+            for (int x = 0; x < 32; x++) for (int y = 0; y < 32; y++)
+                if (Cur(x, y).A == 255 && Cur(x, y) != Ref(x + dx, y + dy)) moved.Add((x, y));
+            int best = 0, tx = 0, ty = 0;
+            for (int ox = -10; ox <= 10; ox++)
+                for (int oy = -6; oy <= 15; oy++)
+                {
+                    int n = 0;
+                    foreach (var (x, y) in moved) if (Ref(x + dx - ox, y + dy - oy) == Cur(x, y)) n++;
+                    if (n > best) { best = n; tx = ox; ty = oy; }
+                }
+            head = new();
+            foreach (var (x, y) in moved)
+            {
+                int qx = x + dx - tx, qy = y + dy - ty;
+                if (Ref(qx, qy).A == 255) head[(x, y)] = (qx, qy);
+            }
+        }
+        return new(view, dx, dy, true, head);
+    }
+    private static (int X, int Y)? Anchor(Func<int, int, Color> px, int fx, int fy)
+    {
+        int minX = 99, minY = 99;
+        for (int x = 0; x < 32; x++) for (int y = 0; y < 32; y++)
+        { var c = px(fx + x, fy + y); if (c.A == 255 && Array.IndexOf(Strap, c) >= 0) { minX = Math.Min(minX, x); minY = Math.Min(minY, y); } }
+        return minX == 99 ? null : (minX, minY);
+    }
+    /// <summary>Front view = the chest end of the side body (front legs at side x 19-23), back view = the rump end (hind legs 8-12).</summary>
+    private static (double X, double Y) Body(int x, int y, int view) => view switch
+    {
+        0 => (21 + (x - 16) * 0.4, y),
+        2 => (10 - (x - 16) * 0.4, y),
+        _ => (x, y),
+    };
 
     private static HashSet<(int, int)> SaddleMask(Func<int, int, Color> px, int fx, int fy)
     {
