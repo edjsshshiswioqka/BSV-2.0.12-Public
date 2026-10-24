@@ -90,7 +90,6 @@ partial class Program
   a.modData[afkKey]=afkId;a.fridge.Value=true;
   Check(!MarketInventory.Container(a),"AFK identity never overrides special-container exclusions");
   SaveChecks(h);
-  Check(Harmony.GetAllPatchedMethods().Count(m=>m.DeclaringType==typeof(StardewValley.Menus.ShippingMenu)&&Harmony.GetPatchInfo(m)!.Owners.Contains("Eddie.BetterStardewValley.Orders"))==3,"three exact native ShippingMenu targets installed");
-  foreach(var (w,he) in new[]{(640,360),(800,600),(1280,720),(1920,1080)}){var (rect,row)=OrderIncome.Geometry(w,he);Check(rect.X>=0&&rect.Y>=0&&rect.Bottom<=he&&row>=30,"seven-row income layout fits supported viewport");}
+  Check(Harmony.GetAllPatchedMethods().Count(m=>m.DeclaringType==typeof(StardewValley.Menus.ShippingMenu)&&Harmony.GetPatchInfo(m)!.Owners.Contains("Eddie.BetterStardewValley.Orders"))==0,"no ShippingMenu patches: order income is not shown on the native summary");
  }
 }

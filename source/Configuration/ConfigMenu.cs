@@ -58,7 +58,7 @@ internal sealed class ConfigMenu
         draft.AfkFishing.EnableChestConnection=defaults.AfkFishing.EnableChestConnection;
         draft.CallHorseKey=defaults.CallHorseKey;draft.EnableLargeHorses=defaults.EnableLargeHorses;
         if(!HostEditable)return;
-        draft.EnableHarvestSeeds=false;draft.SeedChance=.50;draft.HarvestBonus.Enabled=true;
+        draft.EnableHarvestSeeds=true;draft.SeedChance=.50;draft.HarvestBonus.Enabled=true;
         draft.EnableBsvSpeedGro=true;draft.HarvestBonus.EnableFertilizerYieldBonus=true;draft.AutoRestartProduction=true;
         draft.EnableAllProfessions=true;draft.EnableAnnualLegendaryFish=true;draft.EnableHorseSpeedBonus=true;
         draft.HorseSpeedBonus=.20;draft.EnableOrdersSystem=true;draft.EnableLargeHorses=true;draft.OnlyOwnersRide=true;

@@ -18,7 +18,7 @@ internal sealed class OrdersService
  {
   Instance=this;Helper=helper;Monitor=monitor;ModId=manifest.UniqueID;Version=manifest.Version.ToString();
   ItemExclusions=itemExclusions??(()=>Array.Empty<string>());
-  var h=new Harmony(ModId+".Orders");try{_=new OrderTerminal(helper,monitor,h);OrderIncome.Install(h);}catch{h.UnpatchAll(h.Id);throw;}
+  var h=new Harmony(ModId+".Orders");try{_=new OrderTerminal(helper,monitor,h);}catch{h.UnpatchAll(h.Id);throw;}
   helper.Events.GameLoop.UpdateTicked+=(_,e)=>{UpdateBoxLocks();if(e.IsMultipleOf(12))Tick();};
   helper.Events.GameLoop.SaveLoaded+=(_,_)=>Guard(Migrate);
   helper.Events.GameLoop.DayStarted+=(_,_)=>Guard(DayStarted);

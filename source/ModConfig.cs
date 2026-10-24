@@ -2,7 +2,7 @@ namespace BetterStardewValley;
 
 public sealed class ModConfig
 {
-    public int ConfigSchemaVersion { get; set; } = 4;
+    public int ConfigSchemaVersion { get; set; } = 5;
     public bool AutoRestartProduction { get; set; } = true;
     public bool EnableAllProfessions { get; set; } = true;
     public bool EnableHorseSpeedBonus { get; set; } = true;
@@ -18,7 +18,7 @@ public sealed class ModConfig
     public string[] OrderItemExclusions { get; set; } = Array.Empty<string>();
     public int HomeTerminalPlacementDistance { get; set; } = 3;
     public AfkFishing.AfkOptions AfkFishing { get; set; } = new();
-    public bool EnableHarvestSeeds { get; set; } = false;
+    public bool EnableHarvestSeeds { get; set; } = true;
     public double SeedChance { get; set; } = 0.5;
     public bool EnableAnnualLegendaryFish { get; set; } = true;
     public StardewModdingAPI.SButton CallHorseKey { get; set; } = StardewModdingAPI.SButton.H; // switched to J at runtime only while another mod uses H

@@ -67,7 +67,7 @@ internal static class ConfigFiles
             if(!File.Exists(path))
             {
                 // First start: the package ships no config.json (so updates never reset players' settings); create it now.
-                var fresh=new ModConfig{ConfigSchemaVersion=4};
+                var fresh=new ModConfig{ConfigSchemaVersion=5};
                 try{Commit(helper.DirectoryPath,new Dictionary<string,object>{["config.json"]=fresh});}catch(Exception ex){monitor.Log("BSV could not create config.json: "+ex.Message,LogLevel.Warn);}
                 return fresh;
             }
@@ -79,8 +79,11 @@ internal static class ConfigFiles
             // A short-lived test build stored J for everyone (schema 3); the key is H again and only switches
             // to J at runtime while another mod uses H (see HorseFeature.CallKey).
             if(schema==3&&config.CallHorseKey==StardewModdingAPI.SButton.J)config.CallHorseKey=StardewModdingAPI.SButton.H;
-            config.ConfigSchemaVersion=4;
-            if(schema<4)try{Commit(helper.DirectoryPath,new Dictionary<string,object>{["config.json"]=config});}catch(Exception ex){monitor.Log("BSV could not update config.json: "+ex.Message,LogLevel.Warn);}
+            // Schema 5: the 50% seed return is on by default. Earlier builds created config.json with it off, so turn it
+            // on once; a player who switches it off afterwards keeps that choice.
+            if(schema<5)config.EnableHarvestSeeds=true;
+            config.ConfigSchemaVersion=5;
+            if(schema<5)try{Commit(helper.DirectoryPath,new Dictionary<string,object>{["config.json"]=config});}catch(Exception ex){monitor.Log("BSV could not update config.json: "+ex.Message,LogLevel.Warn);}
             return config;
         }
         catch(Exception ex)
