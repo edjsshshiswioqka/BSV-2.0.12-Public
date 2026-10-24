@@ -153,7 +153,7 @@ public sealed class ModEntry
         if(e.NameWithoutLocale.IsEquivalentTo("Data/BigCraftables"))e.Edit(a=>a.AsDictionary<string,BigCraftableData>().Data[CrabId]=new()
         {Name=CrabId,DisplayName=T("crab.name"),Description=T("crab.description"),Price=0,Fragility=2,
          CanBePlacedIndoors=true,CanBePlacedOutdoors=true,Texture="Mods/Eddie.BetterStardewValley/CrabIcon",SpriteIndex=0,ContextTags=new(){"bsv_crab_catcher"}});
-        if(e.NameWithoutLocale.IsEquivalentTo("Mods/Eddie.BetterStardewValley/FishingIcon"))e.LoadFrom(()=>BetterStardewValley.HdSprites.LogicalIcon("fishing_icon"),AssetLoadPriority.Exclusive);
+        if(e.NameWithoutLocale.IsEquivalentTo("Mods/Eddie.BetterStardewValley/FishingIcon"))e.LoadFrom(()=>BetterStardewValley.HdSprites.WideIconHandle(Helper.ModContent.Load<Texture2D>("assets/icon.png")),AssetLoadPriority.Exclusive);
         if(e.NameWithoutLocale.IsEquivalentTo("Mods/Eddie.BetterStardewValley/CrabIcon"))e.LoadFromModFile<Texture2D>("assets/crab-catcher/native-icon.png",AssetLoadPriority.Exclusive);
         if(e.NameWithoutLocale.IsEquivalentTo("Data/CraftingRecipes"))e.Edit(a=>a.AsDictionary<string,string>().Data[CrabId]=
             $"{string.Join(" ",CrabRules.Craft(false).Select(r=>$"{r.Id} {r.Count}"))}/Home/{CrabId} 1/true/Fishing 6/{T("crab.name")}");

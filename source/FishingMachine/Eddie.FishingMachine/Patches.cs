@@ -164,8 +164,8 @@ internal static class CraftingPageMachineIconPatch
             foreach (var pair in page)
             {
                 if (!ModEntry.IsRecipe(pair.Value.name)) continue;
-                pair.Key.texture = ModEntry.Instance.Art.MenuTextureFor(pair.Value.name==ModEntry.CrabId);
-                pair.Key.sourceRect = new Rectangle(0, 0, 32, 16);
+                pair.Key.texture = ModEntry.Instance.Art.CraftTextureFor(pair.Value.name==ModEntry.CrabId);
+                pair.Key.sourceRect = new Rectangle(0, 0, 32, 64);
                 pair.Key.scale = pair.Key.baseScale = 2f;
             }
     }

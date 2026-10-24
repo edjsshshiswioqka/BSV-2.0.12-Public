@@ -134,14 +134,26 @@ internal static class HdSprites
             var native=data.GetTexture();if(native.Width!=16||native.Height!=32)continue;
             RegisterPrepared(native,Helper!.ModContent.Load<Texture2D>(path));ItemSources.Add(native);
         }
-        var crab=ItemRegistry.GetData("(BC)Eddie.BetterStardewValley_CrabCatcher");
-        if(crab!=null&&!crab.IsErrorItem){var native=crab.GetTexture();if(native.Width==16&&native.Height==32){Register(native,"crab_icon",64,128);ItemSources.Add(native);}}
     }
 
-    internal static Texture2D LogicalIcon(string file,int width=16,int height=32)
+    /// <summary>
+    /// A native 16x32 big-craftable handle for a wide 32x16 machine icon. The handle itself holds a
+    /// half-size copy (used only if the adapter is off); the adapter draws the icon at full detail,
+    /// vertically centred in the cell, so other mods' item draws show the same icon as BSV's menus.
+    /// </summary>
+    internal static Texture2D WideIconHandle(Texture2D icon)
     {
-        var texture=new Texture2D(Game1.graphics.GraphicsDevice,width,height);texture.SetData(new Color[width*height]);
-        Register(texture,file,width*4,height*4);return texture;
+        var input=new Color[icon.Width*icon.Height];icon.GetData(input);
+        var small=new Color[16*32];var full=new Color[32*64];
+        int top=(64-icon.Height)/2;
+        for(int y=0;y<icon.Height;y++)for(int x=0;x<icon.Width;x++)
+        {
+            full[(top+y)*32+x]=input[y*icon.Width+x];
+            if(x%2==0&&y%2==0&&x/2<16)small[(top/2+y/2)*16+x/2]=input[y*icon.Width+x];
+        }
+        var logical=new Texture2D(Game1.graphics.GraphicsDevice,16,32);logical.SetData(small);
+        if(Enabled){var detail=new Texture2D(Game1.graphics.GraphicsDevice,32,64);detail.SetData(full);RegisterPrepared(logical,detail);}
+        return logical;
     }
     internal static void Register(Texture2D original,string file,int width,int height,int level=1)
     {

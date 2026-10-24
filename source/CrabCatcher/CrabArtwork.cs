@@ -7,25 +7,37 @@ namespace Eddie.FishingMachine;
 
 internal sealed class CrabArtwork
 {
-    internal const int Width=72,Height=48,HeldHeight=40,OriginX=36,OriginY=42;
+    internal const int Width=72,Height=48,OriginX=36,OriginY=42;
     private readonly ModEntry Mod;
-    private readonly Texture2D[] World=new Texture2D[2],Legs=new Texture2D[2],Held=new Texture2D[2],Icon=new Texture2D[2];
+    private readonly Texture2D[] World=new Texture2D[2],Legs=new Texture2D[2],Icon=new Texture2D[2];
     internal Texture2D MenuTexture=>Icon[0];
+    internal Texture2D? CraftTexture;
+    internal static Texture2D CraftCell(Texture2D icon)
+    {
+        var input=new Color[icon.Width*icon.Height];icon.GetData(input);
+        var cell=new Color[32*64];
+        for(int y=0;y<icon.Height;y++)Array.Copy(input,y*icon.Width,cell,(64-icon.Height+y)*32,icon.Width);
+        var texture=new Texture2D(Game1.graphics.GraphicsDevice,32,64);texture.SetData(cell);return texture;
+    }
     internal CrabArtwork(ModEntry mod)=>Mod=mod;
     internal void Load()
     {
         Texture2D Read(string file,int w,int h)
         {var t=Mod.Helper.ModContent.Load<Texture2D>("assets/crab-catcher/"+file);if(t.Width!=w||t.Height!=h)throw new InvalidOperationException("Invalid crab sprite "+file);return t;}
         for(int n=0;n<2;n++)
-        {int l=n+1;World[n]=Read($"world-lv{l}.png",Width*6,Height);Legs[n]=Read($"legs-lv{l}.png",Width,Height);Held[n]=Read($"held-lv{l}.png",Width,HeldHeight);Icon[n]=Read($"icon-lv{l}.png",32,16);BetterStardewValley.HdSprites.Register(Icon[n],"crab_icon",64,32,l);}
+        {int l=n+1;World[n]=Read($"world-lv{l}.png",Width*6,Height);Legs[n]=Read($"legs-lv{l}.png",Width,Height);Icon[n]=Read($"icon-lv{l}.png",32,16);}
+        CraftTexture?.Dispose();CraftTexture=CraftCell(Icon[0]);
     }
     private static void DrawTexture(SpriteBatch b,Texture2D t,Vector2 p,Rectangle? source,float scale,float alpha,float depth)
         =>b.Draw(t,p,source,Color.White*alpha,0,Vector2.Zero,scale,SpriteEffects.None,depth);
     internal void DrawIcon(SpriteBatch b,Vector2 p,float scale,float alpha,float depth,int level)
     {float zoom=2*scale;var offset=SpriteGeometry.MenuOffset(32,16,scale);DrawTexture(b,Icon[Math.Clamp(level-1,0,1)],p+new Vector2((float)offset.X,(float)offset.Y),new Rectangle(0,0,32,16),zoom,alpha,depth);}
-    internal void DrawHeld(SpriteBatch b,Vector2 objectPosition,Farmer farmer,int level)
+    internal void DrawHeld(SpriteBatch b,Vector2 objectPosition,float depth,int level)
     {
-        BetterStardewValley.HdSprites.DrawHeldMachine(b,Icon[Math.Clamp(level-1,0,1)],objectPosition,Math.Clamp((farmer.StandingPixel.Y+3)/10000f,0,1));
+        // Exactly what stands in the world while idle (legs plus the first body frame), at half size.
+        int n=Math.Clamp(level-1,0,1);var p=Artwork.HeldOrigin(objectPosition,Width,Height);
+        DrawTexture(b,Legs[n],p,null,Artwork.HeldZoom,1,depth);
+        DrawTexture(b,World[n],p,new Rectangle(0,0,Width,Height),Artwork.HeldZoom,1,depth+.00001f);
     }
 
     internal void Draw(SpriteBatch b,Vector2 anchor,float alpha,Chest? c)

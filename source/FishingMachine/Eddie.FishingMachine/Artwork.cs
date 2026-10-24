@@ -12,7 +12,9 @@ internal sealed class Artwork
     private Texture2D? Body,Icon,GoldBody,GoldIcon,PurpleBody,PurpleIcon,Bait,Float,Ripple,Ready;
     private MachineLayout Layout=new();
     private CrabArtwork CrabArt=null!;
-    internal Texture2D MenuTextureFor(bool crab)=>crab?CrabArt.MenuTexture:MenuTexture;
+    private Texture2D? CraftIcon;
+    /// <summary>Crafting-page cell (32x64): the inventory icon standing at the bottom, like other big craftables.</summary>
+    internal Texture2D CraftTextureFor(bool crab)=>crab?CrabArt.CraftTexture:CraftIcon ?? throw new InvalidOperationException("Machine art is not loaded.");
     private sealed record LandingCache(GameLocation Location,Vector2 Anchor,long Minute,PixelPoint[] Points);
     private ConditionalWeakTable<Chest,LandingCache> Landings=new();
     internal Texture2D MenuTexture => Icon ?? throw new InvalidOperationException("Machine art is not loaded.");
@@ -81,9 +83,7 @@ internal sealed class Artwork
             foreach(var old in new[]{Body,Icon,GoldBody,GoldIcon,PurpleBody,PurpleIcon,Bait,Float,Ripple,Ready})
                 if(old!=null){BetterStardewValley.HdSprites.Unregister(old);old.Dispose();}
             (Body,Icon,GoldBody,GoldIcon,PurpleBody,PurpleIcon,Bait,Float,Ripple,Ready,Layout)=(body,icon,goldBody,goldIcon,purpleBody,purpleIcon,bait,bobber,ripple,ready,layout);
-            BetterStardewValley.HdSprites.Register(icon,"fishing_icon",64,32);
-            BetterStardewValley.HdSprites.Register(goldIcon,"fishing_icon",64,32,2);
-            BetterStardewValley.HdSprites.Register(purpleIcon,"fishing_icon",64,32,3);
+            CraftIcon?.Dispose();CraftIcon=CrabArtwork.CraftCell(icon);
             Reset();
         }
         catch{foreach(var texture in created)texture.Dispose();throw;}
@@ -164,9 +164,15 @@ internal sealed class Artwork
     }
     internal void DrawHeld(SpriteBatch b,Vector2 p,Farmer farmer,int level=1,bool crab=false)
     {
-        if(crab){CrabArt.DrawHeld(b,p,farmer,level);return;}
-        if(Icon==null)return;
-        // The held item uses the same registered full-resolution icon as inventory and debris.
-        BetterStardewValley.HdSprites.DrawHeldMachine(b,(level switch {3=>PurpleIcon,2=>GoldIcon,_=>Icon})!,p,Math.Clamp((farmer.StandingPixel.Y+3)/10000f,0,1));
+        float depth=Math.Clamp((farmer.StandingPixel.Y+3)/10000f,0,1);
+        if(crab){CrabArt.DrawHeld(b,p,depth,level);return;}
+        if(Body==null)return;
+        // Exactly the placed sprite (same art and level colour), at half the placed size, standing on the farmer's head.
+        var body=(level switch {3=>PurpleBody,2=>GoldBody,_=>Body})!;
+        b.Draw(body,HeldOrigin(p,body.Width,body.Height),null,Color.White,0,Vector2.Zero,HeldZoom,SpriteEffects.None,depth);
     }
+    internal const float HeldZoom=2;
+    /// <summary>Bottom-centre of the art sits where the bottom-centre of a native held big craftable sits.</summary>
+    internal static Vector2 HeldOrigin(Vector2 objectPosition,int width,int height)
+        =>new(MathF.Round(objectPosition.X+32-width*HeldZoom/2),MathF.Round(objectPosition.Y+128-height*HeldZoom));
 }
