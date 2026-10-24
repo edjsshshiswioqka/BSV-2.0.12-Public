@@ -42,6 +42,7 @@ internal sealed partial class TeaFeature
             postfix: new HarmonyMethod(typeof(TeaFeature), nameof(NewBush)));
         }
         catch { h.UnpatchAll(TeaAppleRules.Prefix + ".Tea"); throw; }
+        InstallWaterLook(h, helper, monitor); // cosmetic: a failure here never disables tea
         GameStateQuery.Register(TeaAppleRules.SeasonQuery, (_, _) => TeaAppleRules.GrowingSeason((int)Game1.season));
         helper.Events.Content.AssetRequested += Assets;
         helper.Events.Content.LocaleChanged += (_, _) =>
