@@ -60,7 +60,5 @@
     <None Include="../BetterStardewValley/manifest.json" Link="manifest.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../BetterStardewValley/assets/**/*" Link="assets/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../BetterStardewValley/i18n/**/*" Link="i18n/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../BetterStardewValley/crab-catcher.json" Link="crab-catcher.json" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../BetterStardewValley/fishing-machine.json" Link="fishing-machine.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
