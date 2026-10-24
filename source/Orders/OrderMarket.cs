@@ -6,9 +6,9 @@ namespace BetterStardewValley.Orders;
 internal sealed record MarketReward(string Id,int Count);
 internal sealed record MarketOrder(string Id,string Npc,string Item,int Quantity,int ReferencePrice,int Percent,int Gold,
  int Created,int MinimumQuality,string Kind,string Size,List<MarketReward> Rewards,long Actor=0,int Accepted=-1,int Completed=-1,
- string State="available",int LegacyDue=-1);
+ string State="available",int LegacyDue=-1,string Box="",string Reservation="");
 internal sealed record MarketCandidate(string Id,string Npc,int Price,int Band=0,bool Quality=false);
-internal sealed record MarketIntent(string Id,long Sequence,long Actor,string Action,string Order,string Location,int X,int Y,string Inventory);
+internal sealed record MarketIntent(string Id,long Sequence,long Actor,string Action,string Order,string Location,int X,int Y,string Inventory,string Box="",string Reservation="");
 internal sealed record MarketReceipt(string Id,long Sequence,bool Success,string Message,string Inventory="");
 internal sealed class MarketBook
 {

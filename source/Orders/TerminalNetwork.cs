@@ -64,6 +64,7 @@ internal sealed class TerminalNetwork
         if (place && !TerminalEntity.CanPlace(location, tile, who))
         { World.Notice(TerminalEntity.Allowed(location, who) ? "orders.terminal-blocked" : "orders.terminal-map"); return; }
         if (!place && (!TerminalEntity.InReach(who, anchor!.TileLocation, TerminalEntity.Pending(anchor)) || who.CurrentTool is not (Axe or Pickaxe))) return;
+        if (!place && !OrderBox.IsEmpty(OrderBox.Key(TerminalEntity.Id(anchor!)))) { World.Notice("orders.box-not-empty"); return; }
         SObject? item = place ? who.ActiveObject : anchor;
         if (item == null || !OrderTerminal.IsTerminal(item) || item.Stack < 1 || TerminalEntity.IsPart(item)) return;
         string packed = TerminalItem.Pack(item);

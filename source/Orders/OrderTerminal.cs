@@ -91,7 +91,16 @@ internal sealed class OrderTerminal
    if(!TerminalEntity.CanUse(who,who.currentLocation.NameOrUniqueName,(int)anchor.TileLocation.X,(int)anchor.TileLocation.Y))return false;
    if(TerminalEntity.Pending(anchor))Game1.addHUDMessage(new HUDMessage(Instance.Tr("orders.terminal-migrate"),3));
    if(!OrdersService.Instance.Enabled){Game1.drawObjectDialogue(Instance.Tr("orders.disabled"));return false;}
-   Game1.activeClickableMenu=new OrdersMenu(OrdersService.Instance,who.currentLocation.NameOrUniqueName,(int)anchor.TileLocation.X,(int)anchor.TileLocation.Y);
+   string id=TerminalEntity.Id(anchor);if(id.Length==0)return false;
+   string key=OrderBox.Key(id),location=who.currentLocation.NameOrUniqueName;int x=(int)anchor.TileLocation.X,y=(int)anchor.TileLocation.Y;
+   // Like a native chest: one player at a time uses a terminal's order box.
+   OrderBox.Items(key); // create the box on first use so its lock is advanced every tick
+   OrderBox.Mutex(key).RequestLock(()=>
+   {
+    if(Game1.activeClickableMenu==null&&TerminalEntity.CanUse(Game1.player,location,x,y))
+     Game1.activeClickableMenu=new OrderDeskMenu(OrdersService.Instance,location,x,y,key);
+    else OrderBox.Mutex(key).ReleaseLock();
+   },()=>Game1.addHUDMessage(new HUDMessage(Instance.Tr("orders.box-busy"),3)));
   }
   return false;
  }

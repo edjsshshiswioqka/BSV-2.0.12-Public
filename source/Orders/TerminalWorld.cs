@@ -94,6 +94,8 @@ internal sealed class TerminalWorld
             || who.CurrentTool is not (Axe or Pickaxe)) return "orders.return-terminal";
         if (!TerminalEntity.Resolve(l, tile, out var anchor) || TerminalEntity.Id(anchor) != id) return "orders.terminal-gone";
         if (!TerminalEntity.InReach(who, anchor.TileLocation, TerminalEntity.Pending(anchor))) return "orders.return-terminal";
+        // Like a native chest: the order box must be emptied first (this also keeps confirmed goods in place).
+        if (!OrderBox.IsEmpty(OrderBox.Key(id)) || OrderBox.Mutex(OrderBox.Key(id)).IsLocked()) return "orders.box-not-empty";
         // Pickup also works in a legacy/externally moved illegal map, so the player can recover it.
         string packed = TerminalItem.Pack(anchor);
         var entries = l.objects.Pairs.Where(p => OrderTerminal.IsTerminal(p.Value) && TerminalEntity.Id(p.Value) == id).ToArray();
