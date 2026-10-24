@@ -176,7 +176,8 @@ internal static class HorseSkins
                             {
                                 // Patterns follow the body: frames are aligned on the saddle with the view's first frame,
                                 // and a grazing horse's lowered head keeps the colours of its raised head.
-                                bool moved = frame.Head != null && frame.Head.TryGetValue((x, y), out var from);
+                                (int X, int Y) from = (0, 0);
+                                bool moved = frame.Head != null && frame.Head.TryGetValue((x, y), out from);
                                 int qx = moved ? from.X : x + frame.Dx, qy = moved ? from.Y : y + frame.Dy;
                                 int t = moved ? top[x] : top[x] + frame.Dy;
                                 var (bx, by) = Body(qx, qy, frame.View);
