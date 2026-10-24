@@ -223,7 +223,7 @@ internal sealed partial class AfkFishingService
         Persist(); TraceState(previous, "new day ready: waiting for world/player initialization");
     }
 
-    private bool KeyConflict(SButton button) => button == SButton.None || button == Config.CallHorseKey
+    private bool KeyConflict(SButton button) => button == SButton.None || button == HorseFeature.CallKey
 
         || button is SButton.T or SButton.ControllerX or SButton.W or SButton.A or SButton.S or SButton.D or SButton.Escape
         or SButton.MouseLeft or SButton.MouseRight || button.IsActionButton() || button.IsUseToolButton();

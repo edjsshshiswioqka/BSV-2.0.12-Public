@@ -95,12 +95,13 @@ internal sealed partial class HorseFeature
         };
         helper.Events.GameLoop.SaveLoaded += (_, _) => { ResetLocal(); if (Context.IsMainPlayer) RecoverAll(); };
         helper.Events.GameLoop.DayStarted += (_, _) => { if (Context.IsMainPlayer) RecoverAll(); Local.Value.CoatOffered.Clear(); };
-        // One-time notice after the 2.0.13 key change (H was also UI Info Suite 2's quest board key).
+        helper.Events.GameLoop.GameLaunched += (_, _) => FindKeyConflicts();
+        // Told once per player: while another mod uses the call key, BSV listens to J instead.
         helper.Events.GameLoop.DayStarted += (_, _) =>
         {
-            if (!Configuration.ConfigFiles.HorseKeyMoved) return;
-            Configuration.ConfigFiles.HorseKeyMoved = false;
-            Game1.drawObjectDialogue(T("horse.key-moved"));
+            if (CallKey == Config.CallHorseKey || Game1.player.modData.ContainsKey(KeyNoticeKey)) return;
+            Game1.player.modData[KeyNoticeKey] = "1";
+            Game1.drawObjectDialogue(T("horse.key-moved", new { mod = KeyConflictMod, key = Config.CallHorseKey.ToString() }));
         };
         helper.Events.GameLoop.Saving += (_, _) => { if (Context.IsMainPlayer) StopAll(); };
         helper.Events.GameLoop.ReturnedToTitle += (_, _) => { ResetLocal(); if (Context.IsMainPlayer) ClearHost(); };
@@ -170,10 +171,43 @@ internal sealed partial class HorseFeature
     private void ClearHost() { StopAll(); Views.Clear(); Replies.Clear(); Incoming.Clear(); Calls.Clear(); Interactions.Clear(); }
     private void StopAll() { foreach (var s in Active.Values.ToArray()) Finish(s, ""); }
 
+    private const string KeyNoticeKey = "Eddie.BetterStardewValley/HorseKeyConflictNotice";
+    private static readonly HashSet<SButton> ForeignKeys = new();
+    private static string KeyConflictMod = "";
+    /// <summary>The configured key (H by default), or J while another mod also uses that key.</summary>
+    internal static SButton CallKey => Instance is { } mod && ForeignKeys.Contains(mod.Config.CallHorseKey) && !ForeignKeys.Contains(SButton.J) ? SButton.J
+        : Instance?.Config.CallHorseKey ?? SButton.H;
+    /// <summary>UI Info Suite 2 opens its quest board with H by default; read its actual setting when possible.</summary>
+    private void FindKeyConflicts()
+    {
+        ForeignKeys.Clear();
+        try
+        {
+            const string id = "Annosz.UiInfoSuite2";
+            var info = Helper.ModRegistry.Get(id);
+            if (info == null) return;
+            KeyConflictMod = info.Manifest.Name;
+            string? dir = info.GetType().GetProperty("DirectoryPath")?.GetValue(info) as string;
+            string? raw = dir != null && File.Exists(Path.Combine(dir, "config.json")) ? File.ReadAllText(Path.Combine(dir, "config.json")) : null;
+            var keys = new List<string>();
+            if (raw != null)
+            {
+                var json = Newtonsoft.Json.Linq.JObject.Parse(raw);
+                foreach (string field in new[] { "OpenQuestBoardKeybind", "OpenCalendarKeybind" })
+                    if (json[field]?.ToString() is { } list) keys.AddRange(list.Split(','));
+            }
+            else keys.AddRange(new[] { "H", "B" }); // its defaults
+            foreach (string key in keys)
+                if (!key.Contains('+') && Enum.TryParse<SButton>(key.Trim(), true, out var button)) ForeignKeys.Add(button);
+            if (ForeignKeys.Contains(Config.CallHorseKey))
+                Monitor.Log($"BSV horses: {KeyConflictMod} also uses {Config.CallHorseKey}; call your horse with J while it is installed.", LogLevel.Info);
+        }
+        catch (Exception ex) { Monitor.Log("BSV horses: could not read other mods' keys: " + ex.Message, LogLevel.Trace); }
+    }
     private void OnButton(object? sender, ButtonPressedEventArgs e)
     {
         if (!Ready || !Context.IsPlayerFree) return;
-        var key = Config.CallHorseKey;
+        var key = CallKey;
         if (key == SButton.None || e.Button != key || Helper.Input.IsSuppressed(e.Button)) return;
         Helper.Input.Suppress(e.Button);
         CallLocal();
