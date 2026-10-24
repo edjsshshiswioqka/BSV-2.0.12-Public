@@ -14,7 +14,7 @@ internal static class TeaAppleRules
     internal const string SeasonQuery = Prefix + "_TeaGrowingSeason";
     internal const int SaplingPrice = 400, LeavesPrice = 80, CupPrice = 80, CakePrice = 750, ApplePrice = 500;
     internal const int GrowthDays = 15, RegrowDays = 2, LeavesPerHarvest = 1, CakeInput = 5, CakeDays = 2;
-    internal const int CupEnergy = 32, CupHealth = 14, AppleEnergy = 38, AppleHealth = 18, AppleGoldBars = 3;
+    internal const int CupEnergy = 28, CupHealth = 14, AppleEnergy = 38, AppleHealth = 18, AppleGoldBars = 3;
     internal const int ExpiryTime = 2600, InvincibleMilliseconds = 2500;
     internal const string GrowthKey = Prefix + "/Tea/Growth", RegrowKey = Prefix + "/Tea/Regrow";
     internal const string DeadKey = Prefix + "/Tea/Dead", WaterKey = Prefix + "/Tea/WateredDay";
