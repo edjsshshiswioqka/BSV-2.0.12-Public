@@ -9,6 +9,9 @@ public sealed class HorseRequest
     public string Location { get; set; } = "";
     public string Action { get; set; } = "Call";
     public string Name { get; set; } = "";
+    /// <summary>"Come" or "Leave", from the caller's press counter (odd presses call, even presses send away).
+    /// Empty from an older client: the host then decides from where the horse is, as before.</summary>
+    public string Intent { get; set; } = "";
     public HorseViewport View { get; set; } = new();
 }
 public sealed class HorseViewport

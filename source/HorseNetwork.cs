@@ -14,7 +14,7 @@ internal sealed partial class HorseFeature
         Actor = Game1.player.UniqueMultiplayerID, Location = Game1.currentLocation.NameOrUniqueName,
         X = Game1.viewport.X, Y = Game1.viewport.Y, Width = Game1.viewport.Width, Height = Game1.viewport.Height
     };
-    private void SendAction(Horse horse, string action, string name = "")
+    private void SendAction(Horse horse, string action, string name = "", string intent = "")
     {
         if (!Context.IsWorldReady || !IsRealManagedHorse(horse)) return;
         if (!Context.IsMainPlayer && !Context.IsSplitScreen
@@ -23,7 +23,7 @@ internal sealed partial class HorseFeature
         { Message("horse.call.host_required"); return; }
         var r = new HorseRequest { Id = Guid.NewGuid().ToString("N"), Actor = Game1.player.UniqueMultiplayerID,
             Horse = horse.HorseId.ToString("N"), Location = Game1.currentLocation.NameOrUniqueName, Action = action,
-            Name = name, View = CurrentView() };
+            Name = name, Intent = intent, View = CurrentView() };
         Local.Value.Pending = r.Id; Local.Value.PendingSince = Now; Local.Value.Busy = true;
         if (Context.IsMainPlayer || Context.IsSplitScreen) Incoming[r.Actor] = r;
         else Helper.Multiplayer.SendMessage(r, RequestType, new[] { ModId }, new[] { Game1.MasterPlayer.UniqueMultiplayerID });
@@ -90,6 +90,7 @@ internal sealed partial class HorseFeature
         if (!Ready || !Context.IsWorldReady) return;
         double now = Now;
         var local = Local.Value;
+        TrackCallCounter(local);
         if (now >= local.NextView)
         {
             local.NextView = now + .25;
@@ -159,7 +160,7 @@ internal sealed partial class HorseFeature
             if (horse.rider != null || who.mount != null || horse.mounting.Value || horse.dismounting.Value)
             { Reply(r, "horse.call.already_here"); return; }
             // Press again while it runs: it turns around (coming -> leaving, leaving -> coming) from where it is.
-            moving.Departing = !moving.Departing;
+            moving.Departing = r.Intent switch { "Leave" => true, "Come" => false, _ => !moving.Departing };
             moving.Started = false; moving.Route.Clear(); moving.BlockedSince = 0;
             moving.Start = moving.LastTick = Now - 1; moving.DepartStart = Now;
             Reply(r, "", sound: moving.Departing ? "dismiss" : "call", horseName: moving.Horse.Name ?? ""); return;
@@ -181,11 +182,34 @@ internal sealed partial class HorseFeature
         { Reply(r, "horse.call.no_path"); return; }
         // Horse already with the player (on screen in the same place): send it away. Anywhere else, even on
         // another map, it comes: it appears just outside the player's view and runs to them.
-        bool present = horse.currentLocation == who.currentLocation
-            && VisualBounds(horse.Position).Intersects(Bounds(view.View).Inflate(64));
+        // The caller's press counter decides; an older client without one falls back to where the horse is.
+        bool present = r.Intent switch
+        {
+            "Leave" => true,
+            "Come" => false,
+            _ => horse.currentLocation == who.currentLocation && VisualBounds(horse.Position).Intersects(Bounds(view.View).Inflate(64)),
+        };
         Active[id] = new Summon(r, horse, who.currentLocation, stable, Now) { Departing = present, DepartStart = Now };
         Reply(r, "", sound: present ? "dismiss" : "call", horseName: horse.Name ?? "");
         static bool nowStale(double time) => Now - time > 1;
+    }
+    private static void TrackCallCounter(LocalState local)
+    {
+        var who = Game1.player;
+        bool mounted = who.mount != null;
+        if (mounted) local.LastMount = who.mount!.HorseId;
+        // Dismounting: the horse is right here, so the next press sends it away.
+        if (local.WasMounted && !mounted) { local.NextLeave = true; local.AfterDismount = true; }
+        local.WasMounted = mounted;
+        // A new map (indoors included) starts the counter over: the next press calls.
+        string here = Game1.currentLocation?.NameOrUniqueName ?? "";
+        if (here != local.CounterLocation) { local.CounterLocation = here; local.NextLeave = false; local.AfterDismount = false; return; }
+        // Walked away from the horse after dismounting: the next press calls it again.
+        if (local.AfterDismount && local.NextLeave)
+        {
+            var horse = Game1.currentLocation?.characters.OfType<Horse>().FirstOrDefault(h => h.HorseId == local.LastMount);
+            if (horse == null || Vector2.Distance(horse.Tile, who.Tile) > CallCounterReach) { local.NextLeave = false; local.AfterDismount = false; }
+        }
     }
     private static bool InReach(Farmer who, Horse horse) => who.currentLocation == horse.currentLocation
         && Vector2.Distance(who.Position, horse.Position) <= 4 * 64;

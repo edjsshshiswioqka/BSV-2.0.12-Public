@@ -43,7 +43,14 @@ internal sealed partial class HorseFeature
         internal readonly Dictionary<Guid, (string Token, Vector2 Position, double Phase)> Animations = new();
         internal readonly HashSet<Guid> CoatOffered = new();
         internal double CarpenterSeen, NextCoatCheck;
+        // Call counter: odd presses call the horse, even presses send it away. It starts over (next press calls)
+        // on every map change, which includes going indoors. After dismounting, the next press sends the horse
+        // away, unless the player has walked more than CallCounterReach tiles from it first.
+        internal bool NextLeave, AfterDismount, WasMounted;
+        internal string CounterLocation = "";
+        internal Guid LastMount;
     }
+    private const float CallCounterReach = 11;
 
     internal static bool ScaleEligible(Horse horse) => Instance is { Ready: true } mod && mod.Config.EnableLargeHorses && IsRealManagedHorse(horse);
 
@@ -227,7 +234,10 @@ internal sealed partial class HorseFeature
         if (!Allowed(Game1.currentLocation)) { PlayWhistle(false); Message("horse.call.unavailable_location"); return; }
         if (Game1.player.mount != null) { Message("horse.call.already_here"); return; }
         var horse = PickOwnedHorse(true, forceChoice);
-        if (horse != null) SendAction(horse, "Call");
+        if (horse == null) return;
+        string intent = local.NextLeave ? "Leave" : "Come";
+        local.NextLeave = !local.NextLeave; local.AfterDismount = false;
+        SendAction(horse, "Call", intent: intent);
     }
 
     /// <summary>Call whistle (rising) or "go home" whistle (falling). Both are BSV's own synthesized sounds (MIT).</summary>
