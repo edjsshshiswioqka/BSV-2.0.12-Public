@@ -29,6 +29,7 @@ internal sealed class OrderDeskMenu : IClickableMenu
  {
   Service=service;Location=location;TileX=x;TileY=y;Key=key;
   Refresh();OrderBox.Pad(Box);OrderBox.StripStale(Box,Book,Key);Layout();
+  if(Game1.options.SnappyMenus)snapToDefaultClickableComponent();
   Game1.playSound("bigSelect");
  }
  private void Layout()
@@ -39,12 +40,86 @@ internal sealed class OrderDeskMenu : IClickableMenu
   BoxMenu=new InventoryMenu(Right.X+16,Right.Y+76,false,Box,null,OrderBox.Capacity,OrderBox.Rows);
   Backpack=new InventoryMenu(Right.X+16,Right.Y+76+OrderBox.Rows*64+70,true);
   upperRightCloseButton=new ClickableTextureComponent(new Rectangle(Right.Right-44,Right.Y-8,48,48),Game1.mouseCursors,new Rectangle(337,494,12,12),4f);
+  BuildComponents();
+ }
+ // ---------- controller navigation ----------
+ // Ids: tabs 100-102, row buttons 200+, reject 300+, scroll 400/401, close 500, box slots 1000+, backpack slots 0-35.
+ private void BuildComponents()
+ {
+  int keep=currentlySnappedComponent?.myID??-1;
+  var all=new List<ClickableComponent>();
+  int visible=Math.Max(0,Math.Min(Rows,RowsFor().Count-Scroll));bool arrows=RowsFor().Count>Rows;
+  int RowTarget(int n)=>visible==0?100+Tab:200+Math.Clamp(n,0,visible-1);
+  for(int n=0;n<3;n++)all.Add(new(TabRect(n),"tab"+n){myID=100+n,leftNeighborID=n>0?99+n:-1,rightNeighborID=n<2?101+n:1000,downNeighborID=RowTarget(0),upNeighborID=-1});
+  var rows=RowsFor();
+  for(int n=0;n<visible;n++)
+  {
+   var row=RowRect(n);bool reject=Tab==0&&rows[Scroll+n].State=="available";
+   all.Add(new(Tab==2?row:ButtonRect(row),"row"+n){myID=200+n,upNeighborID=n==0?100+Tab:200+n-1,downNeighborID=n<visible-1?201+n:arrows?401:-1,
+    leftNeighborID=reject?300+n:-1,rightNeighborID=1000+Math.Min(n,OrderBox.Rows-1)*OrderBox.Columns});
+   if(reject)all.Add(new(RejectRect(row),"reject"+n){myID=300+n,rightNeighborID=200+n,downNeighborID=200+n,upNeighborID=n==0?100+Tab:200+n-1,leftNeighborID=-1});
+  }
+  if(arrows)
+  {
+   all.Add(new(UpRect,"up"){myID=400,rightNeighborID=401,upNeighborID=RowTarget(visible-1),leftNeighborID=-1,downNeighborID=-1});
+   all.Add(new(DownRect,"down"){myID=401,leftNeighborID=400,upNeighborID=RowTarget(visible-1),rightNeighborID=1000+(OrderBox.Rows-1)*OrderBox.Columns,downNeighborID=-1});
+  }
+  upperRightCloseButton.myID=500;upperRightCloseButton.downNeighborID=1000+OrderBox.Columns-1;upperRightCloseButton.leftNeighborID=102;all.Add(upperRightCloseButton);
+  for(int i=0;i<BoxMenu.inventory.Count;i++)
+  {
+   var c=BoxMenu.inventory[i];int col=i%OrderBox.Columns,row=i/OrderBox.Columns;
+   c.myID=1000+i;c.leftNeighborID=col==0?RowTarget(row):c.myID-1;c.rightNeighborID=col==OrderBox.Columns-1?-1:c.myID+1;
+   c.upNeighborID=row==0?(col==OrderBox.Columns-1?500:100+Tab):c.myID-OrderBox.Columns;
+   c.downNeighborID=row==OrderBox.Rows-1?col:c.myID+OrderBox.Columns;all.Add(c);
+  }
+  for(int i=0;i<Backpack.inventory.Count;i++)
+  {
+   var c=Backpack.inventory[i];int col=i%OrderBox.Columns,row=i/OrderBox.Columns;
+   c.myID=i;c.leftNeighborID=col==0?(arrows?401:RowTarget(visible-1)):i-1;c.rightNeighborID=col==OrderBox.Columns-1?-1:i+1;
+   c.upNeighborID=row==0?1000+(OrderBox.Rows-1)*OrderBox.Columns+col:i-OrderBox.Columns;c.downNeighborID=i+OrderBox.Columns<Backpack.inventory.Count?i+OrderBox.Columns:-1;all.Add(c);
+  }
+  allClickableComponents=all;
+  if(keep>=0&&Game1.options.SnappyMenus)
+  {
+   currentlySnappedComponent=getComponentWithID(keep)??getComponentWithID(RowTarget(keep-200))??getComponentWithID(1000);
+   if(currentlySnappedComponent!=null&&currentlySnappedComponent.myID!=keep)snapCursorToCurrentSnappedComponent();
+  }
+ }
+ public override void snapToDefaultClickableComponent()
+ {
+  currentlySnappedComponent=getComponentWithID(200)??getComponentWithID(1000);
+  snapCursorToCurrentSnappedComponent();
+ }
+ public override void applyMovementKey(int direction)
+ {
+  // Moving past the first/last visible order scrolls the list instead of leaving it.
+  if(currentlySnappedComponent is {} c&&c.myID is >=200 and <300)
+  {
+   int n=c.myID-200,count=RowsFor().Count;
+   if(direction==2&&n==Rows-1&&Scroll+Rows<count){Scroll++;BuildComponents();Game1.playSound("shiny4");return;}
+   if(direction==0&&n==0&&Scroll>0){Scroll--;BuildComponents();Game1.playSound("shiny4");return;}
+  }
+  base.applyMovementKey(direction);
+ }
+ private void SwitchTab(int tab){Tab=(tab+3)%3;Scroll=0;ConfirmReject=null;BuildComponents();Game1.playSound("shwip");
+  if(Game1.options.SnappyMenus){currentlySnappedComponent=getComponentWithID(200)??getComponentWithID(100+Tab);snapCursorToCurrentSnappedComponent();}}
+ public override void receiveGamePadButton(Buttons b)
+ {
+  switch(b)
+  {
+   case Buttons.LeftShoulder:SwitchTab(Tab-1);break;
+   case Buttons.RightShoulder:SwitchTab(Tab+1);break;
+   case Buttons.LeftTrigger:Scroll=Math.Max(0,Scroll-Rows);BuildComponents();break;
+   case Buttons.RightTrigger:Scroll=Math.Min(Math.Max(0,RowsFor().Count-Rows),Scroll+Rows);BuildComponents();break;
+   case Buttons.B:receiveKeyPress(Keys.Escape);break;
+  }
  }
  public override void gameWindowSizeChanged(Rectangle oldBounds,Rectangle newBounds)=>Layout();
  private void Refresh()
  {
   try{Book=Service.Read();}catch{Service.Notice.Value="orders.error";Book=new();}
   Scroll=Math.Clamp(Scroll,0,Math.Max(0,RowsFor().Count-Rows));
+  if(BoxMenu!=null)BuildComponents();
  }
  private List<MarketOrder> RowsFor()=>Tab==0?Book.Available.Concat(Book.Active.Where(o=>o.State=="legacy-active"&&o.Actor==Game1.player.UniqueMultiplayerID)).ToList()
   :Tab==1?Book.Active.Where(o=>o.State=="pending").OrderBy(o=>o.Box==Key?0:1).ToList():Book.Completed;
@@ -157,9 +232,9 @@ internal sealed class OrderDeskMenu : IClickableMenu
  public override void receiveLeftClick(int x,int y,bool playSound=true)
  {
   if(upperRightCloseButton.containsPoint(x,y)){exitThisMenu();return;}
-  for(int n=0;n<3;n++)if(TabRect(n).Contains(x,y)){Tab=n;Scroll=0;ConfirmReject=null;Game1.playSound("shwip");return;}
-  if(UpRect.Contains(x,y)){Scroll=Math.Max(0,Scroll-1);return;}
-  if(DownRect.Contains(x,y)){Scroll=Math.Min(Math.Max(0,RowsFor().Count-Rows),Scroll+1);return;}
+  for(int n=0;n<3;n++)if(TabRect(n).Contains(x,y)){SwitchTab(n);return;}
+  if(RowsFor().Count>Rows&&UpRect.Contains(x,y)){Scroll=Math.Max(0,Scroll-1);BuildComponents();return;}
+  if(RowsFor().Count>Rows&&DownRect.Contains(x,y)){Scroll=Math.Min(Math.Max(0,RowsFor().Count-Rows),Scroll+1);BuildComponents();return;}
   var rows=RowsFor();
   for(int n=0;n<Rows&&Scroll+n<rows.Count;n++)
   {
@@ -179,12 +254,13 @@ internal sealed class OrderDeskMenu : IClickableMenu
  public override void receiveScrollWheelAction(int direction)
  {
   if(!Left.Contains(Game1.getMouseX(),Game1.getMouseY()))return;
-  Scroll=Math.Clamp(Scroll+(direction<0?1:-1),0,Math.Max(0,RowsFor().Count-Rows));
+  Scroll=Math.Clamp(Scroll+(direction<0?1:-1),0,Math.Max(0,RowsFor().Count-Rows));BuildComponents();
  }
  public override void receiveKeyPress(Keys key)
  {
   if(key==Keys.Escape||Game1.options.doesInputListContain(Game1.options.menuButton,key)){if(ConfirmReject!=null)ConfirmReject=null;else exitThisMenu();return;}
-  if(key==Keys.Left||key==Keys.Right||key==Keys.Tab){Tab=(Tab+(key==Keys.Left?2:1))%3;Scroll=0;ConfirmReject=null;}
+  if(Game1.options.SnappyMenus){base.receiveKeyPress(key);return;} // controller: d-pad/stick move between buttons and slots
+  if(key==Keys.Tab)SwitchTab(Tab+1);
  }
  public override bool readyToClose()=>true;
  public override void performHoverAction(int x,int y)
