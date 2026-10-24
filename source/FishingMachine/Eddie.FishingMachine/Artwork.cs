@@ -14,7 +14,7 @@ internal sealed class Artwork
     private CrabArtwork CrabArt=null!;
     private Texture2D? CraftIcon;
     /// <summary>Crafting-page cell (32x64): the inventory icon standing at the bottom, like other big craftables.</summary>
-    internal Texture2D CraftTextureFor(bool crab)=>crab?CrabArt.CraftTexture:CraftIcon ?? throw new InvalidOperationException("Machine art is not loaded.");
+    internal Texture2D CraftTextureFor(bool crab)=>(crab?CrabArt.CraftTexture:CraftIcon) ?? throw new InvalidOperationException("Machine art is not loaded.");
     private sealed record LandingCache(GameLocation Location,Vector2 Anchor,long Minute,PixelPoint[] Points);
     private ConditionalWeakTable<Chest,LandingCache> Landings=new();
     internal Texture2D MenuTexture => Icon ?? throw new InvalidOperationException("Machine art is not loaded.");
