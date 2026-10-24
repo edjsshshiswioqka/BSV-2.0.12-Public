@@ -507,7 +507,7 @@
   "config.page.other": "Hệ thống khác",
   "config.page.maps": "Nhà kính và hầm rượu",
   "config.maps-note": "Thay đổi bản đồ có hiệu lực từ lần tải bản lưu tiếp theo. Bản lưu đã dùng nhà kính hoặc hầm rượu mở rộng của BSV sẽ giữ nguyên (cùng mọi thứ bên trong) ngay cả khi tắt; muốn quay lại, hãy dùng bản sao lưu trước khi mở rộng. Hãy tắt nếu một mod khác thay thế bản đồ nhà kính hoặc hầm rượu.",
-  "config.greenhouse-expansion.help": "Cài đặt của chủ nhà. 24 x 20 = 480 ô trồng. Tắt: bản lưu mới và chưa mở rộng giữ bản đồ gốc (hoặc của mod khác).",
+  "config.greenhouse-expansion.help": "Cài đặt của chủ nhà. 35 x 20 = 700 ô trồng. Tắt: bản lưu mới và chưa mở rộng giữ bản đồ gốc (hoặc của mod khác).",
   "config.cellar-expansion.help": "Cài đặt của chủ nhà. Gấp đôi sàn hầm rượu. Tắt: bản lưu mới và chưa mở rộng giữ bản đồ gốc (hoặc của mod khác).",
   "config.cellar-appearance.help": "Cài đặt của chủ nhà. Làm sàn khu hầm rượu do BSV thêm vào đa dạng hơn để không lặp lại. Chỉ thay đổi hình ảnh.",
   "config.intro2": "Có hiệu lực sau khi lưu. Đặt lại chỉ đổi cấu hình, giữ nguyên trạng thái máy và cây trồng.",

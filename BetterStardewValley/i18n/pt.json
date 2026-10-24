@@ -507,7 +507,7 @@
   "config.page.other": "Outros sistemas",
   "config.page.maps": "Estufa e adega",
   "config.maps-note": "As mudanças de mapa valem a partir do próximo carregamento de um jogo salvo. Um jogo que já usa a estufa ou a adega ampliadas do BSV as mantém (com tudo o que há nelas) mesmo desativado; para voltar, use um backup de antes da ampliação. Desative se outro mod substituir o mapa da estufa ou da adega.",
-  "config.greenhouse-expansion.help": "Configuração do anfitrião. 24 x 20 = 480 espaços de plantio. Desativado: jogos novos e não ampliados mantêm o mapa original (ou o de outro mod).",
+  "config.greenhouse-expansion.help": "Configuração do anfitrião. 35 x 20 = 700 espaços de plantio. Desativado: jogos novos e não ampliados mantêm o mapa original (ou o de outro mod).",
   "config.cellar-expansion.help": "Configuração do anfitrião. Dobra o piso da adega. Desativado: jogos novos e não ampliados mantêm o mapa original (ou o de outro mod).",
   "config.cellar-appearance.help": "Configuração do anfitrião. Varia o piso da área de adega adicionada pelo BSV para não se repetir. Apenas visual.",
   "config.intro2": "As alterações valem após salvar. Redefinir muda apenas a configuração, preservando máquinas e plantações.",

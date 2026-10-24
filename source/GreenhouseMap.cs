@@ -51,8 +51,9 @@ internal static class GreenhouseMap
         int left = soil.Min(p => p.X), top = soil.Min(p => p.Y);
         if (soil.Max(p => p.X) - left != 11 || soil.Max(p => p.Y) - top != 9)
             throw new MapConflictException("Expected a single 12 by 10 soil rectangle.");
-        var layout = new GreenhouseLayout(left, top);
-        if (requiredStamp != null && requiredStamp != layout.Stamp)
+        // A save kept on an older layout (expansion switched off) is rebuilt with exactly that layout.
+        var layout = requiredStamp != null ? GreenhouseLayout.Parse(requiredStamp) : new GreenhouseLayout(left, top);
+        if (layout.SoilX != left || layout.SoilY != top)
             throw new InvalidOperationException("Cannot restore the saved greenhouse onto a different base layout; nothing changed.");
         var layers = map.Layers.ToArray();
         if (layers.Any(l => l.LayerWidth != width || l.LayerHeight != height))
@@ -68,14 +69,14 @@ internal static class GreenhouseMap
         // stretched with its own edges, so the old right/bottom soil edge no longer leaves a seam in the middle.
         // The two strips just before the cut continue the rhythm on both sides of the inserted band.
         (int A, int B) columns = (layout.CutX - 2, layout.CutX - 1), rows = (layout.CutY - 2, layout.CutY - 1);
-        int VisualX(int x) => x < layout.CutX || x >= layout.CutX + GreenhouseLayout.AddedWidth ? layout.SourceX(x, fillColumn) : (x - layout.CutX) % 2 == 0 ? columns.A : columns.B;
-        int VisualY(int y) => y < layout.CutY || y >= layout.CutY + GreenhouseLayout.AddedHeight ? layout.SourceY(y, fillRow) : (y - layout.CutY) % 2 == 0 ? rows.A : rows.B;
+        int VisualX(int x) => x < layout.CutX || x >= layout.CutX + layout.AddedWidth ? layout.SourceX(x, fillColumn) : (x - layout.CutX) % 2 == 0 ? columns.A : columns.B;
+        int VisualY(int y) => y < layout.CutY || y >= layout.CutY + layout.AddedHeight ? layout.SourceY(y, fillRow) : (y - layout.CutY) % 2 == 0 ? rows.A : rows.B;
         (int X, int Y)? SoilSource(int x, int y)
         {
             int rx = x - layout.SoilX, ry = y - layout.SoilY;
-            if (rx < 0 || ry < 0 || rx >= 12 + GreenhouseLayout.AddedWidth || ry >= 10 + GreenhouseLayout.AddedHeight) return null;
-            int sx = rx == 0 ? 0 : rx == 12 + GreenhouseLayout.AddedWidth - 1 ? 11 : 1 + (rx - 1) % 10;
-            int sy = ry == 0 ? 0 : ry == 10 + GreenhouseLayout.AddedHeight - 1 ? 9 : 1 + (ry - 1) % 8;
+            if (rx < 0 || ry < 0 || rx >= layout.BedWidth || ry >= layout.BedHeight) return null;
+            int sx = rx == 0 ? 0 : rx == layout.BedWidth - 1 ? 11 : 1 + (rx - 1) % 10;
+            int sy = ry == 0 ? 0 : ry == layout.BedHeight - 1 ? 9 : 1 + (ry - 1) % 8;
             return (layout.SoilX + sx, layout.SoilY + sy);
         }
         var properties = map.Properties.ToDictionary(p => p.Key, p => p.Value);
@@ -95,7 +96,7 @@ internal static class GreenhouseMap
         foreach (Layer old in layers)
         {
             var layer = new Layer(old.Id, map,
-                new Size(width + GreenhouseLayout.AddedWidth, height + GreenhouseLayout.AddedHeight), old.TileSize)
+                new Size(width + layout.AddedWidth, height + layout.AddedHeight), old.TileSize)
             { Visible = old.Visible, Description = old.Description };
             foreach (var p in old.Properties) layer.Properties[p.Key] = p.Value;
             for (int y = 0; y < layer.LayerHeight; y++)
@@ -128,9 +129,9 @@ internal static class GreenhouseMap
         for (int y = 0; y < expandedBack.LayerHeight; y++)
             for (int x = 0; x < expandedBack.LayerWidth; x++)
                 if (Property(expandedBack.Tiles[x, y], "Diggable") is not null) count++;
-        if (count != 480) throw new InvalidOperationException($"Expanded map has {count} tillable tiles instead of 480.");
-        for (int y = top; y < top + 20; y++)
-            for (int x = left; x < left + 24; x++)
+        if (count != layout.Tiles) throw new InvalidOperationException($"Expanded map has {count} tillable tiles instead of {layout.Tiles}.");
+        for (int y = top; y < top + layout.BedHeight; y++)
+            for (int x = left; x < left + layout.BedWidth; x++)
                 if (Property(expandedBack.Tiles[x, y], "Diggable") is null
                     || (expandedBuildings.Tiles[x, y] is not null && Property(expandedBuildings.Tiles[x, y], "Passable") is null))
                     throw new InvalidOperationException("Expanded planting bed contains a blocked tile.");

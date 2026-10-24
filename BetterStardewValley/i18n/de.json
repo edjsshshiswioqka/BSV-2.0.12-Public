@@ -507,7 +507,7 @@
   "config.page.other": "Weitere Systeme",
   "config.page.maps": "Gewächshaus & Keller",
   "config.maps-note": "Kartenänderungen gelten ab dem nächsten Laden eines Spielstands. Ein Spielstand, der BSVs erweitertes Gewächshaus oder den erweiterten Keller schon nutzt, behält ihn (samt allem darin) auch wenn ausgeschaltet; zum Zurückkehren eine Sicherung von vor der Erweiterung nutzen. Ausschalten, wenn eine andere Mod die Gewächshaus- oder Kellerkarte ersetzt.",
-  "config.greenhouse-expansion.help": "Host-Einstellung. 24 x 20 = 480 Pflanzfelder. Aus: neue und nicht erweiterte Spielstände behalten die Originalkarte (oder die einer anderen Mod).",
+  "config.greenhouse-expansion.help": "Host-Einstellung. 35 x 20 = 700 Pflanzfelder. Aus: neue und nicht erweiterte Spielstände behalten die Originalkarte (oder die einer anderen Mod).",
   "config.cellar-expansion.help": "Host-Einstellung. Verdoppelt den Kellerboden. Aus: neue und nicht erweiterte Spielstände behalten die Originalkarte (oder die einer anderen Mod).",
   "config.cellar-appearance.help": "Host-Einstellung. Variiert den Boden des von BSV hinzugefügten Kellerbereichs, damit er sich nicht wiederholt. Nur optisch.",
   "config.intro2": "Gilt nach dem Speichern. Zurücksetzen ändert nur Einstellungen; Maschinen- und Pflanzenzustände bleiben erhalten.",

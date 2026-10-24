@@ -48,7 +48,7 @@ internal sealed class GreenhouseFeature
             try
             {
                 GreenhouseMap.Expand(asset.AsMap().Data, enabled() ? null : retainedStamp);
-                monitor.Log("BSV greenhouse: 24 x 20 = 480 planting tiles.", LogLevel.Trace);
+                monitor.Log("BSV greenhouse map expanded.", LogLevel.Trace);
             }
             catch (MapConflictException ex) when (enabled())
             {
@@ -112,15 +112,26 @@ internal sealed class GreenhouseFeature
             var layout = GreenhouseLayout.Parse(stamp.ToString());
             if (location.modData.TryGetValue(GreenhouseMap.LayoutKey, out string previous))
             {
-                if (previous != layout.Stamp)
+                if (previous == layout.Stamp) return;
+                // A save expanded by an older BSV (24 x 20): widen it in place. Everything inside the old bed keeps
+                // its tile; the right wall and anything beyond it moves out with the wall.
+                var older = GreenhouseLayout.Parse(previous);
+                if (!layout.Grows(older))
                     throw new InvalidOperationException("The greenhouse base layout changed after migration. Restore the previous map setup.");
+                string? before = GreenhouseBackup.Create(Constants.CurrentSavePath, backupRoot);
+                if (before is not null) monitor.Log("BSV saved a pre-upgrade greenhouse backup to: " + before, LogLevel.Debug);
+                Migrate(location, t => new(layout.UpgradeX(older, (int)t.X), layout.UpgradeY(older, (int)t.Y)),
+                    p => new(p.X < (older.CutX + older.AddedWidth) * 64 ? p.X : p.X + (layout.AddedWidth - older.AddedWidth) * 64,
+                        p.Y < (older.CutY + older.AddedHeight) * 64 ? p.Y : p.Y + (layout.AddedHeight - older.AddedHeight) * 64));
+                location.modData[GreenhouseMap.LayoutKey] = layout.Stamp;
+                monitor.Log($"BSV greenhouse upgraded from {older.Tiles} to {layout.Tiles} planting tiles ({layout.BedWidth} x {layout.BedHeight}). Crops kept their positions; the right wall and what stood beyond it moved out.", LogLevel.Debug);
                 return;
             }
             string? backup = GreenhouseBackup.Create(Constants.CurrentSavePath, backupRoot);
             if (backup is not null) monitor.Log("BSV saved a pre-expansion backup to: " + backup, LogLevel.Debug);
-            Migrate(location, layout);
+            Migrate(location, t => Move(t, layout), p => MovePixels(p, layout));
             location.modData[GreenhouseMap.LayoutKey] = layout.Stamp;
-            monitor.Log("BSV greenhouse expanded to 480 planting tiles. Existing crops kept their positions; right/bottom perimeter items moved with the walls.", LogLevel.Debug);
+            monitor.Log($"BSV greenhouse expanded to {layout.Tiles} planting tiles ({layout.BedWidth} x {layout.BedHeight}). Existing crops kept their positions; right/bottom perimeter items moved with the walls.", LogLevel.Debug);
         }
         catch (Exception ex)
         {
@@ -137,7 +148,7 @@ internal sealed class GreenhouseFeature
     private static Vector2 MovePixels(Vector2 position, GreenhouseLayout layout) =>
         new(layout.MovePixelX(position.X), layout.MovePixelY(position.Y));
 
-    private static void Migrate(GameLocation location, GreenhouseLayout layout)
+    private static void Migrate(GameLocation location, Func<Vector2, Vector2> Move, Func<Vector2, Vector2> MovePixels)
     {
         // Move saved instances instead of reconstructing items or crops. This preserves
         // contents, fruit, fertilizer, quality, machine timers, and other mods' data.
@@ -152,27 +163,27 @@ internal sealed class GreenhouseFeature
         try
         {
             foreach (var pair in objects)
-                if (Move(pair.Key, layout) != pair.Key) location.objects.Remove(pair.Key);
+                if (Move(pair.Key) != pair.Key) location.objects.Remove(pair.Key);
             foreach (var pair in objects)
             {
-                Vector2 next = Move(pair.Key, layout);
+                Vector2 next = Move(pair.Key);
                 if (next == pair.Key) continue;
                 location.objects.Add(next, pair.Value);
                 pair.Value.TileLocation = next;
                 if (pair.Value is IndoorPot pot) pot.hoeDirt.Value.OnAdded(location, next);
             }
             foreach (var pair in terrain)
-                if (Move(pair.Key, layout) != pair.Key) location.terrainFeatures.Remove(pair.Key);
+                if (Move(pair.Key) != pair.Key) location.terrainFeatures.Remove(pair.Key);
             foreach (var pair in terrain)
             {
-                Vector2 next = Move(pair.Key, layout);
+                Vector2 next = Move(pair.Key);
                 if (next != pair.Key) location.terrainFeatures.Add(next, pair.Value);
             }
-            foreach (var pair in furniture) pair.Item.InitializeAtTile(Move(pair.Tile, layout));
-            foreach (var pair in large) pair.Item.Tile = Move(pair.Tile, layout);
-            foreach (var pair in clumps) pair.Item.Tile = Move(pair.Tile, layout);
-            foreach (var pair in characters) pair.Item.Position = MovePixels(pair.Position, layout);
-            foreach (var pair in farmers) pair.Item.Position = MovePixels(pair.Position, layout);
+            foreach (var pair in furniture) pair.Item.InitializeAtTile(Move(pair.Tile));
+            foreach (var pair in large) pair.Item.Tile = Move(pair.Tile);
+            foreach (var pair in clumps) pair.Item.Tile = Move(pair.Tile);
+            foreach (var pair in characters) pair.Item.Position = MovePixels(pair.Position);
+            foreach (var pair in farmers) pair.Item.Position = MovePixels(pair.Position);
         }
         catch
         {

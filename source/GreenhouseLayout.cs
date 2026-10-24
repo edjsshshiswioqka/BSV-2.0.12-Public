@@ -3,20 +3,34 @@ using System.Globalization;
 
 namespace BetterStardewValley;
 
+/// <summary>
+/// Where BSV widens the native 12 x 10 greenhouse bed. Columns are inserted right of the native bed and rows below it,
+/// so every native and planted tile left/above the cut keeps its coordinates.
+/// v1 (2.0.12): +12 x +10 = 24 x 20 (480 tiles). v2: +23 x +10 = 35 x 20 (700 tiles), sized so quality (3 x 3),
+/// iridium (5 x 5) and iridium + pressure nozzle (7 x 7) sprinklers all tile the bed in a regular grid.
+/// </summary>
 internal sealed class GreenhouseLayout
 {
-    internal const int AddedWidth = 12;
-    internal const int AddedHeight = 10;
+    internal const int BaseWidth = 12, BaseHeight = 10;
+    internal const int CurrentAddedWidth = 23, CurrentAddedHeight = 10;
     internal int SoilX { get; }
     internal int SoilY { get; }
-    internal int CutX => SoilX + AddedWidth;
-    internal int CutY => SoilY + AddedHeight;
-    internal string Stamp => $"v1:{SoilX},{SoilY},12,10";
+    internal int AddedWidth { get; }
+    internal int AddedHeight { get; }
+    internal int Version => AddedWidth == 12 && AddedHeight == 10 ? 1 : 2;
+    internal int BedWidth => BaseWidth + AddedWidth;
+    internal int BedHeight => BaseHeight + AddedHeight;
+    internal int Tiles => BedWidth * BedHeight;
+    internal int CutX => SoilX + BaseWidth;
+    internal int CutY => SoilY + BaseHeight;
+    internal string Stamp => $"v{Version}:{SoilX},{SoilY},{AddedWidth},{AddedHeight}";
 
-    internal GreenhouseLayout(int soilX, int soilY)
+    internal GreenhouseLayout(int soilX, int soilY, int addedWidth = CurrentAddedWidth, int addedHeight = CurrentAddedHeight)
     {
         SoilX = soilX;
         SoilY = soilY;
+        AddedWidth = addedWidth;
+        AddedHeight = addedHeight;
     }
 
     internal int MoveX(int x) => x < CutX ? x : x + AddedWidth;
@@ -32,15 +46,22 @@ internal sealed class GreenhouseLayout
     internal int SourceY(int y, int fillRow) =>
         y < CutY ? y : y < CutY + AddedHeight ? fillRow : y - AddedHeight;
 
+    /// <summary>Same base map, larger insert: the extra columns/rows are added after the older insert.</summary>
+    internal bool Grows(GreenhouseLayout older) => older.SoilX == SoilX && older.SoilY == SoilY
+        && AddedWidth >= older.AddedWidth && AddedHeight >= older.AddedHeight && (AddedWidth, AddedHeight) != (older.AddedWidth, older.AddedHeight);
+    /// <summary>Moves a tile of a save expanded with <paramref name="older"/> into this layout.</summary>
+    internal int UpgradeX(GreenhouseLayout older, int x) => x < older.CutX + older.AddedWidth ? x : x + AddedWidth - older.AddedWidth;
+    internal int UpgradeY(GreenhouseLayout older, int y) => y < older.CutY + older.AddedHeight ? y : y + AddedHeight - older.AddedHeight;
+
     internal static GreenhouseLayout Parse(string value)
     {
-        if (!value.StartsWith("v1:", StringComparison.Ordinal))
-            throw new InvalidOperationException("Unknown greenhouse layout version.");
-        string[] parts = value[3..].Split(',');
-        if (parts.Length != 4 || parts[2] != "12" || parts[3] != "10")
-            throw new InvalidOperationException("Unsupported greenhouse layout dimensions.");
-        return new GreenhouseLayout(int.Parse(parts[0], CultureInfo.InvariantCulture),
-            int.Parse(parts[1], CultureInfo.InvariantCulture));
+        string[] parts = value.Length > 3 && value[0] == 'v' && value[2] == ':' ? value[3..].Split(',') : Array.Empty<string>();
+        if (parts.Length != 4) throw new InvalidOperationException("Unknown greenhouse layout version.");
+        var layout = new GreenhouseLayout(int.Parse(parts[0], CultureInfo.InvariantCulture), int.Parse(parts[1], CultureInfo.InvariantCulture),
+            int.Parse(parts[2], CultureInfo.InvariantCulture), int.Parse(parts[3], CultureInfo.InvariantCulture));
+        bool known = (value[1], layout.AddedWidth, layout.AddedHeight) is ('1', 12, 10) or ('2', CurrentAddedWidth, CurrentAddedHeight);
+        if (!known) throw new InvalidOperationException("Unsupported greenhouse layout dimensions.");
+        return layout;
     }
 
     // Only source coordinates move; destinations in other locations stay unchanged.

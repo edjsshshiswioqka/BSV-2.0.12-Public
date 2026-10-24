@@ -121,7 +121,7 @@ public sealed partial class ModEntry : Mod
                 postfix: new HarmonyMethod(typeof(ModEntry), nameof(AfterHarvest)) { priority = Priority.Last },
                 transpiler: new HarmonyMethod(typeof(ModEntry), nameof(CaptureHarvestOutputs)),
                 finalizer: new HarmonyMethod(typeof(ModEntry), nameof(FinishHarvestScope)));
-            Monitor.Log($"BSV {ModManifest.Version} loaded. Greenhouse: 480 planting tiles. Harvest seed bonus: {(Config.EnableHarvestSeeds ? Config.SeedChance.ToString("P0") : "disabled")}; 1 seed per winning harvest.", LogLevel.Debug);
+            Monitor.Log($"BSV {ModManifest.Version} loaded. Greenhouse: 35 x 20 = 700 planting tiles. Harvest seed bonus: {(Config.EnableHarvestSeeds ? Config.SeedChance.ToString("P0") : "disabled")}; 1 seed per winning harvest.", LogLevel.Debug);
         }
         catch (Exception ex)
         {

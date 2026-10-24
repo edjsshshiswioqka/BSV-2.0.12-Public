@@ -54,18 +54,18 @@ internal static class Program
         GreenhouseMap.VisualPass = true; var fixedMap = Load(dir, "Greenhouse"); var layout2 = GreenhouseMap.Expand(fixedMap);
         Check(soil == 120, "real greenhouse has 120 soil tiles");
         Check(layout.Stamp == layout2.Stamp, "layout stamp unchanged (existing saves keep their coordinates)");
-        Check(Count(fixedMap, "Diggable") == 480, "real greenhouse expands to 480 soil tiles");
+        Check(Count(fixedMap, "Diggable") == 700, "real greenhouse expands to 700 soil tiles (35 x 20)");
         SameBehaviour(legacy, fixedMap, "greenhouse");
         var back0 = original.GetLayer("Back"); var back = fixedMap.GetLayer("Back");
         int midY = layout.SoilY + 5, edge = back0.Tiles[layout.SoilX + 11, midY].TileIndex, inner = back0.Tiles[layout.SoilX + 5, midY].TileIndex;
         if (edge != inner)
         {
             Check(back.Tiles[layout.SoilX + 11, midY].TileIndex != edge, "old right soil edge no longer cuts through the middle of the field");
-            Check(back.Tiles[layout.SoilX + 23, midY].TileIndex == edge, "right soil edge is drawn on the new outer column");
+            Check(back.Tiles[layout.SoilX + layout.BedWidth - 1, midY].TileIndex == edge, "right soil edge is drawn on the new outer column");
         }
         var b0 = original.GetLayer("Buildings"); var b1 = fixedMap.GetLayer("Buildings");
         int windowRow = Enumerable.Range(1, layout.SoilY - 1).First(y => b0.Tiles[layout.CutX - 1, y] != null && b0.Tiles[layout.CutX - 2, y] != null && b0.Tiles[layout.CutX - 1, y].TileIndex != b0.Tiles[layout.CutX - 2, y].TileIndex);
-        Check(Enumerable.Range(layout.CutX, 11).All(x => b1.Tiles[x, windowRow].TileIndex != b1.Tiles[x + 1, windowRow].TileIndex), "window frames keep their alternating native rhythm across the added wall");
+        Check(Enumerable.Range(layout.CutX, layout.AddedWidth - 1).All(x => b1.Tiles[x, windowRow].TileIndex != b1.Tiles[x + 1, windowRow].TileIndex), "window frames keep their alternating native rhythm across the added wall");
 
         // Cellar.
         var cellar0 = Load(dir, "Cellar"); var floors0 = CellarMap.FloorTiles(cellar0);

@@ -507,7 +507,7 @@
   "config.page.other": "Otros sistemas",
   "config.page.maps": "Invernadero y bodega",
   "config.maps-note": "Los cambios de mapa se aplican la próxima vez que se cargue una partida. Una partida que ya usa el invernadero o la bodega ampliados de BSV los conserva (con todo lo que contienen) aunque se desactive; para volver atrás, usa una copia de seguridad de antes de la ampliación. Desactívalo si otro mod reemplaza el mapa del invernadero o de la bodega.",
-  "config.greenhouse-expansion.help": "Ajuste del anfitrión. 24 x 20 = 480 casillas de cultivo. Desactivado: las partidas nuevas y no ampliadas mantienen el mapa original (o el de otro mod).",
+  "config.greenhouse-expansion.help": "Ajuste del anfitrión. 35 x 20 = 700 casillas de cultivo. Desactivado: las partidas nuevas y no ampliadas mantienen el mapa original (o el de otro mod).",
   "config.cellar-expansion.help": "Ajuste del anfitrión. Duplica el suelo de la bodega. Desactivado: las partidas nuevas y no ampliadas mantienen el mapa original (o el de otro mod).",
   "config.cellar-appearance.help": "Ajuste del anfitrión. Varía el suelo de la zona de bodega añadida por BSV para que no se repita. Solo visual.",
   "config.intro2": "Se aplica al guardar. Restablecer solo cambia la configuración y conserva máquinas y cultivos.",

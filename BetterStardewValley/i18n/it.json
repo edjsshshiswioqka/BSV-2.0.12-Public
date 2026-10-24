@@ -507,7 +507,7 @@
   "config.page.other": "Altri sistemi",
   "config.page.maps": "Serra e cantina",
   "config.maps-note": "Le modifiche alle mappe si applicano al prossimo caricamento di un salvataggio. Un salvataggio che usa già la serra o la cantina ampliate di BSV le mantiene (con tutto il contenuto) anche se disattivate; per tornare indietro usa un backup precedente all'ampliamento. Disattiva se un'altra mod sostituisce la mappa della serra o della cantina.",
-  "config.greenhouse-expansion.help": "Impostazione dell'host. 24 x 20 = 480 caselle coltivabili. Disattivato: i salvataggi nuovi e non ampliati mantengono la mappa originale (o quella di un'altra mod).",
+  "config.greenhouse-expansion.help": "Impostazione dell'host. 35 x 20 = 700 caselle coltivabili. Disattivato: i salvataggi nuovi e non ampliati mantengono la mappa originale (o quella di un'altra mod).",
   "config.cellar-expansion.help": "Impostazione dell'host. Raddoppia il pavimento della cantina. Disattivato: i salvataggi nuovi e non ampliati mantengono la mappa originale (o quella di un'altra mod).",
   "config.cellar-appearance.help": "Impostazione dell'host. Varia il pavimento dell'area di cantina aggiunta da BSV per evitare ripetizioni. Solo estetico.",
   "config.intro2": "Le modifiche si applicano al salvataggio. Ripristina cambia solo la configurazione, mantenendo macchine e colture.",

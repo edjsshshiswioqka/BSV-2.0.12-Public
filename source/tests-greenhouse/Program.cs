@@ -72,16 +72,16 @@ internal static class Program
         Map map = Fixture();
         Check(CountProperty(map, "Back", "Diggable") == 120, "fixture has 120 starting soil tiles");
         var layout = GreenhouseMap.Expand(map);
-        Check(CountProperty(map, "Back", "Diggable") == 480, "actual xTile expansion yields exactly 480 soil tiles");
-        Check(map.Layers.All(l => l.LayerWidth == 32 && l.LayerHeight == 36), "all map layers resized together");
+        Check(CountProperty(map, "Back", "Diggable") == 700, "actual xTile expansion yields exactly 700 soil tiles (35 x 20)");
+        Check(map.Layers.All(l => l.LayerWidth == 43 && l.LayerHeight == 36), "all map layers resized together");
         Check(map.Properties["Warp"].ToString() == "10 34 Farm 28 16", "exit moves down; external destination stays unchanged");
-        Check(map.Properties["Light"].ToString() == "30 31 4", "perimeter lamp follows both expanded axes");
-        Check(map.Properties["DayTiles"].ToString() == "Front 30 5 4"
-            && map.Properties["NightTiles"].ToString() == "Front 30 5 5", "day/night tile changes follow the window");
+        Check(map.Properties["Light"].ToString() == "41 31 4", "perimeter lamp follows both expanded axes");
+        Check(map.Properties["DayTiles"].ToString() == "Front 41 5 4"
+            && map.Properties["NightTiles"].ToString() == "Front 41 5 5", "day/night tile changes follow the window");
         Check(CountProperty(map, "Back", "Water") == 1 && CountProperty(map, "Buildings", "WaterSource") == 1,
             $"water trough remains single and interactive ({CountProperty(map, "Back", "Water")}/{CountProperty(map, "Buildings", "WaterSource")})");
-        Check(map.GetLayer("Front").Tiles[30, 5] is AnimatedTile, "animated tile survives expansion");
-        Check(map.GetLayer("Back").Tiles[29, 30].Properties["Sentinel"].ToString() == "preserved", "original tile metadata moves intact");
+        Check(map.GetLayer("Front").Tiles[41, 5] is AnimatedTile, "animated tile survives expansion");
+        Check(map.GetLayer("Back").Tiles[40, 30].Properties["Sentinel"].ToString() == "preserved", "original tile metadata moves intact");
         Check(map.Properties["AmbientLight"].ToString() == "95 95 95", "non-coordinate map properties stay intact");
         Check(map.GetLayer("Buildings").Tiles[10, 33] is null, "arrival tile north of exit is open");
 
@@ -91,14 +91,14 @@ internal static class Program
         while (queue.Count > 0)
         {
             var p = queue.Dequeue();
-            if (p.X < 0 || p.Y < 0 || p.X >= 32 || p.Y >= 36 || visited.Contains(p)) continue;
+            if (p.X < 0 || p.Y < 0 || p.X >= 43 || p.Y >= 36 || visited.Contains(p)) continue;
             if (map.GetLayer("Buildings").Tiles[p.X, p.Y] is not null) continue;
             visited.Add(p);
             queue.Enqueue((p.X - 1, p.Y)); queue.Enqueue((p.X + 1, p.Y));
             queue.Enqueue((p.X, p.Y - 1)); queue.Enqueue((p.X, p.Y + 1));
         }
-        Check(Enumerable.Range(4, 24).All(x => Enumerable.Range(7, 20).All(y => visited.Contains((x, y)))),
-            "all 480 planting tiles reachable from the entrance");
+        Check(Enumerable.Range(4, 35).All(x => Enumerable.Range(7, 20).All(y => visited.Contains((x, y)))),
+            "all 700 planting tiles reachable from the entrance");
 
         var sameLayout = GreenhouseMap.Expand(map);
         var restored = Fixture();
@@ -110,13 +110,13 @@ internal static class Program
         mismatch = false;
         try { GreenhouseMap.Expand(map, "foreign-layout"); } catch (InvalidOperationException) { mismatch = true; }
         Check(mismatch && GreenhouseMap.Expand(map).Stamp == layout.Stamp, "already expanded mismatched stamp is refused without changing the map");
-        Check(sameLayout.Stamp == layout.Stamp && map.GetLayer("Back").LayerWidth == 32
-            && CountProperty(map, "Back", "Diggable") == 480, "same map cannot expand twice");
+        Check(sameLayout.Stamp == layout.Stamp && map.GetLayer("Back").LayerWidth == 43
+            && CountProperty(map, "Back", "Diggable") == 700, "same map cannot expand twice");
         Check(GreenhouseLayout.Parse(layout.Stamp).CutX == 16, "saved migration stamp round-trips");
         Check(Enumerable.Range(4, 12).All(x => layout.MoveX(x) == x)
             && Enumerable.Range(7, 10).All(y => layout.MoveY(y) == y), "every original crop coordinate stays unchanged");
-        Check(layout.MoveX(16) == 28 && layout.MoveY(17) == 27, "right/bottom perimeter moves outward");
-        Check(layout.MovePixelX(16 * 64 + 13.5f) == 28 * 64 + 13.5f, "character movement preserves within-tile offset");
+        Check(layout.MoveX(16) == 39 && layout.MoveY(17) == 27, "right/bottom perimeter moves outward");
+        Check(layout.MovePixelX(16 * 64 + 13.5f) == 39 * 64 + 13.5f, "character movement preserves within-tile offset");
 
         var identities = new Dictionary<(int X, int Y), object>();
         for (int y = 0; y < 26; y++)
@@ -137,13 +137,21 @@ internal static class Program
         try { GreenhouseMap.Expand(malformed); } catch (InvalidOperationException) { refused = true; }
         Check(refused && malformed.GetLayer("Back").LayerWidth == 20, "malformed warp cannot partially expand a map");
 
+        // A 2.0.12 save (v1, 24 x 20) is rebuilt exactly while the expansion is switched off, and upgrades in place.
+        var v1 = Fixture();
+        var v1Layout = GreenhouseMap.Expand(v1, "v1:4,7,12,10");
+        Check(v1Layout.Stamp == "v1:4,7,12,10" && CountProperty(v1, "Back", "Diggable") == 480 && v1.GetLayer("Back").LayerWidth == 32,
+            "older v1 layout is restored exactly (480 tiles)");
+        Check(Enumerable.Range(0, 28).All(x => layout.UpgradeX(v1Layout, x) == x) && layout.UpgradeX(v1Layout, 28) == 39
+            && Enumerable.Range(0, 40).All(y => layout.UpgradeY(v1Layout, y) == y) && layout.Grows(v1Layout),
+            "v1 -> v2 upgrade keeps every old bed tile; the right wall moves 11 tiles out");
         Map instanceSoil = Fixture();
         var sheet = instanceSoil.TileSheets[0];
         sheet.TileIndexProperties[1].Remove("Diggable");
         for (int y = 7; y < 17; y++)
             for (int x = 4; x < 16; x++) instanceSoil.GetLayer("Back").Tiles[x,y].Properties["Diggable"] = "T";
         GreenhouseMap.Expand(instanceSoil);
-        Check(CountProperty(instanceSoil, "Back", "Diggable") == 480, "per-instance Diggable properties survive cloning too");
+        Check(CountProperty(instanceSoil, "Back", "Diggable") == 700, "per-instance Diggable properties survive cloning too");
         instanceSoil.GetLayer("Back").Tiles[16,7].Properties["TestUnique"] = "T";
         Check(GreenhouseMap.Property(instanceSoil.GetLayer("Back").Tiles[5,7], "TestUnique") is null,
             "new tiles have independent property collections");

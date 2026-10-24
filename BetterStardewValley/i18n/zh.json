@@ -507,7 +507,7 @@
   "config.page.other": "其他系统",
   "config.page.maps": "温室与地窖",
   "config.maps-note": "地图改动在下次读取存档时生效。已经用上 BSV 扩建温室或地窖的存档，即使关闭也会保留扩建（以及里面的所有物品）；想恢复原样，请使用扩建前的存档备份。如果用其他 Mod 替换了温室或地窖地图，请关闭对应选项。",
-  "config.greenhouse-expansion.help": "房主设置。24 × 20 = 480 格种植区。关闭后：新存档和未扩建的存档保持原版温室地图（或其他 Mod 的地图）。",
+  "config.greenhouse-expansion.help": "房主设置。35 × 20 = 700 格种植区。关闭后：新存档和未扩建的存档保持原版温室地图（或其他 Mod 的地图）。",
   "config.cellar-expansion.help": "房主设置。地窖地面翻倍。关闭后：新存档和未扩建的存档保持原版地窖地图（或其他 Mod 的地图）。",
   "config.cellar-appearance.help": "房主设置。让 BSV 新增的地窖区域地面纹理富于变化，不再重复。仅影响外观。",
   "config.intro2": "保存后生效。重置只修改配置，保留机器和作物状态。",

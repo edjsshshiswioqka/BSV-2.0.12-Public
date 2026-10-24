@@ -507,7 +507,7 @@
   "config.page.other": "Diğer Sistemler",
   "config.page.maps": "Sera ve mahzen",
   "config.maps-note": "Harita değişiklikleri bir kayıt bir sonraki yüklendiğinde geçerli olur. BSV'nin genişletilmiş serasını veya mahzenini zaten kullanan bir kayıt, kapatılsa bile bunu (ve içindeki her şeyi) korur; geri dönmek için genişletmeden önceki bir yedeği kullanın. Başka bir mod sera veya mahzen haritasını değiştiriyorsa kapatın.",
-  "config.greenhouse-expansion.help": "Ev sahibi ayarı. 24 x 20 = 480 ekim karesi. Kapalı: yeni ve genişletilmemiş kayıtlar özgün haritayı (veya başka bir modunkini) korur.",
+  "config.greenhouse-expansion.help": "Ev sahibi ayarı. 35 x 20 = 700 ekim karesi. Kapalı: yeni ve genişletilmemiş kayıtlar özgün haritayı (veya başka bir modunkini) korur.",
   "config.cellar-expansion.help": "Ev sahibi ayarı. Mahzen zeminini ikiye katlar. Kapalı: yeni ve genişletilmemiş kayıtlar özgün haritayı (veya başka bir modunkini) korur.",
   "config.cellar-appearance.help": "Ev sahibi ayarı. BSV'nin eklediği mahzen bölümünün zeminini tekrar etmeyecek şekilde çeşitlendirir. Yalnızca görsel.",
   "config.intro2": "Kaydettikten sonra uygulanır. Sıfırlama yalnızca ayarları değiştirir; makineler ve ekinler korunur.",

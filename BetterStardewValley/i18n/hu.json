@@ -507,7 +507,7 @@
   "config.page.other": "Egyéb rendszerek",
   "config.page.maps": "Üvegház és pince",
   "config.maps-note": "A térképváltozások a mentés következő betöltésekor lépnek életbe. Az a mentés, amely már a BSV bővített üvegházát vagy pincéjét használja, kikapcsolva is megtartja (mindennel együtt, ami benne van); a visszaálláshoz használj a bővítés előtti biztonsági mentést. Kapcsold ki, ha egy másik mod lecseréli az üvegház vagy a pince térképét.",
-  "config.greenhouse-expansion.help": "Házigazda-beállítás. 24 x 20 = 480 ültetőmező. Ki: az új és nem bővített mentések megtartják az eredeti térképet (vagy egy másik modét).",
+  "config.greenhouse-expansion.help": "Házigazda-beállítás. 35 x 20 = 700 ültetőmező. Ki: az új és nem bővített mentések megtartják az eredeti térképet (vagy egy másik modét).",
   "config.cellar-expansion.help": "Házigazda-beállítás. Megduplázza a pince padlóját. Ki: az új és nem bővített mentések megtartják az eredeti térképet (vagy egy másik modét).",
   "config.cellar-appearance.help": "Házigazda-beállítás. Változatossá teszi a BSV által hozzáadott pincerész padlóját, hogy ne ismétlődjön. Csak külső.",
   "config.intro2": "Mentés után érvényes. A visszaállítás csak a beállításokat módosítja, a gépek és növények állapotát megőrzi.",

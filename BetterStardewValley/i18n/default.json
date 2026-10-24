@@ -507,7 +507,7 @@
   "config.page.other": "Other Systems",
   "config.page.maps": "Greenhouse & Cellar",
   "config.maps-note": "Map changes apply the next time a save is loaded. A save that already uses BSV's expanded greenhouse or cellar keeps it (and everything placed in it) even when switched off; use a backup from before the expansion to go back. Turn these off if another mod replaces the greenhouse or cellar map.",
-  "config.greenhouse-expansion.help": "Host setting. 24 x 20 = 480 planting tiles. Off: new and unexpanded saves keep the original greenhouse map (or another mod's).",
+  "config.greenhouse-expansion.help": "Host setting. 35 x 20 = 700 planting tiles. Off: new and unexpanded saves keep the original greenhouse map (or another mod's).",
   "config.cellar-expansion.help": "Host setting. Doubles the cellar floor. Off: new and unexpanded saves keep the original cellar map (or another mod's).",
   "config.cellar-appearance.help": "Host setting. Varies the floor of BSV's added cellar area so it does not repeat. Purely visual.",
   "config.intro2": "Changes apply after saving. Reset changes configuration only; machine and crop state is retained.",
