@@ -141,21 +141,31 @@ internal sealed class FertilizerService
     {if(Ready){var s=Read(__instance);if(s.Dual)__result=Math.Max(__result,FertilizerRules.Quality(s.Quality));}}
     private static void SpeedBoost(HoeDirt __instance,ref float __result)
     {if(Ready){var s=Read(__instance);if(s.Dual)__result=Math.Max(__result,FertilizerRules.Speed(s.Speed) switch{1=>.1f,2=>.25f,3=>.33f,_=>0});}}
-    private static void Draw(HoeDirt __instance,SpriteBatch __0)
+    private static void Draw(HoeDirt __instance,SpriteBatch __1)
     {
-        try{DrawDual(__instance,__0);}catch(Exception ex){Instance?.Error(ex);}
+        try{DrawDual(__instance,__1);}catch(Exception ex){Instance?.Error(ex);}
     }
-    private static void DrawDual(HoeDirt __instance,SpriteBatch __0)
+    /// <summary>
+    /// The native soil already shows the first fertilizer's speckles. A second one adds its own native speckles on
+    /// the same tile, drawn exactly like the native overlay (cursor sheet, current texture replacements, no Begin/End).
+    /// </summary>
+    private static void DrawDual(HoeDirt __instance,SpriteBatch fertBatch)
     {
-        if(!Ready||!Read(__instance).Dual)return;
-        // Two separate small native item icons. Uses current texture replacements, no Begin/End.
-        var s=Read(__instance);var p=Game1.GlobalToLocal(Game1.viewport,__instance.Tile*64);
-        int n=0;
-        foreach(string id in new[]{s.Quality,s.Speed})
+        if(!Ready)return;var s=Read(__instance);
+        if(!s.Dual)return;
+        string second=s.Primary==s.Quality?s.Speed:s.Quality;
+        if(Overlay(second) is not {} rect)return;
+        var p=Game1.GlobalToLocal(Game1.viewport,__instance.Tile*64);
+        fertBatch.Draw(Game1.mouseCursors,p,rect,Color.White,0,Vector2.Zero,4f,SpriteEffects.None,1.95E-08f);
+    }
+    /// <summary>Native HoeDirt.GetFertilizerSourceRect cell for each fertilizer (Stardew 1.6.15).</summary>
+    internal static Rectangle? Overlay(string id)
+    {
+        int index=FertilizerRules.Id(id) switch
         {
-            var data=ItemRegistry.GetDataOrErrorItem(id);var rect=data.GetSourceRect();
-            __0.Draw(data.GetTexture(),p+new Vector2(2+n++*24,40),rect,Color.White,0,Vector2.Zero,20f/Math.Max(rect.Width,rect.Height),SpriteEffects.None,.0000003f);
-        }
+            "(O)368"=>0,"(O)369"=>1,"(O)919"=>2,"(O)370"=>3,"(O)371"=>4,"(O)920"=>5,"(O)465"=>6,"(O)466"=>7,"(O)918"=>8,_=>-1
+        };
+        return index<0?null:new Rectangle(173+index/3*16,462+index%3*16,16,16);
     }
     private void Hover(SpriteBatch b)
     {

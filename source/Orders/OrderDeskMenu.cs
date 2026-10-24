@@ -341,7 +341,15 @@ internal sealed class OrderDeskMenu : IClickableMenu
    Panel(b,UpRect,Scroll>0?Pale:Disabled);b.Draw(Game1.mouseCursors,new Vector2(UpRect.Center.X-22,UpRect.Y+2),new Rectangle(421,459,11,12),Color.White,0,Vector2.Zero,2.5f,SpriteEffects.None,.96f);
    Panel(b,DownRect,Scroll+Rows<rows.Count?Pale:Disabled);b.Draw(Game1.mouseCursors,new Vector2(DownRect.Center.X-14,DownRect.Y+2),new Rectangle(421,472,11,12),Color.White,0,Vector2.Zero,2.5f,SpriteEffects.None,.96f);
   }
-  string notice=Service.Notice.Value;string footer=ConfirmReject!=null?Tr("reject-question"):string.IsNullOrEmpty(notice)?Tr("desk-footer"):Service.Tr(notice);
+  string notice=Service.Notice.Value;
+  if(Tab==2&&ConfirmReject==null&&string.IsNullOrEmpty(notice))
+  {
+   // Completed tab: the income summary takes the footer (last night and this season, in gold).
+   var (last,season,_)=Service.Earnings();
+   Text(b,Tr("income-summary",new{last=Service.Number(last),season=Service.Number(season)}),Left.X+20,Left.Bottom-(rows.Count>Rows?104:62),LeftW-40,.9f,new Color(160,100,20),true);
+   return;
+  }
+  string footer=ConfirmReject!=null?Tr("reject-question"):string.IsNullOrEmpty(notice)?Tr("desk-footer"):Service.Tr(notice);
   int lines=0;foreach(var s in DisplayText.Wrap(footer,LeftW-40,t=>Game1.smallFont.MeasureString(t).X*.72f).Split('\n').Take(2))
    Text(b,s,Left.X+20,Left.Bottom-(rows.Count>Rows?104:62)+lines++*22,LeftW-40,.72f,Ink);
  }

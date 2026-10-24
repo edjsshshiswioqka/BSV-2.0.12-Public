@@ -11,7 +11,7 @@ internal sealed class OrdersService
 {
  internal static OrdersService Instance=null!;
  internal readonly IModHelper Helper;private readonly IMonitor Monitor;private readonly string ModId,Version;
- internal readonly PerScreen<string> Notice=new(()=>"");private readonly HashSet<string> Errors=new();private bool Suspended;
+ internal readonly PerScreen<string> Notice=new(()=>"");private readonly PerScreen<bool> IncomeShown=new(()=>true);private readonly HashSet<string> Errors=new();private bool Suspended;
  private readonly Func<IEnumerable<string>?> ItemExclusions;
  internal bool Enabled=>!Configuration.SharedPreferences.HasLocal||Configuration.SharedPreferences.Current.EnableOrdersSystem;
  internal OrdersService(IModHelper helper,IMonitor monitor,IManifest manifest,Func<IEnumerable<string>?>? itemExclusions = null)
@@ -21,7 +21,9 @@ internal sealed class OrdersService
   var h=new Harmony(ModId+".Orders");try{_=new OrderTerminal(helper,monitor,h);}catch{h.UnpatchAll(h.Id);throw;}
   helper.Events.GameLoop.UpdateTicked+=(_,e)=>{UpdateBoxLocks();if(e.IsMultipleOf(12))Tick();};
   helper.Events.GameLoop.SaveLoaded+=(_,_)=>Guard(Migrate);
-  helper.Events.GameLoop.DayStarted+=(_,_)=>Guard(DayStarted);
+  helper.Events.GameLoop.DayStarted+=(_,_)=>{Guard(DayStarted);IncomeShown.Value=false;};
+  // Order income is not on the native shipping summary: each farmer sees it as a HUD message once they can move.
+  helper.Events.GameLoop.UpdateTicked+=(_,e)=>{if(e.IsMultipleOf(30)&&!IncomeShown.Value&&Context.IsPlayerFree)Guard(ShowIncome);};
   helper.Events.GameLoop.DayEnding+=(_,_)=>Guard(Settle);
   helper.Events.GameLoop.ReturnedToTitle+=(_,_)=>{Errors.Clear();Notice.ResetAllScreens();Suspended=false;};
  }
@@ -256,6 +258,26 @@ internal sealed class OrdersService
   }
   OrderMarket.Trim(next);next.Revision++;string old=book.Save();steps.Add(new(()=>Write(next),()=>Write(MarketBook.Load(old))));
   AtomicChange.Execute(()=>IntegrationHost.CanMutate&&!Suspended&&team.useSeparateWallets.Value==separate,steps);
+ }
+ private void ShowIncome()
+ {
+  IncomeShown.Value=true;
+  var (last,_,count)=Earnings();if(last<=0)return;
+  var message=new HUDMessage(Tr("orders.income-hud",new{gold=Number(last),count}));
+  if(ItemRegistry.GetData("(O)GoldCoin") is {IsErrorItem:false})message.messageSubject=ItemRegistry.Create("(O)GoldCoin");
+  Game1.addHUDMessage(message);
+ }
+ /// <summary>This farmer's order income: last night's settlement (and how many orders it paid), and this season so far.
+ /// With a shared wallet everyone sees the farm's total, like the native shipping summary.</summary>
+ internal (int Last,int Season,int Count) Earnings()
+ {
+  var book=Read();long me=Game1.player.UniqueMultiplayerID;bool separate=book.SettlementSeparate;
+  int last=Income();
+  bool Mine(MarketOrder o)=>!separate||o.Actor==me;
+  int count=last>0?book.Completed.Count(o=>o.Completed==book.SettlementDay&&o.Gold>0&&Mine(o)):0;
+  int seasonStart=Game1.Date.TotalDays-(Game1.dayOfMonth-1);
+  int season=checked(book.Completed.Where(o=>o.Completed>=seasonStart&&Mine(o)).Sum(o=>Math.Max(0,o.Gold)));
+  return (last,season,count);
  }
  internal int Income()
  {
