@@ -81,6 +81,7 @@ internal sealed class WorldService
             o.modData[ModEntry.Tag+"AnchorX"]=((int)a.X).ToString(System.Globalization.CultureInfo.InvariantCulture);
             o.modData[ModEntry.Tag+"AnchorY"]=((int)a.Y).ToString(System.Globalization.CultureInfo.InvariantCulture);
             o.modData[ModEntry.Tag+"Facing"]=facing.ToString().ToLowerInvariant();
+            if(o is Chest fresh)Compat(fresh);
             if(o is Chest chest && machineState!=null)
             {
                 chest.modData[ProductionService.StateKey]=machineState;
@@ -213,9 +214,18 @@ internal sealed class WorldService
         foreach(var entry in Mod.Machines.All)
         {
             var c=entry.Key;var l=entry.Value;
+            Compat(c);
             if(Footprint(c).Any(p=>!TryAnchor(l,Vector(p),out var same) || !ReferenceEquals(same,c)))
                 Mod.Monitor.Log($"Damaged footprint in {l.NameOrUniqueName} at {c.TileLocation}; no unrelated tiles changed.",LogLevel.Warn);
         }
+    }
+    /// <summary>The machine's storage is not an ordinary chest: Automate must not push junk into it or pull its bait
+    /// and catches out, and Chests Anywhere must not open it remotely (it would skip the machine menu and its rules).</summary>
+    internal static void Compat(Chest c)
+    {
+        if(c.modData.GetValueOrDefault("Pathoschild.Automate/StoreItems")!="Disable")c.modData["Pathoschild.Automate/StoreItems"]="Disable";
+        if(c.modData.GetValueOrDefault("Pathoschild.Automate/TakeItems")!="Disable")c.modData["Pathoschild.Automate/TakeItems"]="Disable";
+        if(c.modData.GetValueOrDefault("Pathoschild.ChestsAnywhere/IsIgnored")!="true")c.modData["Pathoschild.ChestsAnywhere/IsIgnored"]="true";
     }
     // Read-only diagnostics at the real candidate anchor. Never starts a cycle or moves inventory.
     internal void Diagnose(Vector2 a)
