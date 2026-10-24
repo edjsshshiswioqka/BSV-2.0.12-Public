@@ -26,7 +26,7 @@ internal static class HdSprites
     private static bool Enabled,Rebind;
     internal static bool Initialized => Enabled;
     private static readonly (string Id,string File)[] Items={
-        // Grape Wine and Blood of Jesus now use their own vanilla-style 16x16 sprites (no HD replacement).
+        // Grape Wine and Ruby Reserve (id BloodOfJesus, kept for saves) now use their own vanilla-style 16x16 sprites (no HD replacement).
         (TeaAppleRules.Cup,"a_cup_of_green_tea"),(TeaAppleRules.Cake,"tea_cake"),(TeaAppleRules.GoldenApple,"golden_apple")};
     private static readonly HashSet<Texture2D> ItemSources=new();
     internal static void Install(IModHelper helper,IMonitor monitor,string id)

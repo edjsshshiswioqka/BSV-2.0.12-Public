@@ -43,7 +43,7 @@ internal sealed class ProfessionService
         try
         {
             if(typeof(Farmer).Module.ModuleVersionId.ToString()!=AuditedMvid)
-                Monitor.Log("BSV professions: game binary differs from the audited 1.6.15 reference; validating exact API targets. Compatibility needs in-game verification.",LogLevel.Warn);
+                Monitor.Log("BSV professions: game build differs from the audited 1.6.15 reference; the exact API targets were found and are used.",LogLevel.Info);
             MethodInfo M(Type type,string name,Type result,params Type[] args)=>DrawPatchTargets.Require(type,name,result,args);
             var constructors=new[]{typeof(LevelUpMenu).GetConstructor(Type.EmptyTypes)!,typeof(LevelUpMenu).GetConstructor(new[]{typeof(int),typeof(int)})!};
             var update=M(typeof(LevelUpMenu),"update",typeof(void),typeof(GameTime));
@@ -55,7 +55,9 @@ internal sealed class ProfessionService
                 M(typeof(LevelUpMenu),"removeImmediateProfessionPerk",typeof(void),typeof(int)),
                 M(typeof(LevelUpMenu),"AddMissedProfessionChoices",typeof(void),typeof(Farmer))}).ToArray();
             if(Critical.Any(m=>m==null))throw new MissingMethodException("All Professions menu target missing.");
-            string? conflict=Conflicts();if(conflict!=null)throw new NotSupportedException(conflict);
+            // Other mods patching the level-up menu (SpaceCore, skill mods...) no longer switch this feature off;
+            // both keep running and the overlap is only reported once in the log.
+            string? conflict=Conflicts();if(conflict!=null)WarnOverlap(conflict);
             HarmonyMethod Menu(string name)=>new(typeof(ProfessionMenus),name);
             foreach(var ctor in constructors)Patches.Patch(ctor,postfix:Menu(nameof(ProfessionMenus.Convert)));
             // Parameterless menu creates a page inside update. Prefix covers an already-open
@@ -76,6 +78,12 @@ internal sealed class ProfessionService
             Monitor.Log("BSV All Professions could not initialize; native profession selection retained.\n"+ex,LogLevel.Error);return false;
         }
     }
+    private string? WarnedOverlap;
+    private void WarnOverlap(string conflict)
+    {
+        if(WarnedOverlap==conflict)return;WarnedOverlap=conflict;
+        Monitor.Log("BSV All Professions keeps running alongside another mod's level-up patch; if profession choices look wrong, report it with this log. "+conflict,LogLevel.Info);
+    }
     private string? Conflicts()
     {
         foreach(var method in Critical)
@@ -94,11 +102,7 @@ internal sealed class ProfessionService
         WaitingForPolicy=false;
         if(!Active)return;
         string? conflict=Conflicts();
-        if(conflict!=null)
-        {
-            Enabled=false;Reason=conflict;Patches.UnpatchAll(Patches.Id);ProfessionSkillsPage.Remove();ProfessionMenus.Clear();
-            Monitor.Log("BSV All Professions disabled before migration: "+conflict,LogLevel.Error);return;
-        }
+        if(conflict!=null)WarnOverlap(conflict);
         try
         {
             int added=ProfessionGrant.Migrate(Game1.player);

@@ -56,7 +56,7 @@ internal static class WineData
             starter.Description = translate("grape-starter.description");
         Add(WineRules.GrapeWineId, "Farmhouse Special Grape Wine", "grape-wine", WineRules.GrapeWinePrice, grapeTexture);
         objects[WineRules.GrapeWineId].Edibility = WineRules.GrapeWineEdibility;   // native wine buffs (Tipsy) kept
-        Add(WineRules.BloodOfJesusId, "Blood of Jesus", "blood-of-jesus", WineRules.BloodOfJesusPrice, bloodTexture);
+        Add(WineRules.BloodOfJesusId, "Ruby Reserve", "blood-of-jesus", WineRules.BloodOfJesusPrice, bloodTexture);
         var blood = objects[WineRules.BloodOfJesusId];
         blood.Edibility = WineRules.BloodOfJesusEdibility;
         blood.Buffs = new() { new() { Id = WineRules.BloodOfJesusId, Duration = WineRules.BloodBuffMinutes,
