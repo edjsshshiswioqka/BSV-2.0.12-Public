@@ -118,12 +118,24 @@ internal static class InventoryScroll
     private static InventoryMenu? Under(int x, int y) => Grids().FirstOrDefault(m => For(m) != null && (Area(m).Contains(x, y) || Track(m).Contains(x, y)));
 
     // ---------------------------------------------------------------- input
+    private static int WheelAccumulated;
+    private static double LastWheelStep;
     private static bool BeforeWheel(int direction)
     {
         try
         {
             if (Under(Game1.getMouseX(), Game1.getMouseY()) is not { } grid) return true;
-            Scroll(grid, direction > 0 ? -1 : 1);
+            // One row per full wheel notch (120), at most one row every 150 ms: smooth-scrolling wheels and touchpads
+            // send many small steps, which would otherwise race through the rows.
+            if (Math.Sign(direction) != Math.Sign(WheelAccumulated)) WheelAccumulated = 0;
+            WheelAccumulated += direction;
+            double now = Game1.currentGameTime?.TotalGameTime.TotalMilliseconds ?? 0;
+            bool notch = Math.Abs(WheelAccumulated) >= 120 || Math.Abs(direction) == 1; // some input paths send ±1 per notch
+            if (notch && now - LastWheelStep >= 150)
+            {
+                Scroll(grid, WheelAccumulated > 0 ? -1 : 1);
+                WheelAccumulated = 0; LastWheelStep = now;
+            }
             return false;
         }
         catch (Exception ex) { Warn(ex); return true; }
