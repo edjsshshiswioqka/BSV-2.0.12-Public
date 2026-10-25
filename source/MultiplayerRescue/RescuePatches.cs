@@ -100,7 +100,16 @@ internal sealed partial class RescueService
     { if(World && __instance==Game1.player && __instance.IsLocalPlayer)Instance?.Safe(()=>Instance.RecoveryTick(false)); }
     private static void AfterNativeUpdate(Farmer __instance)
     { if(World && __instance==Game1.player && __instance.IsLocalPlayer)Instance?.Safe(()=>Instance.ObserveNativeRecovery()); }
+    private static bool PoseFailed;
+    // Render-only: a failure here must never take down the game's draw loop.
     private static void Pose(Farmer who, ref FarmerSprite.AnimationFrame animationFrame, ref int currentFrame,
+        ref Rectangle sourceRect, ref int facingDirection)
+    {
+        if (PoseFailed) return;
+        try { PoseCore(who, ref animationFrame, ref currentFrame, ref sourceRect, ref facingDirection); }
+        catch (Exception ex) { PoseFailed = true; Instance?.Monitor.Log("BSV rescue: downed pose disabled after a drawing error: " + ex, LogLevel.Error); }
+    }
+    private static void PoseCore(Farmer who, ref FarmerSprite.AnimationFrame animationFrame, ref int currentFrame,
         ref Rectangle sourceRect, ref int facingDirection)
     {
         var s = Instance;
@@ -116,7 +125,9 @@ internal sealed partial class RescueService
         else return;
         // Native FarmerSprite pass-out frames 4/5, inspected in 1.6.15. Render only:
         // never install animation 293's passOutFromTired callback or change collision.
-        int columns = Math.Max(1, who.FarmerSprite.Texture.Width / 16);
+        // Farmer frames are laid out like FarmerSprite.UpdateSourceRect: six 16 px frames per 96 px row.
+        // (FarmerSprite.Texture is null for farmers: FarmerRenderer draws from its own base texture.)
+        const int columns = 96 / 16;
         currentFrame = frame; sourceRect = new Rectangle(frame % columns * 16, frame / columns * 32, 16, 32);
         facingDirection = 2; animationFrame = new FarmerSprite.AnimationFrame(frame, 100);
     }
