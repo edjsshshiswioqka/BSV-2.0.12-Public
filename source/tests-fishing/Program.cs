@@ -11,7 +11,7 @@ cfg.Validate();
 
 // ---- 1. Static values per level ----
 var levels = new[] { 1, 2, 3 };
-int[] bait = { 200, 300, 400 }, minutes = { 2880, 4320, 5760 }, slots = { 36, 70, 70 }, cycles = { 15, 20, 0 };
+int[] bait = { 200, 300, 400 }, minutes = { 2880, 4320, 5760 }, slots = { 70, 105, 140 }, cycles = { 15, 20, 0 };
 foreach (int lv in levels)
 {
     var s = new ProductionState { Level = lv };
