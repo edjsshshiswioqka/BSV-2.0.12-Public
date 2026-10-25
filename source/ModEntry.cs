@@ -148,8 +148,8 @@ public sealed partial class ModEntry : Mod
         catch (Exception ex) { Startup.Check(false); Monitor.Log(Tr("totem.error") + "\n" + ex, LogLevel.Error); }
         try { _ = new Orders.OrdersService(helper, Monitor, ModManifest, () => Config.OrderItemExclusions); Monitor.Log(Tr("orders.loaded"), LogLevel.Debug); }
         catch (Exception ex) { Startup.Check(false); Monitor.Log(Tr("orders.error") + "\n" + ex, LogLevel.Error); }
-        try { _ = new MultiplayerRescue.RescueService(helper, Monitor, ModManifest); }
-        catch (Exception ex) { Startup.Check(false); Monitor.Log("BSV Multiplayer Rescue initialization failed; native death remains active.\n" + ex, LogLevel.Error); }
+        // Multiplayer Rescue is held back for BSV 3.0 (still in testing). The code stays in MultiplayerRescue/
+        // but is not started in 2.0: native death and pass-out rules apply unchanged.
         try { _ = new AfkFishing.AfkFishingService(helper, Monitor, ModManifest, Config); }
         catch (Exception ex) { Startup.Check(false); Monitor.Log(Tr("afk.error") + "\n" + ex, LogLevel.Error); }
         try { _ = new SpiritFish.SpiritService(helper, Monitor, ModManifest.UniqueID); }
