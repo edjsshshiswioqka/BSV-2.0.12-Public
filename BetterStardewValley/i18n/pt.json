@@ -685,5 +685,11 @@
   "crab.power-on-help": "ON: sempre que houver isca para um ciclo completo, a máquina arma suas armadilhas de novo, ciclo após ciclo. Clique para desligar: ela para na hora, o que já pegou fica e a isca não usada volta para a máquina.",
   "crab.power-off-help": "OFF: a máquina não faz nada. Coloque uma carga completa de isca (Nv. 1: 150, Nv. 2: 350; metade com a profissão Mestre da Isca) e clique para ligar.",
   "spirit.buff.name": "Bênção do espírito",
-  "spirit.buff.description": "Os espíritos estão cuidando de você. Hoje tudo dá certo."
+  "spirit.buff.description": "Os espíritos estão cuidando de você. Hoje tudo dá certo.",
+  "backpack.question": "Uma mochila maior com {{count}} espaços por {{price}}g. Comprar?",
+  "backpack.yes": "Comprar ({{price}}g)",
+  "backpack.no": "Não, obrigado",
+  "backpack.bought": "Sua mochila agora guarda {{count}} itens. Role para ver as novas fileiras.",
+  "backpack.no-money": "Você não tem dinheiro suficiente.",
+  "backpack.max": "Sua mochila não pode ficar maior."
 }

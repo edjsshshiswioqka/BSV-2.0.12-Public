@@ -685,5 +685,11 @@
   "crab.power-on-help": "オン：エサが1回分そろうたびに、マシンが何度でもかごを仕掛け直す。クリックでオフ：すぐに止まり、それまでの獲物はそのまま、使っていないエサはマシンに戻る。",
   "crab.power-off-help": "オフ：マシンは動かない。エサを1回分（Lv1 150個、Lv2 350個、ルアーの達人の職業なら半分）入れて、クリックでオン。",
   "spirit.buff.name": "精霊の祝福",
-  "spirit.buff.description": "精霊が見守ってくれている。今日は何もかもうまくいく。"
+  "spirit.buff.description": "精霊が見守ってくれている。今日は何もかもうまくいく。",
+  "backpack.question": "もっと大きなリュック：{{count}}マス、{{price}}g。買いますか？",
+  "backpack.yes": "買う（{{price}}g）",
+  "backpack.no": "やめておく",
+  "backpack.bought": "リュックに {{count}} 個入るようになりました。スクロールすると新しい列が見えます。",
+  "backpack.no-money": "お金が足りません。",
+  "backpack.max": "リュックはこれ以上大きくできません。"
 }

@@ -685,5 +685,11 @@
   "crab.power-on-help": "ON: siempre que haya cebo para un ciclo completo, la máquina vuelve a colocar sus trampas, ciclo tras ciclo. Haz clic para apagarla: se detiene al momento, conserva lo capturado y el cebo sin usar vuelve a la máquina.",
   "crab.power-off-help": "OFF: la máquina no hace nada. Pon una carga completa de cebo (niv. 1: 150, niv. 2: 350; la mitad con la profesión As del señuelo) y haz clic para encenderla.",
   "spirit.buff.name": "Bendición del espíritu",
-  "spirit.buff.description": "Los espíritus velan por ti. Hoy todo te sale bien."
+  "spirit.buff.description": "Los espíritus velan por ti. Hoy todo te sale bien.",
+  "backpack.question": "Una mochila más grande con {{count}} huecos por {{price}}g. ¿La compras?",
+  "backpack.yes": "Comprar ({{price}}g)",
+  "backpack.no": "No, gracias",
+  "backpack.bought": "Tu mochila ahora guarda {{count}} objetos. Desplázala para ver las filas nuevas.",
+  "backpack.no-money": "No tienes suficiente dinero.",
+  "backpack.max": "Tu mochila ya no puede ser más grande."
 }

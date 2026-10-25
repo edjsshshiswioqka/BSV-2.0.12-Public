@@ -685,5 +685,11 @@
   "crab.power-on-help": "BE: amíg van egy teljes adag csali, a gép körről körre újra kihelyezi a csapdákat. Kattints a kikapcsoláshoz: azonnal leáll, az eddigi zsákmány megmarad, a fel nem használt csali visszakerül a gépbe.",
   "crab.power-off-help": "KI: a gép nem csinál semmit. Tegyél bele egy teljes adag csalit (1. szint: 150, 2. szint: 350; Csalimester szakmával a fele), majd kattints a bekapcsoláshoz.",
   "spirit.buff.name": "A szellem áldása",
-  "spirit.buff.description": "A szellemek vigyáznak rád. Ma minden úgy alakul, ahogy szeretnéd."
+  "spirit.buff.description": "A szellemek vigyáznak rád. Ma minden úgy alakul, ahogy szeretnéd.",
+  "backpack.question": "Nagyobb hátizsák {{count}} hellyel, {{price}}g-ért. Megveszed?",
+  "backpack.yes": "Megveszem ({{price}}g)",
+  "backpack.no": "Nem, köszönöm",
+  "backpack.bought": "A hátizsákodba most {{count}} tárgy fér. Görgesd az új sorokhoz.",
+  "backpack.no-money": "Nincs elég pénzed.",
+  "backpack.max": "A hátizsákod már nem lehet nagyobb."
 }

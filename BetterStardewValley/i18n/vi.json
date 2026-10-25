@@ -685,5 +685,11 @@
   "crab.power-on-help": "BẬT: mỗi khi có đủ mồi cho một lượt, máy lại đặt bẫy, hết lượt này đến lượt khác. Bấm để tắt: máy dừng ngay, những gì đã bắt được vẫn giữ nguyên, mồi chưa dùng được trả lại vào máy.",
   "crab.power-off-help": "TẮT: máy không làm gì cả. Bỏ vào đủ mồi cho một lượt (Cấp 1: 150, Cấp 2: 350; giảm một nửa nếu có nghề Bậc Thầy Mồi Câu), rồi bấm để bật.",
   "spirit.buff.name": "Phước Lành Linh Hồn",
-  "spirit.buff.description": "Các linh hồn đang dõi theo bạn. Hôm nay mọi việc đều suôn sẻ."
+  "spirit.buff.description": "Các linh hồn đang dõi theo bạn. Hôm nay mọi việc đều suôn sẻ.",
+  "backpack.question": "Ba lô lớn hơn: {{count}} ô, giá {{price}}g. Mua không?",
+  "backpack.yes": "Mua ({{price}}g)",
+  "backpack.no": "Thôi",
+  "backpack.bought": "Ba lô của bạn giờ chứa được {{count}} món. Cuộn xuống để thấy các hàng mới.",
+  "backpack.no-money": "Bạn không đủ tiền.",
+  "backpack.max": "Ba lô không thể lớn hơn nữa."
 }

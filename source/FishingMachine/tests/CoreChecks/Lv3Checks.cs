@@ -19,7 +19,7 @@ internal static class Lv3Checks
         var old=ProductionState.Load("{\"Schema\":5,\"Level\":2,\"CompletedCycles\":501}");
         check(old.LevelCycles==0 && old.CompletedCycles==501 && old.IdleCopy().Level==2,"old Lv2 stage starts at zero without losing lifetime progression");
         var lv3=new ProductionState{Level=3,CompletedCycles=100,LevelCycles=0};
-        check(MachineUpgrade.Plan(lv3,materials)==null && MachineUpgrade.RequiredBait(lv3,cfg)==650 && MachineUpgrade.Capacity(3)==70,"Lv3 cannot upgrade again; fuel and capacity");
+        check(MachineUpgrade.Plan(lv3,materials)==null && MachineUpgrade.RequiredBait(lv3,cfg)==650 && MachineUpgrade.Capacity(3)==140,"Lv3 cannot upgrade again; fuel and capacity");
         check(MachineLevelRules.Quality(1,.24999)==1 && MachineLevelRules.Quality(1,.25)==0,"Lv1 quality threshold");
         check(MachineLevelRules.Quality(3,.79999)==4 && MachineLevelRules.Quality(3,.8)==2,"Lv3 quality threshold");
         check(MachineLevelRules.ExtraMultiplier(cfg,3,.659999)==1 && MachineLevelRules.ExtraMultiplier(cfg,3,.66)==2 && MachineLevelRules.ExtraMultiplier(cfg,3,cfg.LevelThreeCriticalChance+cfg.LevelThreeTripleChance)==0,"exclusive 66/20/14 critical thresholds");

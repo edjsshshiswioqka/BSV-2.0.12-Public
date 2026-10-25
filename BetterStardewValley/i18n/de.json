@@ -685,5 +685,11 @@
   "crab.power-on-help": "AN: Sobald genug Köder für eine volle Runde da sind, legt die Maschine ihre Fallen erneut aus, Runde um Runde. Klicken zum Ausschalten: Sie stoppt sofort, der bisherige Fang bleibt, unbenutzte Köder kommen zurück in die Maschine.",
   "crab.power-off-help": "AUS: Die Maschine tut nichts. Lege eine volle Ladung Köder ein (St. 1: 150, St. 2: 350; mit dem Beruf Lockmeister die Hälfte) und klicke zum Einschalten.",
   "spirit.buff.name": "Segen des Geistes",
-  "spirit.buff.description": "Die Geister wachen über dich. Heute läuft alles nach deinem Willen."
+  "spirit.buff.description": "Die Geister wachen über dich. Heute läuft alles nach deinem Willen.",
+  "backpack.question": "Ein größerer Rucksack mit {{count}} Plätzen für {{price}}g. Kaufen?",
+  "backpack.yes": "Kaufen ({{price}}g)",
+  "backpack.no": "Nein danke",
+  "backpack.bought": "Dein Rucksack fasst jetzt {{count}} Gegenstände. Scrolle, um die neuen Reihen zu sehen.",
+  "backpack.no-money": "Du hast nicht genug Geld.",
+  "backpack.max": "Dein Rucksack kann nicht noch größer werden."
 }

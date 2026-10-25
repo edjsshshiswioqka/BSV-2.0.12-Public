@@ -7,7 +7,7 @@ public static class MachineUpgrade
     public const int IronRequired=25, GoldRequired=15, LevelTwoBait=300, LevelThreeBait=400;
     public static int RequiredBait(ProductionState s, BalanceConfig config) => s.Level switch { 3=>config.LevelThreeBaitPerCycle, 2=>config.LevelTwoBaitPerCycle, _=>config.BaitPerCycle };
     // Native standard/BigChest layouts expose 36/70 slots; legacy overflow is withdrawal-compatible.
-    public static int Capacity(int level) => level==1?36:70;
+    public static int Capacity(int level) => level switch { 1 => 70, 2 => 105, _ => 140 };
     public static (string Id,int Count)[] Requirements(int level)=>level switch
     {
         1=>new[]{("(O)335",25),("(O)336",15),("(O)787",3),("(O)709",10)},

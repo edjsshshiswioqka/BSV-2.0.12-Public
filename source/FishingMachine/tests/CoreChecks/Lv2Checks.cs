@@ -18,7 +18,7 @@ internal static class Lv2Checks
         check(MachineUpgrade.Plan(state,new[]{new UpgradeSlot(0,"(O)335",19),new(1,"(O)336",10)})==null,"19 iron cannot upgrade");
         state.Phase="working";check(MachineUpgrade.Plan(state,bars)==null,"working batch cannot change level midway");
         check(MachineUpgrade.Plan(lv2,bars)==null,"Lv2 cannot consume upgrade cost a second time");
-        check(MachineUpgrade.Capacity(1)==36 && MachineUpgrade.Capacity(2)==70,"native large chest capacity 70");
+        check(MachineUpgrade.Capacity(1)==70 && MachineUpgrade.Capacity(2)==105,"Lv1 70 slots, Lv2 105 slots");
         check(MachineUpgrade.RequiredBait(lv2,new BalanceConfig{BaitPerCycle=2})==450,"Lv2 always requires 450 bait");
         check(Production.PlanBait(new[]{new BaitSlot(0,449,BaitKind.Challenge)},450,new HashSet<string>{"(O)128"})==null,"449 challenge bait cannot start");
         check(LevelTwoCatch.Quality(0)==1 && LevelTwoCatch.Quality(.399999)==1 && LevelTwoCatch.Quality(.4)==2 && LevelTwoCatch.Quality(.649999)==2 && LevelTwoCatch.Quality(.65)==0,"40/25/35 quality boundaries");

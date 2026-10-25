@@ -685,5 +685,11 @@
   "crab.power-on-help": "ON : dès qu'il y a assez d'appâts pour un cycle complet, la machine repose ses casiers, cycle après cycle. Cliquez pour l'éteindre : elle s'arrête aussitôt, les prises restent et les appâts inutilisés reviennent dans la machine.",
   "crab.power-off-help": "OFF : la machine ne fait rien. Mettez une charge complète d'appâts (niv. 1 : 150, niv. 2 : 350 ; moitié moins avec le métier Maître des leurres), puis cliquez pour l'allumer.",
   "spirit.buff.name": "Bénédiction de l'esprit",
-  "spirit.buff.description": "Les esprits veillent sur vous. Aujourd'hui, tout vous réussit."
+  "spirit.buff.description": "Les esprits veillent sur vous. Aujourd'hui, tout vous réussit.",
+  "backpack.question": "Un sac à dos plus grand de {{count}} emplacements pour {{price}}g. L'acheter ?",
+  "backpack.yes": "Acheter ({{price}}g)",
+  "backpack.no": "Non merci",
+  "backpack.bought": "Ton sac à dos contient maintenant {{count}} objets. Fais-le défiler pour voir les nouvelles rangées.",
+  "backpack.no-money": "Tu n'as pas assez d'argent.",
+  "backpack.max": "Ton sac à dos ne peut pas être plus grand."
 }

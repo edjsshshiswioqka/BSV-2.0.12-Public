@@ -685,5 +685,11 @@
   "crab.power-on-help": "ON: whenever there is a full load of bait the machine sets its traps again, cycle after cycle. Click to switch off: it stops now, the catch so far stays, unused bait comes back into the machine.",
   "crab.power-off-help": "OFF: the machine does nothing. Put in a full load of bait (Lv1 150, Lv2 350; half with the Luremaster profession), then click to switch on.",
   "spirit.buff.name": "Spirit's Blessing",
-  "spirit.buff.description": "The spirits are watching over you. Everything goes your way today."
+  "spirit.buff.description": "The spirits are watching over you. Everything goes your way today.",
+  "backpack.question": "A bigger backpack with {{count}} slots, for {{price}}g. Buy it?",
+  "backpack.yes": "Buy ({{price}}g)",
+  "backpack.no": "No thanks",
+  "backpack.bought": "Your backpack now holds {{count}} items. Scroll it to reach the new rows.",
+  "backpack.no-money": "You don't have enough money.",
+  "backpack.max": "Your backpack can't get any bigger."
 }

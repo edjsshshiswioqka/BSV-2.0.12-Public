@@ -685,5 +685,11 @@
   "crab.power-on-help": "AÇIK: tam bir yem yükü olduğu sürece makine tur tur kapanları yeniden kurar. Kapatmak için tıkla: hemen durur, o ana kadarki av kalır, kullanılmayan yem makineye geri döner.",
   "crab.power-off-help": "KAPALI: makine hiçbir şey yapmaz. Tam bir yem yükü koy (Sv. 1: 150, Sv. 2: 350; Yemci mesleğiyle yarısı), sonra açmak için tıkla.",
   "spirit.buff.name": "Ruhun Lütfu",
-  "spirit.buff.description": "Ruhlar seni gözetiyor. Bugün her şey yolunda gidiyor."
+  "spirit.buff.description": "Ruhlar seni gözetiyor. Bugün her şey yolunda gidiyor.",
+  "backpack.question": "{{count}} yuvalı daha büyük bir sırt çantası, {{price}}g. Alacak mısın?",
+  "backpack.yes": "Satın al ({{price}}g)",
+  "backpack.no": "Hayır, teşekkürler",
+  "backpack.bought": "Sırt çantan artık {{count}} eşya alıyor. Yeni sıraları görmek için kaydır.",
+  "backpack.no-money": "Yeterli paran yok.",
+  "backpack.max": "Sırt çantan daha fazla büyüyemez."
 }

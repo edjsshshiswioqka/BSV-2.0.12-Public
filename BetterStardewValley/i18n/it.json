@@ -685,5 +685,11 @@
   "crab.power-on-help": "ACCESA: finché c'è un carico completo di esche, la macchina ripiazza le trappole, ciclo dopo ciclo. Clicca per spegnerla: si ferma subito, il pescato resta e le esche non usate tornano nella macchina.",
   "crab.power-off-help": "SPENTA: la macchina non fa nulla. Inserisci un carico completo di esche (liv. 1: 150, liv. 2: 350; la metà con la professione Mastro d'esche), poi clicca per accenderla.",
   "spirit.buff.name": "Benedizione dello spirito",
-  "spirit.buff.description": "Gli spiriti vegliano su di te. Oggi ti va tutto per il verso giusto."
+  "spirit.buff.description": "Gli spiriti vegliano su di te. Oggi ti va tutto per il verso giusto.",
+  "backpack.question": "Uno zaino più grande da {{count}} posti per {{price}}g. Lo compri?",
+  "backpack.yes": "Compra ({{price}}g)",
+  "backpack.no": "No, grazie",
+  "backpack.bought": "Ora il tuo zaino contiene {{count}} oggetti. Scorrilo per vedere le nuove file.",
+  "backpack.no-money": "Non hai abbastanza soldi.",
+  "backpack.max": "Il tuo zaino non può diventare più grande."
 }

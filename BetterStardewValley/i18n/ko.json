@@ -685,5 +685,11 @@
   "crab.power-on-help": "켜짐: 한 회차분 미끼가 있을 때마다 기계가 계속해서 통발을 다시 놓습니다. 클릭하면 꺼짐: 즉시 멈추고, 지금까지 잡은 것은 그대로 두며 쓰지 않은 미끼는 기계로 돌아옵니다.",
   "crab.power-off-help": "꺼짐: 기계가 작동하지 않습니다. 한 회차분 미끼(레벨 1: 150개, 레벨 2: 350개, 미끼장인 전문 기술이 있으면 절반)를 넣고 클릭해 켜세요.",
   "spirit.buff.name": "정령의 축복",
-  "spirit.buff.description": "정령이 당신을 지켜보고 있다. 오늘은 모든 일이 술술 풀린다."
+  "spirit.buff.description": "정령이 당신을 지켜보고 있다. 오늘은 모든 일이 술술 풀린다.",
+  "backpack.question": "더 큰 배낭: {{count}}칸, {{price}}g. 살까요?",
+  "backpack.yes": "구매 ({{price}}g)",
+  "backpack.no": "괜찮아요",
+  "backpack.bought": "이제 배낭에 {{count}}개를 넣을 수 있습니다. 스크롤하면 새 줄이 보입니다.",
+  "backpack.no-money": "돈이 부족합니다.",
+  "backpack.max": "배낭을 더 이상 늘릴 수 없습니다."
 }

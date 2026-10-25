@@ -132,6 +132,10 @@ public sealed partial class ModEntry : Mod
         // damage transpiler must not prevent horse, fishing, harvest or greenhouse registration.
         try { WalkThroughPlants.Install(helper, Monitor); }
         catch (Exception ex) { Monitor.Log($"BSV walk-through plants unavailable; trellis crops and tea block as usual.\n{ex}", LogLevel.Warn); }
+        try { InventoryScroll.Install(helper, Monitor); }
+        catch (Exception ex) { Monitor.Log($"BSV inventory scrolling unavailable; larger backpacks and Lv 2/3 fishing machines show their first rows only.\n{ex}", LogLevel.Warn); }
+        try { BackpackUpgrade.Install(helper); }
+        catch (Exception ex) { Monitor.Log($"BSV backpack upgrades unavailable; the native ones still work.\n{ex}", LogLevel.Warn); }
         try { PlacementReach.Install(helper); }
         catch (Exception ex) { Monitor.Log($"BSV placement reach unavailable; BSV machines and totems use the native one-tile reach.\n{ex}", LogLevel.Warn); }
         try { _ = new TeaFeature(helper, Monitor); }

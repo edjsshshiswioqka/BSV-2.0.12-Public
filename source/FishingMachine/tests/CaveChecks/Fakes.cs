@@ -79,7 +79,7 @@ namespace StardewValley.Objects
         public Chest(){}public Chest(bool player,Vector2 tile,string id){TileLocation=tile;QualifiedItemId="(BC)"+id;}
         public List<Item> Items=new();public Net<Color> playerChoiceColor=new(Color.White);
         public SpecialChestTypes SpecialChestType;private readonly Mutex mutex=new();public Mutex GetMutex()=>mutex;
-        public int GetActualCapacity()=>modData.TryGetValue(Eddie.FishingMachine.ProductionService.StateKey,out var raw) && ProductionState.Load(raw).Level>=2 ? 70:36;
+        public int GetActualCapacity()=>modData.TryGetValue(Eddie.FishingMachine.ProductionService.StateKey,out var raw) && ProductionState.Load(raw).Level>=2 ? 105:70;
     }
 }
 namespace StardewValley.Menus

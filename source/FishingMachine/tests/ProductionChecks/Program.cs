@@ -24,7 +24,7 @@ Check(Count(c,"(O)335")==26 && Count(c,"(O)336")==17 && Count(c,"(O)685")==0,"co
 NextCycle();service.Tick();var upgraded=service.Read(c);
 Check(upgraded.CompletedCycles==15 && upgraded.Level==2,"actual 15th completion upgrades machine immediately");
 int bonusGold=c.modData.Writes.Where(w=>w.Key==ProductionService.StateKey).Select(w=>ProductionState.Load(w.Value)).Max(s=>s.Pending.Where(p=>p.Id=="(O)336").Sum(p=>p.Count));
-Check(Count(c,"(O)335")==1 && Count(c,"(O)336")==2+bonusGold && c.GetActualCapacity()==70,"exact upgrade cost, independently generated Lv1 treasure retained, expanded capacity");
+Check(Count(c,"(O)335")==1 && Count(c,"(O)336")==2+bonusGold && c.GetActualCapacity()==105,"exact upgrade cost, independently generated Lv1 treasure retained, expanded capacity");
 var outputs=c.Items.Select(i=>(i.QualifiedItemId,i.Stack,i.Quality)).ToArray();
 service.Tick();Check(c.Items.Select(i=>(i.QualifiedItemId,i.Stack,i.Quality)).SequenceEqual(outputs),"repeated tick never charges again or duplicates output");
 c.Items.Clear();service.Tick();Check(service.Read(c).Phase=="idle" && service.Read(c).CompletedCycles==15,"collection resets batch but keeps progression");

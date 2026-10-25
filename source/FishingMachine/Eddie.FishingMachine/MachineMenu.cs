@@ -104,7 +104,8 @@ internal sealed partial class ProductionService
         int columns0=Math.Max(1,grid.capacity/Math.Max(1,grid.rows));
         int cellW=grid.width/columns0,cellH=grid.height/Math.Max(1,grid.rows);
         int areaW=Math.Max(grid.width,cellW*14),areaH=Math.Max(grid.height,cellH*5);
-        int inner=Math.Max(areaW,bag.width),width=inner+2*Pad;
+        int bar=menu.sourceItem is Chest source&&grid.capacity<source.GetActualCapacity()?44:0; // a scrolling grid gets its bar inside the window
+        int inner=Math.Max(areaW+2*bar,bag.width),width=inner+2*Pad;
         // The native side buttons (fill stacks, organize, trash, OK) stay to the right of the windows.
         if(width+2*(64+24)>vw)return null;
         bool upgrade=crab?s.Level==1:s.Level<3;
@@ -162,6 +163,22 @@ internal sealed partial class ProductionService
     }
     private static void Place(ClickableComponent? c,int x,int y){if(c!=null)c.bounds=new Rectangle(x,y,c.bounds.Width,c.bounds.Height);}
 
+    // Lv 2 / Lv 3 fishing machines hold 105 / 140 items. The native menu would lay them out in one very wide 5-row grid;
+    // instead the grid keeps the 14 x 5 size of every other machine window and scrolls (BetterStardewValley.InventoryScroll).
+    private static readonly ConditionalWeakTable<ItemGrabMenu,object> Scrolled=new();
+    internal const int VisibleSlots=70,VisibleRows=5;
+    private static void ScrollGrid(ItemGrabMenu menu,Chest c)
+    {
+        if(Scrolled.TryGetValue(menu,out _))return;
+        Scrolled.Add(menu,new object());
+        var old=menu.ItemsToGrabMenu;int total=c.GetActualCapacity();
+        if(old==null||total<=VisibleSlots||old.capacity<=VisibleSlots)return;
+        var grid=new InventoryMenu(old.xPositionOnScreen,old.yPositionOnScreen,false,old.actualInventory,old.highlightMethod,VisibleSlots,VisibleRows,
+            old.horizontalGap,old.verticalGap,old.drawSlots){showGrayedOutSlots=old.showGrayedOutSlots};
+        menu.ItemsToGrabMenu=grid;
+        menu.populateClickableComponentList();
+        BetterStardewValley.InventoryScroll.Register(grid,total);
+    }
     private static void Prepare(ItemGrabMenu menu)
     {
         if(Prepared.TryGetValue(menu,out _))return;
@@ -210,6 +227,7 @@ internal sealed partial class ProductionService
         ProductionState s;
         try{s=Read(c);}catch{FullMenu=null;return false;}
         bool crab=ModEntry.IsCrab(c);
+        ScrollGrid(menu,c);
         var materials=PanelMaterials(c,s);
         var g=Arrange(menu,crab,s,materials.Length+1);
         if(g==null){FullMenu=null;FullGeometry=null;return false;}

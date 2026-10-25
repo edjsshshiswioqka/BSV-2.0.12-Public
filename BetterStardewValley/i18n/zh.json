@@ -685,5 +685,11 @@
   "crab.power-on-help": "开机中：鱼饵够一整轮就会自动一轮接一轮地下蟹笼。点一下关机：马上停止，已收到的东西留着，没用掉的鱼饵退回机器。",
   "crab.power-off-help": "已关机：机器不会运行。放够一整轮的鱼饵（Lv1 150 个、Lv2 350 个；有诱饵大师职业时减半）后点一下开机。",
   "spirit.buff.name": "精灵的祝福",
-  "spirit.buff.description": "精灵正在眷顾你，今天做什么都格外顺利。"
+  "spirit.buff.description": "精灵正在眷顾你，今天做什么都格外顺利。",
+  "backpack.question": "更大的背包：{{count}} 格，售价 {{price}}g。要买吗？",
+  "backpack.yes": "购买（{{price}}g）",
+  "backpack.no": "不用了",
+  "backpack.bought": "你的背包现在能装 {{count}} 件物品。往下滚动就能看到新的格子。",
+  "backpack.no-money": "你的钱不够。",
+  "backpack.max": "你的背包已经不能再大了。"
 }
