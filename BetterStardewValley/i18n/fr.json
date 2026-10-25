@@ -523,7 +523,7 @@
   "config.keep": "Conserver la valeur actuelle",
   "config.legacy": "L’ancienne valeur reste conservée tant que vous ne choisissez pas explicitement une autre valeur.",
   "config.machines-unavailable": "Machines intégrées non prêtes ; leurs fichiers ne seront pas écrasés.",
-  "config.seed-enabled.help": "Réglage hôte. Uniquement les graines bonus BSV, dès la prochaine récolte. Défaut après installation/réinitialisation : désactivé.",
+  "config.seed-enabled.help": "Réglage hôte. Uniquement les graines bonus BSV, dès la prochaine récolte. Défaut après installation/réinitialisation : activé.",
   "config.seed-chance.help": "Réglage hôte. Utilisé seulement si les graines bonus sont activées ; 0–100%, pas de 5%.",
   "config.yield-enabled.help": "Réglage hôte. Désactive seulement le surplus BSV ; récolte normale et qualité inchangées.",
   "config.fertilizer-enabled": "Utiliser les engrais BSV",

@@ -523,7 +523,7 @@
   "config.keep": "Jelenlegi érték megtartása",
   "config.legacy": "A régi érték megmarad, amíg kifejezetten újat nem választasz.",
   "config.machines-unavailable": "Az integrált gépek még nem készek; fájljaikat nem írjuk felül.",
-  "config.seed-enabled.help": "Gazdagép-beállítás. Csak a BSV bónuszmagjait érinti, a következő szürettől. Új telepítés/visszaállítás alapértéke: ki.",
+  "config.seed-enabled.help": "Gazdagép-beállítás. Csak a BSV bónuszmagjait érinti, a következő szürettől. Új telepítés/visszaállítás alapértéke: be.",
   "config.seed-chance.help": "Gazdagép-beállítás. Csak bekapcsolt magvisszatérítésnél használatos; 0–100%, 5%-os lépés.",
   "config.yield-enabled.help": "Gazdagép-beállítás. Csak a BSV többlettermését kapcsolja ki; az alapjáték aratása és minősége változatlan.",
   "config.fertilizer-enabled": "BSV-trágya használata",

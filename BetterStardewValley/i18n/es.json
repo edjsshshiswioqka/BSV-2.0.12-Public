@@ -523,7 +523,7 @@
   "config.keep": "Conservar valor actual",
   "config.legacy": "Se conserva el valor antiguo salvo que elijas expresamente otro.",
   "config.machines-unavailable": "Las máquinas integradas no están listas; no se sobrescribirán sus archivos.",
-  "config.seed-enabled.help": "Anfitrión. Solo semillas extra BSV; desde la próxima cosecha. Por defecto al instalar/restablecer: desactivado.",
+  "config.seed-enabled.help": "Anfitrión. Solo semillas extra BSV; desde la próxima cosecha. Por defecto al instalar/restablecer: activado.",
   "config.seed-chance.help": "Anfitrión. Solo con devolución de semillas activada; 0–100%, pasos de 5%.",
   "config.yield-enabled.help": "Anfitrión. Desactiva solo cosecha extra BSV; cosecha original y calidad intactas.",
   "config.fertilizer-enabled": "Usar fertilizante BSV",

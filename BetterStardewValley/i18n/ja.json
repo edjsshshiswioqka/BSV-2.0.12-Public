@@ -523,7 +523,7 @@
   "config.keep": "現在の値を保持",
   "config.legacy": "別の値を明示的に選ぶまで、旧設定値を保持します。",
   "config.machines-unavailable": "統合版マシンの準備ができていません。設定ファイルは上書きしません。",
-  "config.seed-enabled.help": "ホスト設定。BSV の追加の種だけに影響し、次の収穫から適用します。新規導入・初期化時はオフ。",
+  "config.seed-enabled.help": "ホスト設定。BSV の追加の種だけに影響し、次の収穫から適用します。新規導入・初期化時はオン。",
   "config.seed-chance.help": "ホスト設定。種ボーナスが有効なときのみ使用。0～100%、5% 刻み。",
   "config.yield-enabled.help": "ホスト設定。BSV の追加収穫量だけを無効にし、原作の収穫や品質は変えません。",
   "config.fertilizer-enabled": "BSV の肥料を使用",

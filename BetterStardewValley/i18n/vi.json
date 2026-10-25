@@ -523,7 +523,7 @@
   "config.keep": "Giữ giá trị hiện tại",
   "config.legacy": "Giá trị cũ được giữ trừ khi bạn chủ động chọn giá trị thay thế.",
   "config.machines-unavailable": "Máy tích hợp chưa sẵn sàng; không ghi đè tệp của chúng.",
-  "config.seed-enabled.help": "Cài đặt chủ phòng. Chỉ ảnh hưởng hạt thưởng BSV; áp dụng lần thu hoạch sau. Mặc định cài mới/đặt lại: tắt.",
+  "config.seed-enabled.help": "Cài đặt chủ phòng. Chỉ ảnh hưởng hạt thưởng BSV; áp dụng lần thu hoạch sau. Mặc định cài mới/đặt lại: bật.",
   "config.seed-chance.help": "Cài đặt chủ phòng. Chỉ dùng khi bật hoàn hạt; 0–100%, bước 5%.",
   "config.yield-enabled.help": "Cài đặt chủ phòng. Chỉ tắt sản lượng thêm BSV; thu hoạch và chất lượng gốc không đổi.",
   "config.fertilizer-enabled": "Dùng phân bón BSV",

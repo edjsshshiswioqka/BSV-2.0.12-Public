@@ -523,7 +523,7 @@
   "config.keep": "Aktuellen Wert behalten",
   "config.legacy": "Ein alter Wert bleibt erhalten, solange du nicht ausdrücklich einen Ersatz auswählst.",
   "config.machines-unavailable": "Integrierte Maschinen sind nicht bereit; ihre Dateien werden nicht überschrieben.",
-  "config.seed-enabled.help": "Host-Einstellung. Betrifft nur BSV-Bonussamen; ab nächster Ernte wirksam. Standard bei Neuinstallation/Zurücksetzen: aus.",
+  "config.seed-enabled.help": "Host-Einstellung. Betrifft nur BSV-Bonussamen; ab nächster Ernte wirksam. Standard bei Neuinstallation/Zurücksetzen: an.",
   "config.seed-chance.help": "Host-Einstellung. Nur bei aktivierter Samenzugabe; 0–100% in 5%-Schritten.",
   "config.yield-enabled.help": "Host-Einstellung. Deaktiviert nur BSV-Mehrertrag; normale Ernte und Qualität bleiben unverändert.",
   "config.fertilizer-enabled": "BSV-Dünger verwenden",

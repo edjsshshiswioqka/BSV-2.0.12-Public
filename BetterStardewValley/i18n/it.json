@@ -523,7 +523,7 @@
   "config.keep": "Mantieni valore attuale",
   "config.legacy": "Un valore precedente viene conservato, a meno che tu scelga esplicitamente di sostituirlo.",
   "config.machines-unavailable": "Le macchine integrate non sono pronte; i loro file non verranno sovrascritti.",
-  "config.seed-enabled.help": "Impostazione dell'host. Riguarda solo i semi bonus BSV; si applica al prossimo raccolto. Predefinito per nuova installazione/ripristino: disattivato.",
+  "config.seed-enabled.help": "Impostazione dell'host. Riguarda solo i semi bonus BSV; si applica al prossimo raccolto. Predefinito per nuova installazione/ripristino: attivato.",
   "config.seed-chance.help": "Impostazione dell'host. Usata solo quando la restituzione dei semi è attiva; 0–100%, passi del 5%.",
   "config.yield-enabled.help": "Impostazione dell'host. Disattiva solo la resa extra BSV; raccolto originale e qualità non cambiano.",
   "config.fertilizer-enabled": "Usa fertilizzante BSV",

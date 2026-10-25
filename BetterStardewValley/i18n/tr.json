@@ -523,7 +523,7 @@
   "config.keep": "Geçerli değeri koru",
   "config.legacy": "Açıkça yeni bir değer seçmedikçe eski değer korunur.",
   "config.machines-unavailable": "Bütünleşik makineler hazır değil; dosyalarının üzerine yazılmaz.",
-  "config.seed-enabled.help": "Sunucu ayarı. Yalnızca BSV bonus tohumları etkilenir; sonraki hasatta uygulanır. Yeni kurulum/sıfırlama varsayılanı: kapalı.",
+  "config.seed-enabled.help": "Sunucu ayarı. Yalnızca BSV bonus tohumları etkilenir; sonraki hasatta uygulanır. Yeni kurulum/sıfırlama varsayılanı: açık.",
   "config.seed-chance.help": "Sunucu ayarı. Yalnızca tohum iadesi açıkken kullanılır; %0–100, adım %5.",
   "config.yield-enabled.help": "Sunucu ayarı. Yalnızca BSV ek verimini kapatır; özgün hasat ve kalite değişmez.",
   "config.fertilizer-enabled": "BSV Gübresini Kullan",

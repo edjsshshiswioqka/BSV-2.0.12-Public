@@ -1,8 +1,8 @@
 {
   "Name": "Better Stardew Valley",
   "Author": "Eddie",
-  "Version": "2.0.12",
-  "Description": "Better Stardew Valley 2.0: fishing and crab machines, an order terminal, totems, horses and more.",
+  "Version": "2.0.13-beta",
+  "Description": "Better Stardew Valley 2.0 beta: fishing and crab machines, an order terminal, totems, horses, a bigger greenhouse and cellar, and more.",
   "UniqueID": "Eddie.BetterStardewValley",
   "EntryDll": "BetterStardewValley.dll",
   "MinimumApiVersion": "4.5.2",

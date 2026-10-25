@@ -523,7 +523,7 @@
   "config.keep": "Keep current value",
   "config.legacy": "A legacy value is preserved unless you explicitly select a replacement.",
   "config.machines-unavailable": "Integrated machines are not ready; their files will not be overwritten.",
-  "config.seed-enabled.help": "Host setting. Only BSV bonus seeds are affected; applies on the next harvest. New-install/reset default: off.",
+  "config.seed-enabled.help": "Host setting. Only BSV bonus seeds are affected; applies on the next harvest. New-install/reset default: on.",
   "config.seed-chance.help": "Host setting. Used only when seed return is enabled; 0–100%, step 5%.",
   "config.yield-enabled.help": "Host setting. Disable only BSV extra yield; native harvest and quality remain unchanged.",
   "config.fertilizer-enabled": "Use BSV Fertilizer",

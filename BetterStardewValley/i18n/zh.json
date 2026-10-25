@@ -523,7 +523,7 @@
   "config.keep": "保留当前值",
   "config.legacy": "旧值会保留，只有明确选择新值才会替换。",
   "config.machines-unavailable": "内置机器尚未就绪，不显示周期控件，也不会覆盖其配置文件。",
-  "config.seed-enabled.help": "房主设置。仅控制 BSV 额外返种，下一次收获生效；新安装或恢复默认时关闭。",
+  "config.seed-enabled.help": "房主设置。仅控制 BSV 额外返种，下一次收获生效；新安装或恢复默认时开启。",
   "config.seed-chance.help": "房主设置。仅返种开启时生效；0–100%，步长 5%。",
   "config.yield-enabled.help": "房主设置。关闭仅停止 BSV 额外产量，保留正常收获和品质。",
   "config.fertilizer-enabled": "使用 BSV 肥料",

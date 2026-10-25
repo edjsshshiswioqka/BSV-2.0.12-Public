@@ -523,7 +523,7 @@
   "config.keep": "현재 값 유지",
   "config.legacy": "직접 대체 값을 선택하지 않으면 이전 값이 보존됩니다.",
   "config.machines-unavailable": "통합 기계가 준비되지 않았습니다. 해당 파일을 덮어쓰지 않습니다.",
-  "config.seed-enabled.help": "호스트 설정. BSV 추가 씨앗만 영향을 받으며 다음 수확부터 적용됩니다. 새 설치/초기화 기본값: 꺼짐.",
+  "config.seed-enabled.help": "호스트 설정. BSV 추가 씨앗만 영향을 받으며 다음 수확부터 적용됩니다. 새 설치/초기화 기본값: 켜짐.",
   "config.seed-chance.help": "호스트 설정. 씨앗 반환이 켜져 있을 때만 사용합니다. 0~100%, 5% 단위.",
   "config.yield-enabled.help": "호스트 설정. BSV 추가 수확량만 끕니다. 원작 수확과 품질은 바꾸지 않습니다.",
   "config.fertilizer-enabled": "BSV 비료 사용",
