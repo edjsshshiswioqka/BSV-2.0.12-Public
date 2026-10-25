@@ -5,33 +5,8 @@ using StardewModdingAPI;
 namespace BetterStardewValley.Configuration;
 
 // Only named settings are patched. Unknown fields and explicit per-level settings survive.
-internal static class MachineBalanceMigration
+internal static partial class MachineBalanceMigration
 {
-    internal const int Version = 1;
-    internal static JObject Prepare(JObject original, bool crab)
-    {
-        var next = (JObject)original.DeepClone();
-        if(!crab && (next.Value<int?>("FishingBalanceVersion")??0)<1)
-        {
-            next["FishingBalanceVersion"]=1;
-            next["BaitPerCycle"]=200;next["LevelTwoBaitPerCycle"]=300;next["LevelThreeBaitPerCycle"]=400;
-            next["FishCriticalChance"]=.45;next["LevelTwoCriticalChance"]=.55;next["LevelTwoTripleChance"]=.10;
-            next["LevelThreeCriticalChance"]=.66;next["LevelThreeTripleChance"]=.24;next["RulesVersion"]=1;
-        }
-        if ((next.Value<int?>("LevelDurationVersion") ?? 0) >= Version) return next;
-        int uniform = next.Value<int?>("CycleGameMinutes") ?? 2880;
-        if (uniform is < 10 or > 40320) throw new InvalidDataException("Invalid legacy machine duration; original config preserved.");
-        bool custom = next.Value<bool?>("UniformCycleWasCustomized") == true || uniform != 2880;
-        next["CycleGameMinutes"] = uniform;
-        if (next.GetValue("LevelTwoCycleGameMinutes", StringComparison.OrdinalIgnoreCase) == null)
-            next["LevelTwoCycleGameMinutes"] = custom ? uniform : crab ? 5760 : 4320;
-        if (!crab && next.GetValue("LevelThreeCycleGameMinutes", StringComparison.OrdinalIgnoreCase) == null)
-            next["LevelThreeCycleGameMinutes"] = custom ? uniform : 5760;
-        next["LevelDurationVersion"] = Version;
-        next["PreviousCycleGameMinutes"] = uniform;
-        next["CycleRulesVersion"] = MachineCycleRules.Version;
-        return next;
-    }
     internal static T Load<T>(IModHelper helper, IMonitor monitor, string name, bool crab, Action<T> validate) where T : new()
     {
         string path = Path.Combine(helper.DirectoryPath, name);

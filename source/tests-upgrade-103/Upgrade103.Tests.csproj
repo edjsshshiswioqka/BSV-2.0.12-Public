@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net6.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../FishingMachine/Eddie.FishingMachine.Core/*.cs" />
+    <Compile Include="../Configuration/MachineBalanceRules.cs" Link="MachineBalanceRules.cs" />
+    <Reference Include="Newtonsoft.Json"><HintPath>$(GamePath)/smapi-internal/Newtonsoft.Json.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>
