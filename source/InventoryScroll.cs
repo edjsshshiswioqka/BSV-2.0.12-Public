@@ -72,7 +72,8 @@ internal static class InventoryScroll
             return s.Total > m.capacity ? s : null;
         }
         // The backpack: any native grid showing the farmer's own items with fewer slots than they own.
-        if (m.playerInventory && ReferenceEquals(ActualField.GetValue(m), Game1.player.Items) && Game1.player.MaxItems > m.capacity && m.capacity > 0)
+        // Not playerInventory: chest and machine menus build their backpack grid with playerInventory = false.
+        if (ReferenceEquals(ActualField.GetValue(m), Game1.player.Items) && Game1.player.MaxItems > m.capacity && m.capacity > 0)
         {
             s = States.GetValue(m, _ => new State { Player = true });
             s.Total = Game1.player.MaxItems;
