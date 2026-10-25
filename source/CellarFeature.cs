@@ -45,7 +45,7 @@ internal sealed class CellarFeature
                     if (errors.Add("foreign")) monitor.Log(BsvI18n.Get(helper,"diag.cellar-foreign")+" ("+ex.Message+")", LogLevel.Warn);
                 }
                 catch (Exception ex) { Error("map", "BSV cellar expansion skipped; the original map was retained.", ex); }
-            }, AssetEditPriority.Late);
+            }, BetterStardewValley.BsvAssets.EditPriority);
         };
         helper.Events.GameLoop.SaveLoaded += (_, _) => CheckCellars();
         helper.Events.GameLoop.DayStarted += (_, _) => CheckCellars();

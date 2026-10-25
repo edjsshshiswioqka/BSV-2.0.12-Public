@@ -69,7 +69,7 @@ internal sealed class AnnualLegendaryFeature
         {
             int changed = AnnualLegendaryData.RemoveLifetimeLimits(asset.AsDictionary<string, LocationData>().Data);
             monitor.Log($"BSV replaced {changed} legendary-fish lifetime limits with yearly quotas.", LogLevel.Trace);
-        }, AssetEditPriority.Late);
+        }, BetterStardewValley.BsvAssets.EditPriority);
     }
 
     private static int LifetimeCount(Farmer player, string id) =>

@@ -51,7 +51,7 @@ internal sealed class TotemArt
                     // Zero is a non-sale placeholder, not an author-designed purchase price. No shop entry; recipes are supplied by TotemUnlockService.
                     Price = 0, Fragility = 0
                 };
-        });
+        }, BetterStardewValley.BsvAssets.EditPriority);
     }
     private Texture2D Texture(TotemKind kind, bool icon)
     {

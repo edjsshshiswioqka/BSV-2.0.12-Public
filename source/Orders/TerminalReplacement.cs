@@ -34,7 +34,7 @@ internal sealed class TerminalReplacement
     {
         if (e.NameWithoutLocale.IsEquivalentTo("Data/mail"))
             e.Edit(a => a.AsDictionary<string, string>().Data[MailId] = BsvI18n.Get(Helper, "orders.terminal-replace-mail")
-                + "%item bigobject " + OrderRules.TerminalId + " %%[#]" + BsvI18n.Get(Helper, "orders.terminal-replace-title"));
+                + "%item bigobject " + OrderRules.TerminalId + " %%[#]" + BsvI18n.Get(Helper, "orders.terminal-replace-title"), BetterStardewValley.BsvAssets.EditPriority);
     }
 
     private void Safe(Action action)

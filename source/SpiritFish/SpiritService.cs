@@ -72,11 +72,11 @@ internal sealed class SpiritService
             string name=e.NameWithoutLocale.Name[SpiritRules.TextureRoot.Length..];
             if(name is "fish" or "soup")e.LoadFrom(()=>SpiritArt.Texture(name,16),AssetLoadPriority.Exclusive);
         }
-        else if(e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))e.Edit(a=>SpiritData.Objects(a.AsDictionary<string,ObjectData>().Data,Tr));
-        else if(e.NameWithoutLocale.IsEquivalentTo("Data/Fish"))e.Edit(a=>SpiritData.Fish(a.AsDictionary<string,string>().Data),AssetEditPriority.Late);
-        else if(e.NameWithoutLocale.IsEquivalentTo("Data/Locations"))e.Edit(a=>SpiritData.Locations(a.AsDictionary<string,LocationData>().Data),AssetEditPriority.Late);
-        else if(e.NameWithoutLocale.IsEquivalentTo("Data/CookingRecipes"))e.Edit(a=>SpiritData.Cooking(a.AsDictionary<string,string>().Data,Tr));
-        else if(e.NameWithoutLocale.IsEquivalentTo("Data/FishPondData"))e.Edit(a=>SpiritData.Ponds(a.GetData<List<FishPondData>>()),AssetEditPriority.Late);
+        else if(e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))e.Edit(a=>SpiritData.Objects(a.AsDictionary<string,ObjectData>().Data,Tr), BetterStardewValley.BsvAssets.EditPriority);
+        else if(e.NameWithoutLocale.IsEquivalentTo("Data/Fish"))e.Edit(a=>SpiritData.Fish(a.AsDictionary<string,string>().Data), BetterStardewValley.BsvAssets.EditPriority);
+        else if(e.NameWithoutLocale.IsEquivalentTo("Data/Locations"))e.Edit(a=>SpiritData.Locations(a.AsDictionary<string,LocationData>().Data), BetterStardewValley.BsvAssets.EditPriority);
+        else if(e.NameWithoutLocale.IsEquivalentTo("Data/CookingRecipes"))e.Edit(a=>SpiritData.Cooking(a.AsDictionary<string,string>().Data,Tr), BetterStardewValley.BsvAssets.EditPriority);
+        else if(e.NameWithoutLocale.IsEquivalentTo("Data/FishPondData"))e.Edit(a=>SpiritData.Ponds(a.GetData<List<FishPondData>>()), BetterStardewValley.BsvAssets.EditPriority);
     }
     private static void Learn()
     {

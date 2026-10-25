@@ -63,9 +63,9 @@ internal sealed class BsvKegFeature
         if (e.NameWithoutLocale.IsEquivalentTo(TextureAsset))
             e.LoadFrom(CreateTexture, AssetLoadPriority.Exclusive);
         else if (e.NameWithoutLocale.IsEquivalentTo("Data/BigCraftables"))
-            e.Edit(a => Register(a.AsDictionary<string, BigCraftableData>().Data, k => BsvI18n.Get(Helper, k)));
+            e.Edit(a => Register(a.AsDictionary<string, BigCraftableData>().Data, k => BsvI18n.Get(Helper, k)), BetterStardewValley.BsvAssets.EditPriority);
         else if (e.NameWithoutLocale.IsEquivalentTo("Data/CraftingRecipes"))
-            e.Edit(a => a.AsDictionary<string, string>().Data[WineRules.BsvKegId] = Recipe(BsvI18n.Get(Helper, "bsv-keg.name")));
+            e.Edit(a => a.AsDictionary<string, string>().Data[WineRules.BsvKegId] = Recipe(BsvI18n.Get(Helper, "bsv-keg.name")), BetterStardewValley.BsvAssets.EditPriority);
     }
     internal static void Register(IDictionary<string, BigCraftableData> data, Func<string,string> translate)
     {

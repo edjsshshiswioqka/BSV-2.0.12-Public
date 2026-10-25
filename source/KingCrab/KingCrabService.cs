@@ -27,9 +27,9 @@ internal sealed class KingCrabService
         {
             if(e.NameWithoutLocale.StartsWith(KingCrabData.TextureRoot))
             {string name=e.NameWithoutLocale.Name[KingCrabData.TextureRoot.Length..];if(name is "fish" or "bowl")e.LoadFrom(()=>Texture(name,16),StardewModdingAPI.Events.AssetLoadPriority.Exclusive);}
-            else if(e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))e.Edit(a=>KingCrabData.Objects(a.AsDictionary<string,ObjectData>().Data,Text,KingCrabData.ApprovedBowl));
-            else if(e.NameWithoutLocale.IsEquivalentTo("Data/Fish"))e.Edit(a=>KingCrabData.Fish(a.AsDictionary<string,string>().Data),StardewModdingAPI.Events.AssetEditPriority.Late);
-            else if(e.NameWithoutLocale.IsEquivalentTo("Data/CookingRecipes"))e.Edit(a=>KingCrabData.Cooking(a.AsDictionary<string,string>().Data,Text,KingCrabData.ApprovedBowl));
+            else if(e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))e.Edit(a=>KingCrabData.Objects(a.AsDictionary<string,ObjectData>().Data,Text,KingCrabData.ApprovedBowl), BetterStardewValley.BsvAssets.EditPriority);
+            else if(e.NameWithoutLocale.IsEquivalentTo("Data/Fish"))e.Edit(a=>KingCrabData.Fish(a.AsDictionary<string,string>().Data), BetterStardewValley.BsvAssets.EditPriority);
+            else if(e.NameWithoutLocale.IsEquivalentTo("Data/CookingRecipes"))e.Edit(a=>KingCrabData.Cooking(a.AsDictionary<string,string>().Data,Text,KingCrabData.ApprovedBowl), BetterStardewValley.BsvAssets.EditPriority);
         };
         helper.Events.Content.AssetsInvalidated+=(_,e)=>{if(e.NamesWithoutLocale.Any(n=>n.StartsWith(KingCrabData.TextureRoot)))ClearTextures();};
         helper.Events.GameLoop.TimeChanged+=(_,_)=>{if(Context.IsWorldReady)KingCrabFoodClock.WorldTick(Game1.player);};

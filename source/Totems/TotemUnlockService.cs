@@ -43,14 +43,14 @@ internal sealed class TotemUnlockService
         {
             var data = a.AsDictionary<string, string>().Data;
             foreach (var r in TotemUnlockRules.Recipes) data[r.Id] = r.Data(Tr(r.Key + ".name"));
-        });
+        }, BetterStardewValley.BsvAssets.EditPriority);
         if (e.NameWithoutLocale.IsEquivalentTo("Data/mail")) e.Edit(a =>
         {
             var data = a.AsDictionary<string, string>().Data;
             foreach (var r in TotemUnlockRules.Recipes)
                 data[r.Mail] = Tr(r.Key + ".mail") + "%item craftingrecipe " + r.Id + " %%[#]" + Tr(r.Key + ".mail-title");
             data[AllRecipesMail] = Tr("totem.all.mail") + "[#]" + Tr("totem.all.mail-title");
-        });
+        }, BetterStardewValley.BsvAssets.EditPriority);
     }
     private bool IsCrop(string id)
     {

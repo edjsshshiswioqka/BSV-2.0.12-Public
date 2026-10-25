@@ -49,9 +49,9 @@ internal sealed class OrderTerminal
  private void Assets(object? sender,AssetRequestedEventArgs e)
  {
   if(e.NameWithoutLocale.IsEquivalentTo(Asset)){e.LoadFromModFile<Texture2D>("assets/orders/terminal-native.png",AssetLoadPriority.Exclusive);return;}
-  if(e.NameWithoutLocale.IsEquivalentTo("Data/mail"))e.Edit(a=>a.AsDictionary<string,string>().Data[MailId]=Tr("orders.terminal-mail")+"%item bigobject "+OrderRules.TerminalId+" %%[#]"+Tr("orders.terminal-mail-title"));
+  if(e.NameWithoutLocale.IsEquivalentTo("Data/mail"))e.Edit(a=>a.AsDictionary<string,string>().Data[MailId]=Tr("orders.terminal-mail")+"%item bigobject "+OrderRules.TerminalId+" %%[#]"+Tr("orders.terminal-mail-title"), BetterStardewValley.BsvAssets.EditPriority);
   if(e.NameWithoutLocale.IsEquivalentTo("Data/BigCraftables"))e.Edit(a=>a.AsDictionary<string,BigCraftableData>().Data[OrderRules.TerminalId]=new()
-  {Name="BSV Order Terminal",DisplayName=Tr("orders.terminal-name"),Description=Tr("orders.terminal-description"),Texture=Asset,SpriteIndex=0,Price=0,Fragility=0,CanBePlacedIndoors=true,CanBePlacedOutdoors=true});
+  {Name="BSV Order Terminal",DisplayName=Tr("orders.terminal-name"),Description=Tr("orders.terminal-description"),Texture=Asset,SpriteIndex=0,Price=0,Fragility=0,CanBePlacedIndoors=true,CanBePlacedOutdoors=true}, BetterStardewValley.BsvAssets.EditPriority);
  }
  // A — use each local farmer's native next-day mail queue. Native mail owns attachment claiming.
  private void ScheduleMail()

@@ -75,14 +75,14 @@ public sealed class GrapeWineFeature
         else if (e.NameWithoutLocale.IsEquivalentTo(BloodTexture))
             e.LoadFromModFile<Texture2D>("assets/items/blood_of_jesus.png", AssetLoadPriority.Exclusive);
         else if (e.NameWithoutLocale.IsEquivalentTo("Data/Crops"))
-            e.Edit(a => Guard("crops", () => WineData.EditCrops(a.AsDictionary<string, CropData>().Data)), AssetEditPriority.Late);
+            e.Edit(a => Guard("crops", () => WineData.EditCrops(a.AsDictionary<string, CropData>().Data)), BetterStardewValley.BsvAssets.EditPriority);
         else if (e.NameWithoutLocale.IsEquivalentTo("Data/Shops"))
-            e.Edit(a => Guard("shops", () => WineData.EditShops(a.AsDictionary<string, ShopData>().Data)), AssetEditPriority.Late);
+            e.Edit(a => Guard("shops", () => WineData.EditShops(a.AsDictionary<string, ShopData>().Data)), BetterStardewValley.BsvAssets.EditPriority);
         else if (e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))
             e.Edit(a => Guard("objects", () => WineData.EditObjects(a.AsDictionary<string, ObjectData>().Data,
-                k => BetterStardewValley.BsvI18n.Get(helper, k).ToString(), GrapeTexture, BloodTexture)), AssetEditPriority.Late);
+                k => BetterStardewValley.BsvI18n.Get(helper, k).ToString(), GrapeTexture, BloodTexture)), BetterStardewValley.BsvAssets.EditPriority);
         else if (e.NameWithoutLocale.IsEquivalentTo("Data/Machines"))
-            e.Edit(a => Guard("machines", () => WineData.EditMachines(a.AsDictionary<string, MachineData>().Data)), AssetEditPriority.Late);
+            e.Edit(a => Guard("machines", () => WineData.EditMachines(a.AsDictionary<string, MachineData>().Data)), BetterStardewValley.BsvAssets.EditPriority);
     }
 
     // This is the native MachineOutputDelegate. Probe calls never roll or modify a machine.

@@ -35,11 +35,11 @@ internal sealed class KingService
         {
             if(e.NameWithoutLocale.StartsWith(KingData.TextureRoot))
             {string name=e.NameWithoutLocale.Name[KingData.TextureRoot.Length..];if(name is "fish" or "sashimi")e.LoadFrom(()=>Texture(name,16),StardewModdingAPI.Events.AssetLoadPriority.Exclusive);}
-            else if(e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))e.Edit(a=>KingData.Objects(a.AsDictionary<string,ObjectData>().Data,Tr,KingData.ApprovedSashimi));
-            else if(e.NameWithoutLocale.IsEquivalentTo("Data/CookingRecipes"))e.Edit(a=>KingData.Cooking(a.AsDictionary<string,string>().Data,Tr,KingData.ApprovedSashimi!=null));
-            else if(e.NameWithoutLocale.IsEquivalentTo("Data/mail"))e.Edit(a=>KingMail.Data(a.AsDictionary<string,string>().Data,Tr,KingData.ApprovedSashimi!=null));
-            else if(e.NameWithoutLocale.IsEquivalentTo("Data/Fish"))e.Edit(a=>KingData.Fish(a.AsDictionary<string,string>().Data),StardewModdingAPI.Events.AssetEditPriority.Late);
-            else if(e.NameWithoutLocale.IsEquivalentTo("Data/FishPondData"))e.Edit(a=>KingData.Ponds(a.GetData<List<FishPondData>>()),StardewModdingAPI.Events.AssetEditPriority.Late);
+            else if(e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))e.Edit(a=>KingData.Objects(a.AsDictionary<string,ObjectData>().Data,Tr,KingData.ApprovedSashimi), BetterStardewValley.BsvAssets.EditPriority);
+            else if(e.NameWithoutLocale.IsEquivalentTo("Data/CookingRecipes"))e.Edit(a=>KingData.Cooking(a.AsDictionary<string,string>().Data,Tr,KingData.ApprovedSashimi!=null), BetterStardewValley.BsvAssets.EditPriority);
+            else if(e.NameWithoutLocale.IsEquivalentTo("Data/mail"))e.Edit(a=>KingMail.Data(a.AsDictionary<string,string>().Data,Tr,KingData.ApprovedSashimi!=null), BetterStardewValley.BsvAssets.EditPriority);
+            else if(e.NameWithoutLocale.IsEquivalentTo("Data/Fish"))e.Edit(a=>KingData.Fish(a.AsDictionary<string,string>().Data), BetterStardewValley.BsvAssets.EditPriority);
+            else if(e.NameWithoutLocale.IsEquivalentTo("Data/FishPondData"))e.Edit(a=>KingData.Ponds(a.GetData<List<FishPondData>>()), BetterStardewValley.BsvAssets.EditPriority);
         };
         helper.Events.Content.AssetsInvalidated+=(_,e)=>{if(e.NamesWithoutLocale.Any(n=>n.StartsWith(KingData.TextureRoot))){foreach(var tex in Textures.Values)HdSprites.Unregister(tex);foreach(var tex in Textures.Values.Distinct())tex.Dispose();Textures.Clear();}};
         helper.Events.Player.InventoryChanged+=(_,e)=>

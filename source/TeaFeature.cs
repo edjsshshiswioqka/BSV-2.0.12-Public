@@ -68,13 +68,13 @@ internal sealed partial class TeaFeature
             if (e.NameWithoutLocale.IsEquivalentTo(TeaAppleData.TextureRoot + texture.Key))
             { e.LoadFromModFile<Texture2D>(texture.Value, AssetLoadPriority.Exclusive); return; }
         string Tr(string key) => BetterStardewValley.BsvI18n.Get(Helper, key).ToString();
-        if (e.NameWithoutLocale.IsEquivalentTo("Data/Objects")) e.Edit(a => TeaAppleData.Objects(a.AsDictionary<string, ObjectData>().Data, Tr), AssetEditPriority.Late);
-        else if (e.NameWithoutLocale.IsEquivalentTo("Data/Shops")) e.Edit(a => TeaAppleData.Shops(a.AsDictionary<string, ShopData>().Data), AssetEditPriority.Late);
-        else if (e.NameWithoutLocale.IsEquivalentTo("Data/Machines")) e.Edit(a => TeaAppleData.Machines(a.AsDictionary<string, MachineData>().Data), AssetEditPriority.Late);
-        else if (e.NameWithoutLocale.IsEquivalentTo("Data/CraftingRecipes")) e.Edit(a => TeaAppleData.Crafting(a.AsDictionary<string, string>().Data, Tr), AssetEditPriority.Late);
-        else if (e.NameWithoutLocale.IsEquivalentTo("Data/CookingRecipes")) e.Edit(a => TeaAppleData.Cooking(a.AsDictionary<string, string>().Data, Tr), AssetEditPriority.Late);
-        else if (e.NameWithoutLocale.IsEquivalentTo("Data/Events/Sunroom")) e.Edit(a => TeaAppleData.Events(a.AsDictionary<string, string>().Data, Tr), AssetEditPriority.Late);
-        else if (e.NameWithoutLocale.IsEquivalentTo("Data/mail")) e.Edit(a => TeaAppleData.Mail(a.AsDictionary<string, string>().Data, Tr), AssetEditPriority.Late);
+        if (e.NameWithoutLocale.IsEquivalentTo("Data/Objects")) e.Edit(a => TeaAppleData.Objects(a.AsDictionary<string, ObjectData>().Data, Tr), BetterStardewValley.BsvAssets.EditPriority);
+        else if (e.NameWithoutLocale.IsEquivalentTo("Data/Shops")) e.Edit(a => TeaAppleData.Shops(a.AsDictionary<string, ShopData>().Data), BetterStardewValley.BsvAssets.EditPriority);
+        else if (e.NameWithoutLocale.IsEquivalentTo("Data/Machines")) e.Edit(a => TeaAppleData.Machines(a.AsDictionary<string, MachineData>().Data), BetterStardewValley.BsvAssets.EditPriority);
+        else if (e.NameWithoutLocale.IsEquivalentTo("Data/CraftingRecipes")) e.Edit(a => TeaAppleData.Crafting(a.AsDictionary<string, string>().Data, Tr), BetterStardewValley.BsvAssets.EditPriority);
+        else if (e.NameWithoutLocale.IsEquivalentTo("Data/CookingRecipes")) e.Edit(a => TeaAppleData.Cooking(a.AsDictionary<string, string>().Data, Tr), BetterStardewValley.BsvAssets.EditPriority);
+        else if (e.NameWithoutLocale.IsEquivalentTo("Data/Events/Sunroom")) e.Edit(a => TeaAppleData.Events(a.AsDictionary<string, string>().Data, Tr), BetterStardewValley.BsvAssets.EditPriority);
+        else if (e.NameWithoutLocale.IsEquivalentTo("Data/mail")) e.Edit(a => TeaAppleData.Mail(a.AsDictionary<string, string>().Data, Tr), BetterStardewValley.BsvAssets.EditPriority);
     }
 
     /// <summary>

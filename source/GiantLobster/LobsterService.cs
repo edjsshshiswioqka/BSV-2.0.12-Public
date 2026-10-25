@@ -24,10 +24,10 @@ internal sealed class LobsterService
         {
             if(e.NameWithoutLocale.StartsWith(LobsterData.TextureRoot))
             {string name=e.NameWithoutLocale.Name[LobsterData.TextureRoot.Length..];if(name is "fish" or "bait" or "dinner")e.LoadFrom(()=>Texture(name,16),AssetLoadPriority.Exclusive);}
-            else if(e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))e.Edit(a=>LobsterData.Objects(a.AsDictionary<string,ObjectData>().Data,Tr));
-            else if(e.NameWithoutLocale.IsEquivalentTo("Data/Fish"))e.Edit(a=>LobsterData.Fish(a.AsDictionary<string,string>().Data),AssetEditPriority.Late);
-            else if(e.NameWithoutLocale.IsEquivalentTo("Data/CraftingRecipes"))e.Edit(a=>LobsterData.Crafting(a.AsDictionary<string,string>().Data,Tr));
-            else if(e.NameWithoutLocale.IsEquivalentTo("Data/CookingRecipes"))e.Edit(a=>LobsterData.Cooking(a.AsDictionary<string,string>().Data,Tr));
+            else if(e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))e.Edit(a=>LobsterData.Objects(a.AsDictionary<string,ObjectData>().Data,Tr), BetterStardewValley.BsvAssets.EditPriority);
+            else if(e.NameWithoutLocale.IsEquivalentTo("Data/Fish"))e.Edit(a=>LobsterData.Fish(a.AsDictionary<string,string>().Data), BetterStardewValley.BsvAssets.EditPriority);
+            else if(e.NameWithoutLocale.IsEquivalentTo("Data/CraftingRecipes"))e.Edit(a=>LobsterData.Crafting(a.AsDictionary<string,string>().Data,Tr), BetterStardewValley.BsvAssets.EditPriority);
+            else if(e.NameWithoutLocale.IsEquivalentTo("Data/CookingRecipes"))e.Edit(a=>LobsterData.Cooking(a.AsDictionary<string,string>().Data,Tr), BetterStardewValley.BsvAssets.EditPriority);
         };
         helper.Events.Content.AssetsInvalidated+=(_,e)=>
         {if(e.NamesWithoutLocale.Any(n=>n.StartsWith(LobsterData.TextureRoot))) {foreach(var tex in Textures.Values)HdSprites.Unregister(tex);foreach(var tex in Textures.Values.Distinct())tex.Dispose();Textures.Clear();}};

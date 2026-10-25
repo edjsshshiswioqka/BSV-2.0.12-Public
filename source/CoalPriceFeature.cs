@@ -30,7 +30,7 @@ internal static class CoalPriceFeature
                     item.IgnoreShopPriceModifiers = true;
                     item.PriceModifiers = null;
                 }
-            }, AssetEditPriority.Late);
+            }, BetterStardewValley.BsvAssets.EditPriority);
         };
     }
 }

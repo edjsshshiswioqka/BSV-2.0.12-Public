@@ -25,7 +25,7 @@ internal sealed class DeveloperLetterService
         helper.Events.Content.AssetRequested += (_, e) =>
         {
             if (e.NameWithoutLocale.IsEquivalentTo("Data/mail"))
-                e.Edit(a => a.AsDictionary<string, string>().Data[DeveloperLetterRules.Id] = DeveloperLetterRules.Letter(k => BsvI18n.Get(helper, k)));
+                e.Edit(a => a.AsDictionary<string, string>().Data[DeveloperLetterRules.Id] = DeveloperLetterRules.Letter(k => BsvI18n.Get(helper, k)), BetterStardewValley.BsvAssets.EditPriority);
         };
         helper.Events.GameLoop.SaveLoaded += (_, _) => CheckPending.Value = true;
         helper.Events.GameLoop.Saving += (_, _) => Saving.Value = true;

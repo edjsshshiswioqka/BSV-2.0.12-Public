@@ -149,16 +149,16 @@ public sealed class ModEntry
     {
         if(e.NameWithoutLocale.IsEquivalentTo("Data/BigCraftables"))e.Edit(a=>a.AsDictionary<string,BigCraftableData>().Data[Id]=new()
         {Name=Id,DisplayName=T("machine.name"),Description=T("machine.description"),Price=0,Fragility=2,
-         CanBePlacedIndoors=true,CanBePlacedOutdoors=true,Texture="Mods/Eddie.BetterStardewValley/FishingIcon",SpriteIndex=0,ContextTags=new(){"eddie_fishing_machine"}});
+         CanBePlacedIndoors=true,CanBePlacedOutdoors=true,Texture="Mods/Eddie.BetterStardewValley/FishingIcon",SpriteIndex=0,ContextTags=new(){"eddie_fishing_machine"}}, BetterStardewValley.BsvAssets.EditPriority);
         if(e.NameWithoutLocale.IsEquivalentTo("Data/BigCraftables"))e.Edit(a=>a.AsDictionary<string,BigCraftableData>().Data[CrabId]=new()
         {Name=CrabId,DisplayName=T("crab.name"),Description=T("crab.description"),Price=0,Fragility=2,
-         CanBePlacedIndoors=true,CanBePlacedOutdoors=true,Texture="Mods/Eddie.BetterStardewValley/CrabIcon",SpriteIndex=0,ContextTags=new(){"bsv_crab_catcher"}});
+         CanBePlacedIndoors=true,CanBePlacedOutdoors=true,Texture="Mods/Eddie.BetterStardewValley/CrabIcon",SpriteIndex=0,ContextTags=new(){"bsv_crab_catcher"}}, BetterStardewValley.BsvAssets.EditPriority);
         if(e.NameWithoutLocale.IsEquivalentTo("Mods/Eddie.BetterStardewValley/FishingIcon"))e.LoadFrom(()=>BetterStardewValley.HdSprites.WideIconHandle(Helper.ModContent.Load<Texture2D>("assets/icon.png")),AssetLoadPriority.Exclusive);
         if(e.NameWithoutLocale.IsEquivalentTo("Mods/Eddie.BetterStardewValley/CrabIcon"))e.LoadFromModFile<Texture2D>("assets/crab-catcher/native-icon.png",AssetLoadPriority.Exclusive);
         if(e.NameWithoutLocale.IsEquivalentTo("Data/CraftingRecipes"))e.Edit(a=>a.AsDictionary<string,string>().Data[CrabId]=
-            $"{string.Join(" ",CrabRules.Craft(false).Select(r=>$"{r.Id} {r.Count}"))}/Home/{CrabId} 1/true/Fishing 6/{T("crab.name")}");
+            $"{string.Join(" ",CrabRules.Craft(false).Select(r=>$"{r.Id} {r.Count}"))}/Home/{CrabId} 1/true/Fishing 6/{T("crab.name")}", BetterStardewValley.BsvAssets.EditPriority);
         if(e.NameWithoutLocale.IsEquivalentTo("Data/CraftingRecipes"))e.Edit(a=>a.AsDictionary<string,string>().Data[Id]=
-            $"{string.Join(" ",PreparationRules.Requirements.Select(r=>$"{r.Id} {r.Count}"))}/Home/{Id} 1/true/Fishing 5/{T("machine.name")}");
+            $"{string.Join(" ",PreparationRules.Requirements.Select(r=>$"{r.Id} {r.Count}"))}/Home/{Id} 1/true/Fishing 5/{T("machine.name")}", BetterStardewValley.BsvAssets.EditPriority);
     }
     private void Unlock()
     {

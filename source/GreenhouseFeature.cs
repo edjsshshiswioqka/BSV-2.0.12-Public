@@ -68,7 +68,7 @@ internal sealed class GreenhouseFeature
             monitor.Log(BsvI18n.Get(helper,"diag.map-error")+"\n"+BsvI18n.Get(helper,"diag.greenhouse-conflict")+$"\n{ex}", LogLevel.Error);
                 }
             }
-        }, AssetEditPriority.Late);
+        }, BetterStardewValley.BsvAssets.EditPriority);
     }
 
     private void MigrateIfNeeded()
