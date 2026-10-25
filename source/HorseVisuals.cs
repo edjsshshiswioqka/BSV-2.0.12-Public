@@ -45,13 +45,12 @@ internal sealed partial class HorseFeature
     private void DrawNames(object? sender, RenderedWorldEventArgs e)
     {
         if (!Ready || !Context.IsWorldReady || !Config.EnableHorseNameUI || Game1.eventUp || Game1.activeClickableMenu != null) return;
-        var player = Game1.player;
         Vector2 cursor = Helper.Input.GetCursorPosition().AbsolutePixels;
         foreach (var horse in Game1.currentLocation.characters.OfType<Horse>().Where(IsRealManagedHorse))
         {
             var visual = VisualBounds(horse.Position);
             bool hover = new Rectangle(visual.X, visual.Y, visual.Width, visual.Height).Contains((int)cursor.X, (int)cursor.Y);
-            if (!hover && Vector2.DistanceSquared(player.Position, horse.Position) > 4 * 64 * 4 * 64) continue;
+            if (!hover) continue; // only while the cursor points at the horse
             string name = string.IsNullOrWhiteSpace(horse.Name) ? T("horse.ui.unnamed") : horse.Name.Trim();
             string label = T("horse.ui.name", new { horseName = name });
             var owner = horse.getOwner();
