@@ -40,6 +40,12 @@ partial class Program
  }
  static void Transactions()
  {
+  {
+   // Tractor Mod's seed attachment: seeds in hand, fertilizer from an Enricher chest, the mod consumes on true.
+   var soil=Dirt();IsHost=true;Player(Host);Host.CurrentToolIndex=0;Host.Items[0]=ItemRegistry.Create("(O)472",5);
+   Check(soil.plant("(O)368",Host,true)&&FertilizerService.Read(soil).Primary=="(O)368"&&Host.Items[0].Stack==5,"M01 non-held caller fertilizes bare soil natively");
+   Check(!soil.plant("(O)465",Host,true)&&!FertilizerService.Read(soil).Dual&&Host.Items[0].Stack==5,"M01 non-held caller cannot add the BSV second slot");
+  }
   foreach(bool same in new[]{true,false})
   {
    var soil=Dirt();IsHost=false;Player(Guest);Guest.CurrentToolIndex=0;Guest.Items[0]=ItemRegistry.Create(same?"(O)368":"(O)465",5);

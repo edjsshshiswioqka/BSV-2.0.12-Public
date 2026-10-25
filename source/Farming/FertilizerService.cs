@@ -129,6 +129,12 @@ internal sealed class FertilizerService
     private static bool Plant(HoeDirt __instance,string itemId,Farmer who,bool isFertilizer,ref bool __result)
     {
         if(!Ready||!isFertilizer||!FertilizerRules.Known(itemId))return true;
+        // Another mod applying fertilizer that is not in the farmer's hand (Tractor Mod's seed attachment taking it
+        // from an Enricher, for example) pays for it itself: bare soil takes it the native way so that mod can
+        // consume its own item. The hand path keeps BSV's escrow below, which also covers Tractor Mod's fertilizer
+        // attachment (the fertilizer is held while riding).
+        bool held=who?.ActiveObject is {} hand&&hand.QualifiedItemId==FertilizerRules.Id(itemId);
+        if(!held&&FertilizerRules.Id(__instance.fertilizer.Value)=="")return true;
         // Return false to every native caller: only the approved transaction consumes.
         // Probe uses CanApply/CheckRules and never reaches this mutating entry point.
         __result=false;

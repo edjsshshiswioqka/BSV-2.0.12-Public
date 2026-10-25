@@ -49,6 +49,21 @@ internal static class InventoryScroll
             if (method == null || method.IsAbstract || !seen.Add(method)) continue;
             h.Patch(method, prefix: new HarmonyMethod(typeof(InventoryScroll), nameof(BeforeWheel)));
         }
+        // Mod menus that scroll their own list after calling the native handler (CJB Item Spawner): over the
+        // backpack only the backpack scrolls.
+        helper.Events.GameLoop.GameLaunched += (_, _) =>
+        {
+            foreach (string name in new[] { "CJBItemSpawner.Framework.ItemMenu" })
+            {
+                try
+                {
+                    var type = AccessTools.TypeByName(name);
+                    var method = type?.GetMethod(nameof(IClickableMenu.receiveScrollWheelAction), BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly, null, new[] { typeof(int) }, null);
+                    if (method != null && seen.Add(method)) h.Patch(method, prefix: new HarmonyMethod(typeof(InventoryScroll), nameof(BeforeWheel)));
+                }
+                catch (Exception ex) { monitor.Log($"Backpack scrolling skipped {name}: {ex.Message}", LogLevel.Trace); }
+            }
+        };
         helper.Events.Input.ButtonPressed += OnButton;
         helper.Events.Input.ButtonReleased += (_, e) => { if (e.Button == SButton.MouseLeft) foreach (var m in Grids()) if (States.TryGetValue(m, out var s)) s.Dragging = false; };
         helper.Events.Input.CursorMoved += (_, _) => Drag();
