@@ -64,8 +64,10 @@ public sealed class GrapeWineFeature
 
     private static void NormalizePrice(SObject __instance)
     {
-        if (__instance.QualifiedItemId == WineRules.GrapeWine && __instance.Price != WineRules.GrapeWinePrice)
-            __instance.Price = WineRules.GrapeWinePrice;
+        // Read and write the net field directly: this prefix also runs on the Price getter itself, so going through
+        // the property here would call this prefix again forever (stack overflow: the game closes without a log).
+        if (__instance.QualifiedItemId == WineRules.GrapeWine && __instance.price.Value != WineRules.GrapeWinePrice)
+            __instance.price.Value = WineRules.GrapeWinePrice;
     }
 
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
