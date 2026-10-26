@@ -45,7 +45,7 @@ internal sealed class ChestsAnywhereSupport
             var online = AccessTools.Method(typeof(Game1), nameof(Game1.getOnlineFarmers))?.ReturnType;
             var update = typeof(NetMutex).GetMethods(BindingFlags.Instance | BindingFlags.Public).FirstOrDefault(m => m.Name == nameof(NetMutex.Update)
                 && m.GetParameters() is { Length: 1 } p && p[0].ParameterType != typeof(GameLocation) && online != null && p[0].ParameterType.IsAssignableFrom(online));
-            if (update == null) throw new MissingMethodException("NetMutex.Update(FarmerCollection) not found.");
+            if (update == null || update.GetParameters()[0].ParameterType != typeof(FarmerCollection)) throw new MissingMethodException("NetMutex.Update(FarmerCollection) not found.");
             new Harmony(ModEntry.Tag + "ChestsAnywhere").Patch(update, prefix: new HarmonyMethod(typeof(ChestsAnywhereSupport), nameof(BeforeMutexUpdate)));
             Supported = true;
         }
@@ -118,9 +118,10 @@ internal sealed class ChestsAnywhereSupport
     }
 
     /// <summary>For a machine in an announced remote session, its lock follows every online player.</summary>
-    private static void BeforeMutexUpdate(NetMutex __instance, object[] __args)
+    /// The farmer list is replaced through a by-ref argument (a change to Harmony's __args array is not passed on).
+    private static void BeforeMutexUpdate(NetMutex __instance, ref FarmerCollection __0)
     {
         if (!Context.IsMainPlayer || RemoteIds.Count == 0 || !MachineIds.TryGetValue(__instance, out var id) || !RemoteIds.Contains(id)) return;
-        __args[0] = Game1.getOnlineFarmers();
+        __0 = Game1.getOnlineFarmers();
     }
 }
