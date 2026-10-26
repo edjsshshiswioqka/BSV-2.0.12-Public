@@ -77,7 +77,7 @@
   "machine.lv3-description": "최고 단계입니다. 다음 주기: 게임 달력 기준 {{days}}일, 미끼와 포획 판정 {{bait}}회. 보관된 생산물은 재가동을 막지 않습니다. 보관 공간: {{capacity}}칸.",
   "status.upgrade3": "현재 단계 {{progress}}/{{needed}} · {{materials}}",
   "grape-wine.name": "농가 특제 포도주",
-  "grape-wine.description": "양조 명인 에디의 비밀 레시피로 빚은 와인. 더 비싼 값에 팔린다.",
+  "grape-wine.description": "양조 명인 Eddie의 비밀 레시피로 빚은 와인. 더 비싼 값에 팔린다.",
   "blood-of-jesus.name": "루비 리저브",
   "blood-of-jesus.description": "특별한 조건에서 우연히만 빚어지는 최고급 레드 와인. 숨이 멎을 듯 아름다운 빛깔을 지녀 시장에서 언제나 없어서 못 판다.",
   "grape-starter.description": "봄, 여름, 가을 내내 자라는 포도 덩굴. 계절이 바뀌어도 시들지 않는다. 격자 구조물에 감겨 자란다.",
