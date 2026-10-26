@@ -109,17 +109,23 @@ internal sealed partial class ProductionService
         // The native side buttons (fill stacks, organize, trash, OK) stay to the right of the windows.
         if(width+2*(64+24)>vw)return null;
         bool upgrade=crab?s.Level==1:s.Level<3;
+        // Chests Anywhere draws its chest list just above the window: keep that strip on screen when it is installed
+        // (first pass), and only give it up if the window can't fit otherwise (second pass).
+        int caReserve=ModEntry.Instance.Helper.ModRegistry.IsLoaded("Pathoschild.ChestsAnywhere")?64:0;
+        for(int pass=0;pass<2;pass++)
         // Variants, roomiest first: 0 = mockup; 1 = without section labels; 2 = also three condition columns.
         for(int variant=0;variant<3;variant++)
         {
+            int reserve=pass==0?caReserve:0;
+            if(pass==1&&caReserve==0)break;
             bool labels=variant==0;int columns=variant==2?3:2;
             int rows=upgrade?(conditions+columns-1)/columns:0;
             int upgradeHeight=upgrade?10+40+rows*RowStep+4+52:10+34;
             int machine=Pad+44+10+50+30+10+(labels?44:0)+areaH+Gap+upgradeHeight+Pad-4;
             int backpack=18+(labels?32:0)+bag.height+Pad;
             int total=machine+Gap+backpack;
-            if(total>vh-16)continue;
-            int x=(vw-width)/2,y=(vh-total)/2,cx=x+Pad,cw=inner;
+            if(total>vh-16-reserve)continue;
+            int x=(vw-width)/2,y=Math.Max(reserve,(vh-total)/2),cx=x+Pad,cw=inner;
             var g=new FullLayout{Window=new(x,y,width,machine),BagWindow=new(x,y+machine+Gap,width,backpack),Labels=labels};
             var dividers=new List<int>();
             int cy=y+Pad;
