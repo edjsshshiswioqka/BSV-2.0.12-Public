@@ -21,6 +21,6 @@ internal sealed partial class ProductionService
     internal static bool InternalInputProtected(Item item, ProductionState state) => state.Kind==MachineKinds.Crab
         ? item is not StardewValley.Object crab || crab.questItem.Value || CrabBaitItem(item) || CrabRules.IsUpgradeMaterial(item.QualifiedItemId)
         : item is not StardewValley.Object obj
-        || obj.questItem.Value || item.QualifiedItemId is "(O)685" or "(O)ChallengeBait" or "(O)DeluxeBait" or "(O)SpecificBait" or GiantLobsterRules.Bait
+        || obj.questItem.Value || IsFishingBait(item.QualifiedItemId)
         || MachineUpgrade.IsMaterial(item.QualifiedItemId, state.Level);
 }

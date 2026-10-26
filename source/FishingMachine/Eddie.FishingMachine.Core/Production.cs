@@ -94,18 +94,18 @@ public sealed class ProductionState
         if(s.Schema==8){if(!MachineTimeline.Valid(s))throw new ArgumentException("Invalid timeline; paid state preserved.");return s;}
         if(s.Timeline!=null)throw new ArgumentException("Timeline in legacy schema.");
         if(s.Kind==MachineKinds.Crab){if(!CrabRules.Valid(s))throw new ArgumentException("Invalid crab cycle; preserved.");return s;}
-        if (s.Kind!=MachineKinds.Fishing || s.FishingBalanceVersion is <0 or >1 || s.Schema is not (3 or 4 or 5 or 6 or 7) || !MachineStateMigration.MetadataValid(s) || s.Level is not (1 or 2 or 3) || s.CompletedCycles < 0 || s.LevelCycles < 0 || s.LevelCycles > s.CompletedCycles
+        if (s.Kind!=MachineKinds.Fishing || s.FishingBalanceVersion is <0 or >2 || s.Schema is not (3 or 4 or 5 or 6 or 7) || !MachineStateMigration.MetadataValid(s) || s.Level is not (1 or 2 or 3) || s.CompletedCycles < 0 || s.LevelCycles < 0 || s.LevelCycles > s.CompletedCycles
             || s.ChallengeExtraFish < 0 || s.ChallengeExtraFish > 2L*s.FishCount
             || s.NormalTreasures < 0 || s.AdvancedTreasures < 0 || s.TreasureItemCount < 0
             || (long)s.NormalTreasures+s.AdvancedTreasures > s.FishCount || s.Phase is not ("idle" or "working" or "ready")
             || s.StartedAt < 0 || s.DueAt < s.StartedAt || s.BaitUsed < 0
             || s.FishCount < 0 || s.OtherCount < 0 || s.EmptyCount < 0
-            || s.CriticalFishCount<0 || s.CriticalFishCount>(s.Level==3||s.Level==2&&s.FishingBalanceVersion==1?2L:1L)*(s.FishCount+s.ChallengeExtraFish) || s.Schema==3 && s.CriticalFishCount!=0
+            || s.CriticalFishCount<0 || s.CriticalFishCount>(s.Level==3||s.Level==2&&s.FishingBalanceVersion>=1?2L:1L)*(s.FishCount+s.ChallengeExtraFish) || s.Schema==3 && s.CriticalFishCount!=0
             || s.Pending is null || s.Pending.Any(p => p.Count <= 0 || string.IsNullOrWhiteSpace(p.Id) || p.Quality is not (0 or 1 or 2 or 4))
             || s.LegendaryPlans is null || s.LegendaryPlans.Count>6
             || s.LegendaryPlans.Select(p=>p.Id).Distinct().Count()!=s.LegendaryPlans.Count
             || s.LegendaryPlans.Count>0 && ((s.Level<2||s.Level==2&&s.FishingBalanceVersion==0) && s.LegendaryPlans.Any(p=>p.Id!=Production.SpiritId) || s.Phase!="working")
-            || s.LegendaryPlans.Any(p=>p.Count<1||p.Count>9||(p.Id==Production.SpiritId ? p.Quality is not (0 or 1 or 2 or 4) || p.Count>3 : s.Level==2&&s.FishingBalanceVersion==1 ? p.Quality is not (1 or 2 or 4) : p.Quality is not (2 or 4))
+            || s.LegendaryPlans.Any(p=>p.Count<1||p.Count>9||(p.Id==Production.SpiritId ? p.Quality is not (0 or 1 or 2 or 4) || p.Count>3 : s.Level==2&&s.FishingBalanceVersion>=1 ? p.Quality is not (1 or 2 or 4) : p.Quality is not (2 or 4))
                 || p.Id is not ("(O)159" or "(O)160" or "(O)163" or "(O)682" or "(O)775" or "(O)Eddie.BetterStardewValley_SpiritFish")
                 || string.IsNullOrWhiteSpace(p.FallbackId) || s.LegendaryPlans.Any(k=>k.Id==p.FallbackId)
                 || s.Pending.Where(c=>c.Id==p.Id && c.Quality==p.Quality).Sum(c=>(long)c.Count)!=p.Count)
@@ -195,6 +195,7 @@ public static class Production
         var qualityRandom = new Random(unchecked(seed ^ 0x19572431));
         var treasureRandom = new Random(unchecked(seed ^ 0x52AB541F));
         var jellyRandom = new Random(unchecked(seed ^ 0x342101AE));
+        var sizeRandom = new Random(unchecked(seed ^ 0x6B2D11F7));   // version 2 only: wild/challenge catch size
         void Add(string id, int count, int quality=0)
         { var key=(id,quality); counts[key]=counts.GetValueOrDefault(key)+count; }
         foreach (var s in bait)
@@ -202,7 +203,7 @@ public static class Production
             // The 30% non-target share excludes the targeted species where alternatives exist.
             var choices = s.Kind == BaitKind.Targeted ? fish.Where(f => f.Id != s.Target && f.Id != SpiritId).ToArray() : fish.Where(f=>f.Id != SpiritId).ToArray();
             if (choices.Length == 0) choices = ordinary;
-            if(config.FishingBalanceVersion>0&&s.Kind==BaitKind.GiantLobster)
+            if(config.FishingBalanceVersion==1&&s.Kind==BaitKind.GiantLobster)
                 choices=choices.Select(f=>f with{Weight=f.Weight*GiantLobsterRules.ValueWeight(f.BasePrice)}).ToArray();
             var rates=config.GetRates(s.Kind,state.Level);
             if(state.Level>=2)rates=new(){Fish=rates.Fish,OtherItem=rates.OtherItem*retainedOther,TargetShareOfFish=rates.TargetShareOfFish};
@@ -237,7 +238,9 @@ public static class Production
                         && GiantLobsterRules.SelectSpirit(true,true,s.Kind,spiritRandom.NextDouble()))id=SpiritId;
                     if(isFish && fish.Any(f=>f.Id==id && f.IsLegendary) && !selectedLegends.Add(id))
                         id=Pick(ordinary,fallbackRandom.NextDouble());
-                    int baseCount = isFish && s.Kind == BaitKind.Challenge ? 3 : 1;
+                    int baseCount = !isFish ? 1 : config.FishingBalanceVersion>=2
+                        ? (id==SpiritId ? 1 : BaitRules.CatchSize(s.Kind,state.Level,sizeRandom.NextDouble()))
+                        : s.Kind == BaitKind.Challenge ? 3 : 1;
                     int bonus = isFish ? baseCount * MachineLevelRules.ExtraMultiplier(config,state.Level,criticalRandom.NextDouble()) : 0;
                     if(id==SpiritId)bonus=Math.Min(bonus,3-baseCount); // the machine's crits still apply (max 3); the rod lands exactly one
                     if (isFish) state.ChallengeExtraFish += baseCount - 1;
@@ -248,7 +251,7 @@ public static class Production
                         state.LegendaryPlans.Add(new(id,baseCount+bonus,quality,Pick(ordinary,fallbackRandom.NextDouble())));
                     if (isFish && (state.Level >= 2 || config.FishingBalanceVersion>0))
                     {
-                        int treasure = MachineLevelRules.Treasure(state.Level,treasureRandom.NextDouble(),config.FishingBalanceVersion);
+                        int treasure = BaitRules.Treasure(s.Kind,state.Level,treasureRandom.NextDouble(),config.FishingBalanceVersion);
                         if (treasure != 0)
                         {
                             if (treasure == 1) state.NormalTreasures++; else state.AdvancedTreasures++;

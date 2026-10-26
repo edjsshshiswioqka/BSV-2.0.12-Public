@@ -682,6 +682,7 @@
   "status.off": "Desligada. Coloque {{needed}} iscas (agora {{count}}) e aperte ON.",
   "panel.power-need-bait": "Isca insuficiente: {{count}} / {{needed}}.",
   "machine.bait-quality": "Qualidade com isca direcionada / de desafio: {{mid}}\nQualidade com isca de luxo: {{high}}\nPode misturar iscas: cada uma conta pelo seu tipo.",
+  "machine.bait-effects": "Isca direcionada: {{target}} dos peixes são o peixe escolhido\nIsca selvagem: {{wild}} de chance de uma captura ter 2 peixes\nÍmã: tesouro / tesouro dourado {{magnet}} por peixe\nIsca de desafio (Nv2+): {{challenge}} de chance de 3 peixes por captura\nIsca mágica: qualquer estação, horário e clima. Isca de lagosta gigante: isca mágica + sempre 3 peixes\nPeixes chefe (após «Família Estendida» do Sr. Qi): sorteio próprio, mesma chance dos lendários\nO ×2 / ×3 da máquina vale além de qualquer isca.",
   "crab.power-on-help": "ON: sempre que houver isca para um ciclo completo, a máquina arma suas armadilhas de novo, ciclo após ciclo. Clique para desligar: ela para na hora, o que já pegou fica e a isca não usada volta para a máquina.",
   "crab.power-off-help": "OFF: a máquina não faz nada. Coloque uma carga completa de isca (Nv. 1: 150, Nv. 2: 350; metade com a profissão Mestre da Isca) e clique para ligar.",
   "spirit.buff.name": "Bênção do espírito",

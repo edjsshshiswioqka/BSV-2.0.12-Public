@@ -682,6 +682,7 @@
   "status.off": "Đã tắt. Bỏ vào {{needed}} mồi (hiện có {{count}}) rồi bấm BẬT.",
   "panel.power-need-bait": "Không đủ mồi để bật: {{count}} / {{needed}}.",
   "machine.bait-quality": "Chất lượng với mồi định hướng / mồi thử thách: {{mid}}\nChất lượng với mồi cao cấp: {{high}}\nTrộn mồi cũng được: mỗi mồi được tính theo loại của nó.",
+  "machine.bait-effects": "Mồi mục tiêu: {{target}} số cá là loại đã chọn\nMồi hoang dã: {{wild}} cơ hội mỗi lần câu được 2 con\nNam châm: rương báu / rương vàng {{magnet}} mỗi con cá\nMồi thử thách (Cấp 2+): {{challenge}} cơ hội mỗi lần câu được 3 con\nMồi ma thuật: mọi mùa, giờ và thời tiết. Mồi tôm hùm khổng lồ: mồi ma thuật + luôn 3 con\nCá trùm (sau nhiệm vụ «Đại gia đình» của ông Qi): lượt riêng, tỉ lệ như cá huyền thoại\n×2 / ×3 của máy được cộng thêm cho mọi loại mồi.",
   "crab.power-on-help": "BẬT: mỗi khi có đủ mồi cho một lượt, máy lại đặt bẫy, hết lượt này đến lượt khác. Bấm để tắt: máy dừng ngay, những gì đã bắt được vẫn giữ nguyên, mồi chưa dùng được trả lại vào máy.",
   "crab.power-off-help": "TẮT: máy không làm gì cả. Bỏ vào đủ mồi cho một lượt (Cấp 1: 150, Cấp 2: 350; giảm một nửa nếu có nghề Bậc Thầy Mồi Câu), rồi bấm để bật.",
   "spirit.buff.name": "Phước Lành Linh Hồn",

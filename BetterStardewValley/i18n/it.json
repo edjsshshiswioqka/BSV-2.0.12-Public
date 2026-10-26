@@ -682,6 +682,7 @@
   "status.off": "Spenta. Inserisci {{needed}} esche (ora {{count}}) e premi ON.",
   "panel.power-need-bait": "Esche insufficienti per avviare: {{count}} / {{needed}}.",
   "machine.bait-quality": "Qualità con esca mirata / esca della sfida: {{mid}}\nQualità con esca deluxe: {{high}}\nPuoi mescolare le esche: ognuna viene valutata in base al proprio tipo.",
+  "machine.bait-effects": "Esca mirata: il {{target}} dei pesci è il pesce scelto\nEsca selvatica: {{wild}} di probabilità che una cattura sia di 2 pesci\nCalamita: tesoro / tesoro dorato {{magnet}} per pesce\nEsca sfida (Liv. 2+): {{challenge}} di probabilità di 3 pesci per cattura\nEsca magica: qualsiasi stagione, ora e meteo. Esca per aragosta gigante: esca magica + sempre 3 pesci\nPesci boss (dopo «Famiglia allargata» del Sig. Qi): tiro separato, stessa probabilità dei leggendari\nIl ×2 / ×3 della macchina si applica in più a ogni esca.",
   "crab.power-on-help": "ACCESA: finché c'è un carico completo di esche, la macchina ripiazza le trappole, ciclo dopo ciclo. Clicca per spegnerla: si ferma subito, il pescato resta e le esche non usate tornano nella macchina.",
   "crab.power-off-help": "SPENTA: la macchina non fa nulla. Inserisci un carico completo di esche (liv. 1: 150, liv. 2: 350; la metà con la professione Mastro d'esche), poi clicca per accenderla.",
   "spirit.buff.name": "Benedizione dello spirito",

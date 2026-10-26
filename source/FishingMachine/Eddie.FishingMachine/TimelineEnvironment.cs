@@ -52,6 +52,7 @@ internal static class TimelineEnvironment
         var end=frames.LastOrDefault(w=>w.From<=(long)day*1440+1560);
         if(end==null)return false;
         return end.Profile.Fish.Any(p=>end.Profile.Day==day&&p.Fish.Any(f=>f.Id==id&&f.IsLegendary))
+            ||end.Profile.Day==day&&end.Profile.MagicFish?.Any(f=>f.Id==id&&f.IsLegendary)==true
             ||end.Profile.SafeFish.GetValueOrDefault(MachineTimeline.Season(day))?.Any(p=>p.Fish.Any(f=>f.Id==id&&f.IsLegendary))==true;
     }
 
@@ -110,6 +111,7 @@ internal static class TimelineEnvironment
                     FishPool.Get(c.Location,c.TileLocation,WorldService.GetFacing(c),owner,WorldService.IsExtended(c),s.Level,Game1.year,boundaries[i],day))).ToList();
             }
             if(profile.UnknownWeather)profile.Fish=profile.SafeFish.GetValueOrDefault(MachineTimeline.Season(profile.Day))??new();
+            profile.MagicFish=FishPool.Get(c.Location,c.TileLocation,WorldService.GetFacing(c),owner,WorldService.IsExtended(c),s.Level,Game1.year,600,magic:true);
             profile.Other=FishPool.Other(c.Location,c.TileLocation,WorldService.GetFacing(c),WorldService.IsExtended(c)).ToList();
             profile.Jelly=FishPool.Jelly(c.Location,c.TileLocation,WorldService.GetFacing(c),WorldService.IsExtended(c));
             if(profile.Other.Count==0)profile.Error="Machine water geometry is no longer valid";

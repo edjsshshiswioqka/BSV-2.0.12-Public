@@ -23,15 +23,21 @@ public sealed class BaitRates
 
 public sealed class BalanceConfig
 {
-    public int FishingBalanceVersion { get; set; } = 1;
+    /// <summary>0 legacy, 1 BSV 2.0, 2 BSV 2.0.14 bait rules (wild, magnet, magic bait; per-level challenge and targeted bait).</summary>
+    public int FishingBalanceVersion { get; set; } = 2;
     public double LevelTwoTripleChance { get; set; } = .10;
     public BalanceConfig ForNewCycle()
     {
-        if(FishingBalanceVersion>0)return this;
+        if(FishingBalanceVersion>=2)return this;
         var c=System.Text.Json.JsonSerializer.Deserialize<BalanceConfig>(System.Text.Json.JsonSerializer.Serialize(this))!;
-        c.FishingBalanceVersion=1;c.BaitPerCycle=200;c.LevelTwoBaitPerCycle=300;c.LevelThreeBaitPerCycle=400;
-        c.FishCriticalChance=.45;c.LevelTwoCriticalChance=.55;c.LevelTwoTripleChance=.10;c.LevelThreeCriticalChance=.66;c.LevelThreeTripleChance=.24;
-        c.RulesVersion=1;return c;
+        if(c.FishingBalanceVersion<1)
+        {
+            c.BaitPerCycle=200;c.LevelTwoBaitPerCycle=300;c.LevelThreeBaitPerCycle=400;
+            c.FishCriticalChance=.45;c.LevelTwoCriticalChance=.55;c.LevelTwoTripleChance=.10;c.LevelThreeCriticalChance=.66;c.LevelThreeTripleChance=.24;
+            c.RulesVersion=1;
+        }
+        // Every new cycle uses the current bait rules; a running cycle keeps the rules it was paid with.
+        c.FishingBalanceVersion=2;return c;
     }
     public bool DebugProduction {get;set;}
     public int BaitPerCycle { get; set; } = 200;
@@ -97,7 +103,7 @@ public sealed class BalanceConfig
             throw new ArgumentException("FishCriticalChance must be between 0 and 1.");
         if (new[]{LevelTwoCriticalChance,LevelThreeCriticalChance,LevelThreeTripleChance}.Any(p=>!double.IsFinite(p)||p<0||p>1)
             || LevelThreeCriticalChance+LevelThreeTripleChance>1)throw new ArgumentException("Invalid level critical probabilities.");
-        if(FishingBalanceVersion is <0 or >1 || !double.IsFinite(LevelTwoTripleChance) || LevelTwoTripleChance<0 || LevelTwoCriticalChance+LevelTwoTripleChance>1)throw new ArgumentException("Invalid fishing balance snapshot.");
+        if(FishingBalanceVersion is <0 or >2 || !double.IsFinite(LevelTwoTripleChance) || LevelTwoTripleChance<0 || LevelTwoCriticalChance+LevelTwoTripleChance>1)throw new ArgumentException("Invalid fishing balance snapshot.");
         if (Normal is null || Deluxe is null || Targeted is null)
             throw new ArgumentException("All three bait rate groups are required.");
         Normal.Validate(nameof(Normal));
@@ -112,13 +118,14 @@ public sealed class BalanceConfig
     public BaitRates GetRates(BaitKind kind, int level=1)
     {
         var rates=BaseRates(kind);
-        if(level<3)return rates;
+        double target=kind==BaitKind.Targeted&&FishingBalanceVersion>=2?BaitRules.TargetShare(level):rates.TargetShareOfFish;
+        if(level<3)return target==rates.TargetShareOfFish?rates:new(){Fish=rates.Fish,OtherItem=rates.OtherItem,TargetShareOfFish=target};
         double other=rates.OtherShare/2;
-        return new(){Fish=1-other,OtherItem=other,TargetShareOfFish=rates.TargetShareOfFish};
+        return new(){Fish=1-other,OtherItem=other,TargetShareOfFish=target};
     }
     private BaitRates BaseRates(BaitKind kind) => kind switch
     {
-        BaitKind.Normal or BaitKind.GiantLobster => Normal,
+        BaitKind.Normal or BaitKind.GiantLobster or BaitKind.Wild or BaitKind.Magnet or BaitKind.Magic => Normal,
         BaitKind.Challenge => Normal,
         BaitKind.Deluxe => Deluxe,
         BaitKind.Targeted => Targeted,

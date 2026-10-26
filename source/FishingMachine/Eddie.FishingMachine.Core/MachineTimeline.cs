@@ -9,6 +9,8 @@ public sealed class MachineTimeline
     public int Version {get;set;}=1;
     public List<CycleLegendaryOpportunity> LegendaryOpportunities {get;set;}=new();
     public CycleLegendaryDecision LegendaryDecision {get;set;}=new();
+    /// <summary>Balance version 2: the boss fish roll (separate from the legendary roll). Null before it is made.</summary>
+    public CycleLegendaryDecision? BossDecision {get;set;}
     public List<MachineOpportunity> Plan {get;set;}=new();
     public List<BaitSpend> FishingBait {get;set;}=new();
     public List<CrabBait> CrabBait {get;set;}=new();
@@ -22,7 +24,7 @@ public sealed class MachineTimeline
     public MachineTimeline Copy()
     {
         var copy=(MachineTimeline)MemberwiseClone();copy.Plan=Plan.ToList();copy.FishingBait=FishingBait.ToList();copy.CrabBait=CrabBait.ToList();
-        copy.LegendaryOpportunities=LegendaryOpportunities.Select(o=>o with{Species=o.Species.ToList()}).ToList();copy.LegendaryDecision=JsonSerializer.Deserialize<CycleLegendaryDecision>(JsonSerializer.Serialize(LegendaryDecision))!;copy.Claims=Claims.ToList();copy.Prepared=Prepared?.Snapshot();return copy;
+        copy.LegendaryOpportunities=LegendaryOpportunities.Select(o=>o with{Species=o.Species.ToList()}).ToList();copy.LegendaryDecision=JsonSerializer.Deserialize<CycleLegendaryDecision>(JsonSerializer.Serialize(LegendaryDecision))!;copy.BossDecision=BossDecision==null?null:JsonSerializer.Deserialize<CycleLegendaryDecision>(JsonSerializer.Serialize(BossDecision));copy.Claims=Claims.ToList();copy.Prepared=Prepared?.Snapshot();return copy;
         // Captured configs are immutable; live configuration is detached by StartFish/StartCrab.
     }
     public static int Day(long at)=>checked((int)((at-360)/1440));
@@ -153,14 +155,18 @@ public sealed class MachineTimeline
             ||t.LegendaryDecision.StatsRecorded&&(!t.LegendaryDecision.Evaluated||t.LegendaryDecision.Hit&&!t.LegendaryDecision.Committed&&!t.LegendaryDecision.CompetitionFallback)
             ||!t.LegendaryDecision.Hit&&(t.LegendaryDecision.Species!=null||t.LegendaryDecision.Ordinal!=-1)
             ||t.LegendaryDecision.Committed&&!t.Claims.Any(c=>c.Id==t.LegendaryDecision.Species&&t.LegendaryOpportunities.Any(o=>o.Ordinal==t.LegendaryDecision.Ordinal&&o.Day==c.Day))
-            ||t.Version>=2&&s.Kind==MachineKinds.Fishing&&t.Claims.Count(c=>c.Id!=Production.SpiritId)>1)return false;
+            ||t.Version>=2&&s.Kind==MachineKinds.Fishing&&t.Claims.Count(c=>c.Id!=Production.SpiritId&&!CycleLegendaryRules.IsBoss(c.Id))>1
+            ||t.Version>=2&&s.Kind==MachineKinds.Fishing&&t.Claims.Count(c=>CycleLegendaryRules.IsBoss(c.Id))>1
+            ||t.BossDecision is {} bossRoll&&(bossRoll.Hit&&(!bossRoll.Evaluated||s.Level<2||!t.LegendaryOpportunities.Any(o=>o.Ordinal==bossRoll.Ordinal&&o.Species.Any(f=>f.Id==bossRoll.Species)))
+                ||bossRoll.Committed&&(!bossRoll.Hit||bossRoll.CompetitionFallback)||bossRoll.CompetitionFallback&&!bossRoll.Hit||!bossRoll.Hit&&(bossRoll.Species!=null||bossRoll.Ordinal!=-1)
+                ||bossRoll.Evaluated&&t.Cursor!=t.Plan.Count))return false;
         try
         {
             if(s.Kind==MachineKinds.Fishing)
             {
                 if(t.FishingConfig==null||t.CrabConfig!=null||s.Crab!=null||t.FishingBait==null||t.FishingBait.Any(b=>b.Count<=0||!Enum.IsDefined(typeof(BaitKind),b.Kind)))return false;
-                if(s.FishingBalanceVersion is <0 or >1||s.FishingBalanceVersion!=t.FishingConfig.FishingBalanceVersion
-                    ||s.ChallengeExtraFish>2L*s.FishCount||s.CriticalFishCount>(s.Level==3||s.Level==2&&s.FishingBalanceVersion==1?2L:1L)*(s.FishCount+s.ChallengeExtraFish)
+                if(s.FishingBalanceVersion is <0 or >2||s.FishingBalanceVersion!=t.FishingConfig.FishingBalanceVersion
+                    ||s.ChallengeExtraFish>2L*s.FishCount||s.CriticalFishCount>(s.Level==3||s.Level==2&&s.FishingBalanceVersion>=1?2L:1L)*(s.FishCount+s.ChallengeExtraFish)
                     ||(long)s.NormalTreasures+s.AdvancedTreasures>s.FishCount||s.TreasureItemCount>5L*(s.NormalTreasures+s.AdvancedTreasures))return false;
                 t.FishingConfig.Validate();if(t.Plan.Count!=s.BaitUsed||t.FishingBait.Sum(b=>(long)b.Count)!=s.BaitUsed||t.Plan.Any(p=>p.Bait>=t.FishingBait.Count))return false;
                 for(int i=0;i<t.FishingBait.Count;i++)if(t.Plan.Count(p=>p.Bait==i)!=t.FishingBait[i].Count)return false;

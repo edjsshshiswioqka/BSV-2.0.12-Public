@@ -15,6 +15,8 @@ public sealed class MachineEnvironmentProfile
     public bool Sewer {get;set;}
     public bool KingCrabEnabled {get;set;}
     public List<TimedMachineFish> Fish {get;set;}=new();
+    /// <summary>Fish for magic bait / giant lobster bait: this water at any season, time of day and weather.</summary>
+    public List<FishChoice> MagicFish {get;set;}=new();
     public List<CrabAquatic> Crab {get;set;}=new();
     public List<string> Other {get;set;}=new();
     public string? Jelly {get;set;}

@@ -23,15 +23,18 @@ public sealed class CycleLegendaryDecision
 }
 public static class CycleLegendaryRules
 {
-    public static bool IsSpecies(string id)=>id is "(O)159" or "(O)160" or "(O)163" or "(O)682" or "(O)775";
+    public static bool IsSpecies(string id)=>id is "(O)159" or "(O)160" or "(O)163" or "(O)682" or "(O)775" || IsBoss(id);
+    /// <summary>Boss fish (the legendary family): rolled separately from the legendary fish, with their own yearly quota.</summary>
+    public static bool IsBoss(string id)=>id is "(O)898" or "(O)899" or "(O)900" or "(O)901" or "(O)902";
+    public const int LegendarySalt=0x671CC12, BossSalt=0x5B0551F;
     public static double Chance(int level)=>level==2?.05:level==3?.15:0;
     public static bool Hit(int level,double roll)
     {if(!double.IsFinite(roll)||roll<0||roll>=1)throw new ArgumentOutOfRangeException(nameof(roll));return roll<Chance(level);}
-    public static CycleLegendaryDecision Decide(int level,int seed,IReadOnlyList<CycleLegendaryOpportunity> opportunities)
+    public static CycleLegendaryDecision Decide(int level,int seed,IReadOnlyList<CycleLegendaryOpportunity> opportunities,int salt=LegendarySalt)
     {
         var d=new CycleLegendaryDecision{Evaluated=true,EligibleOpportunities=opportunities.Count};
         if(level<2||opportunities.Count==0)return d;
-        var random=new Random(MachineTimeline.SeedFor(seed,0,0x671CC12));
+        var random=new Random(MachineTimeline.SeedFor(seed,0,salt));
         if(!(d.Hit=Hit(level,random.NextDouble())))return d;
         // Preserve existing species weights; more legal windows don't duplicate a species' weight.
         var species=opportunities.SelectMany(p=>p.Species).GroupBy(p=>p.Id).Select(g=>g.MaxBy(p=>p.Weight)!).ToArray();

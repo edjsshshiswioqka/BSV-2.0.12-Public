@@ -12,7 +12,32 @@ namespace Eddie.FishingMachine;
 internal static class FishPool
 {
     private static readonly HashSet<string> Excluded = new() { "159", "160", "163", "682", "775", "898", "899", "900", "901", "902" };
-    internal static List<FishChoice> Get(GameLocation location, Vector2 anchor, Facing facing, Farmer owner, bool extended=false, int machineLevel=1, int catchYear=0, int? observedTime=null,int? historicalDay=null,Action<string,string>? reject=null)
+    /// <summary>Game state queries magic bait ignores (vanilla list when the game exposes it).</summary>
+    private static readonly HashSet<string> MagicIgnored = ReadMagicKeys();
+    private static HashSet<string> ReadMagicKeys()
+    {
+        try
+        {
+            if (HarmonyLib.AccessTools.Field(typeof(GameStateQuery), "MagicBaitIgnoreQueryKeys")?.GetValue(null) is IEnumerable<string> keys)
+                return new HashSet<string>(keys, StringComparer.OrdinalIgnoreCase);
+        }
+        catch { }
+        return new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "DAY_OF_MONTH", "DAY_OF_WEEK", "SEASON", "SEASON_DAY", "LOCATION_SEASON", "TIME", "WEATHER", "LOCATION_WEATHER", "IS_RAINING" };
+    }
+    /// <summary>Drops the condition parts a magic bait ignores, and the "Extended Family" order check for an unlocked boss fish.</summary>
+    private static string? Relax(string? condition, bool magic, bool boss)
+    {
+        if (string.IsNullOrWhiteSpace(condition) || !magic && !boss) return condition;
+        var kept = condition.Split(',').Where(part =>
+        {
+            string atom = part.Trim().TrimStart('!');
+            string key = atom.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
+            return !(magic && MagicIgnored.Contains(key)) && !(boss && atom.Contains("LEGENDARY_FAMILY", StringComparison.OrdinalIgnoreCase));
+        });
+        return string.Join(",", kept);
+    }
+    /// <summary>`magic`: the cast uses magic bait (or BSV giant lobster bait): season, time of day and weather are ignored, as on a rod.</summary>
+    internal static List<FishChoice> Get(GameLocation location, Vector2 anchor, Facing facing, Farmer owner, bool extended=false, int machineLevel=1, int catchYear=0, int? observedTime=null,int? historicalDay=null,Action<string,string>? reject=null,bool magic=false)
     {
         int clock=observedTime??Game1.timeOfDay;
         var fishData = DataLoader.Fish(Game1.content);
@@ -35,19 +60,23 @@ internal static class FishPool
                 bool legendary=MachineLegendaryBridge.IsLegendary(raw);
                 bool spirit=BetterStardewValley.SpiritFish.SpiritRules.IsFish(raw);
                 if(spirit)continue; // Never enter the weighted pool through a data candidate.
-                bool allowedLegend=legendary && (machineLevel>=2) && (historicalDay.HasValue?MachineLegendaryBridge.AvailableTimeline(owner,raw,catchYear,true):MachineLegendaryBridge.Available(owner,raw,catchYear>0?catchYear:Game1.year));
+                bool boss=MachineLegendaryBridge.IsBoss(raw);
+                int legendYear=catchYear>0?catchYear:Game1.year;
+                bool allowedLegend=legendary && (machineLevel>=2) && (!boss||MachineLegendaryBridge.BossOpen(legendYear))
+                    && (historicalDay.HasValue?MachineLegendaryBridge.AvailableTimeline(owner,raw,catchYear,true):MachineLegendaryBridge.Available(owner,raw,legendYear));
+                string? condition=Relax(spawn.Condition,magic,boss&&allowedLegend);
                 string? why = legendary && !allowedLegend ? "legendary" : spawn.IsBossFish && !allowedLegend ? "boss"
-                    : spawn.RequireMagicBait ? "magic bait" : spawn.CatchLimit >= 0 && !allowedLegend ? "catch limit"
+                    : spawn.RequireMagicBait && !magic ? "magic bait" : spawn.CatchLimit >= 0 && !allowedLegend ? "catch limit"
                     : !string.IsNullOrEmpty(spawn.SetFlagOnCatch) ? "sets flag" : spawn.UseFishCaughtSeededRandom ? "seeded random"
                     : inherited && !spawn.CanBeInherited ? "not inheritable" : spawn.Chance <= 0 ? "chance 0"
                     : spawn.FishAreaId != null && spawn.FishAreaId != area ? $"fish area {spawn.FishAreaId} (cast area {area ?? "none"})"
-                    : spawn.Season.HasValue && (int)spawn.Season != (historicalDay.HasValue?MachineTimeline.Season(historicalDay.Value):(int)Game1.GetSeasonForLocation(environment)) ? "season"
+                    : !magic && spawn.Season.HasValue && (int)spawn.Season != (historicalDay.HasValue?MachineTimeline.Season(historicalDay.Value):(int)Game1.GetSeasonForLocation(environment)) ? "season"
                     : owner.fishingLevel.Value < spawn.MinFishingLevel ? $"fishing level {owner.fishingLevel.Value}<{spawn.MinFishingLevel}"
                     : castDepth < spawn.MinDistanceFromShore ? $"distance {castDepth}<{spawn.MinDistanceFromShore}"
                     : spawn.MaxDistanceFromShore >= 0 && castDepth > spawn.MaxDistanceFromShore ? $"distance {castDepth}>{spawn.MaxDistanceFromShore}"
                     : spawn.BobberPosition.HasValue && !spawn.BobberPosition.Value.Contains((int)cast.X, (int)cast.Y) ? "bobber position"
                     : spawn.PlayerPosition.HasValue && !spawn.PlayerPosition.Value.Contains(bankTile.X, bankTile.Y) ? "player position"
-                    : !(historicalDay.HasValue?MachineTimeConditions.Historical(spawn.Condition,clock,historicalDay.Value,environment):MachineTimeConditions.Check(spawn.Condition,clock,environment,owner)) ? "condition: "+spawn.Condition
+                    : !(historicalDay.HasValue?MachineTimeConditions.Historical(condition,clock,historicalDay.Value,environment):MachineTimeConditions.Check(condition,clock,environment,owner)) ? "condition: "+spawn.Condition
                     : null;
                 if (why != null) { reject?.Invoke(raw, why); continue; }
                 if (raw.StartsWith("LOCATION_FISH ", StringComparison.Ordinal))
@@ -73,6 +102,13 @@ internal static class FishPool
                 if (fields.Length < 13 || fields[1] == "trap") { reject?.Invoke(raw, "trap fish"); continue; }
                 if (!spawn.IgnoreFishDataRequirements)
                 {
+                    // Magic bait: no time-of-day or weather requirement, only the fishing level.
+                    if (magic)
+                    {
+                        if (!int.TryParse(fields[12], out int need) || owner.fishingLevel.Value < need) { reject?.Invoke(raw, $"fish level {fields[12]} > {owner.fishingLevel.Value}"); continue; }
+                    }
+                    else
+                    {
                     var times = fields[5].Split(' ', StringSplitOptions.RemoveEmptyEntries);
                     bool timeOk = false;
                     for (int i = 0; i + 1 < times.Length; i += 2)
@@ -82,6 +118,7 @@ internal static class FishPool
                         : fields[7] == "rainy" && !environment.IsRainingHere() ? "needs rain" : fields[7] == "sunny" && environment.IsRainingHere() ? "needs sun"
                         : !int.TryParse(fields[12], out int level) || owner.fishingLevel.Value < level ? $"fish level {fields[12]} > {owner.fishingLevel.Value}" : null;
                     if (whyData != null) { reject?.Invoke(raw, whyData); continue; }
+                    }
                 }
                 if (!double.TryParse(fields[10], NumberStyles.Float, CultureInfo.InvariantCulture, out var weight)) continue;
                 weight = Math.Clamp(weight, .001, 1) * Math.Clamp(spawn.Chance, .001f, 1);

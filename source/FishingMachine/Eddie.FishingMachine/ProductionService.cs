@@ -67,6 +67,16 @@ internal sealed partial class ProductionService
         try { return Read(c).BlocksRemoval; } catch { return true; }
     }
 
+    /// <summary>What each bait adds at this level (balance version 2), for the machine's info text.</summary>
+    internal string BaitEffects(int level)
+    {
+        string P(double p)=>(p*100).ToString("0.##",System.Globalization.CultureInfo.InvariantCulture)+"%";
+        var m=BaitRules.MagnetTreasure(level);
+        return Mod.T("machine.bait-effects",new{target=P(BaitRules.TargetShare(level)),wild=P(BaitRules.WildDouble(level)),
+            magnet=P(m[0])+" / "+P(m[1]),challenge=P(BaitRules.ChallengeTriple(level))});
+    }
+    /// <summary>Every bait the fishing machine uses (challenge bait only from level 2).</summary>
+    internal static bool IsFishingBait(string? qualifiedId)=>qualifiedId is "(O)685" or "(O)ChallengeBait" or "(O)DeluxeBait" or "(O)SpecificBait" or "(O)774" or "(O)703" or "(O)908" or GiantLobsterRules.Bait;
     internal static BaitSlot? Bait(Item? item, int index, int level = 1)
     {
         if (item is not StardewValley.Object o || o.Stack <= 0 || o.questItem.Value) return null;
@@ -76,6 +86,9 @@ internal sealed partial class ProductionService
             GiantLobsterRules.Bait => new(index, o.Stack, BaitKind.GiantLobster),
             "(O)ChallengeBait" when level >= 2 => new(index, o.Stack, BaitKind.Challenge),
             "(O)DeluxeBait" => new(index, o.Stack, BaitKind.Deluxe),
+            "(O)774" => new(index, o.Stack, BaitKind.Wild),
+            "(O)703" => new(index, o.Stack, BaitKind.Magnet),
+            "(O)908" => new(index, o.Stack, BaitKind.Magic),
             "(O)SpecificBait" when !string.IsNullOrEmpty(o.preservedParentSheetIndex.Value)
                 => new(index, o.Stack, BaitKind.Targeted, o.preservedParentSheetIndex.Value.StartsWith("(O)")
                     ? o.preservedParentSheetIndex.Value : "(O)" + o.preservedParentSheetIndex.Value),
@@ -452,7 +465,7 @@ internal sealed partial class ProductionService
             string P(double p)=>(p*100).ToString("0.##",System.Globalization.CultureInfo.InvariantCulture)+"%";
             var q=MachineLevelRules.QualityShares(level);var t=MachineLevelRules.TreasureShares(level);
             IClickableMenu.drawHoverText(b,Mod.T("machine.balance",new{capacity=MachineUpgrade.Capacity(level),mult=string.Join(" / ",new[]{1-twice-triple,twice,triple}.Select(P)),
-                quality=string.Join(" / ",q.Select(P)),treasure=string.Join(" / ",t.Select(P)),legend=P(CycleLegendaryRules.Chance(level))})+"\n"+Mod.T("machine.bait-quality",new{mid=string.Join(" / ",MachineLevelRules.QualityShares(level,1,BaitKind.Targeted).Select(P)),high=string.Join(" / ",MachineLevelRules.QualityShares(level,1,BaitKind.Deluxe).Select(P))})+"\n"+Mod.T(level>=2?"machine.no-trash":"machine.trash-lv1"),Game1.smallFont);
+                quality=string.Join(" / ",q.Select(P)),treasure=string.Join(" / ",t.Select(P)),legend=P(CycleLegendaryRules.Chance(level))})+"\n"+Mod.T("machine.bait-quality",new{mid=string.Join(" / ",MachineLevelRules.QualityShares(level,1,BaitKind.Targeted).Select(P)),high=string.Join(" / ",MachineLevelRules.QualityShares(level,1,BaitKind.Deluxe).Select(P))})+"\n"+BaitEffects(level)+"\n"+Mod.T(level>=2?"machine.no-trash":"machine.trash-lv1"),Game1.smallFont);
         }
         string status=Status(c);
         float statusScale=Math.Min(.75f,(menu.inventory.width-16)/Math.Max(1,Game1.smallFont.MeasureString(status).X));
@@ -521,6 +534,9 @@ internal sealed partial class ProductionService
     {
         BaitKind.Deluxe => ItemRegistry.Create("(O)DeluxeBait", count),
         BaitKind.Challenge => ItemRegistry.Create("(O)ChallengeBait", count),
+        BaitKind.Wild => ItemRegistry.Create("(O)774", count),
+        BaitKind.Magnet => ItemRegistry.Create("(O)703", count),
+        BaitKind.Magic => ItemRegistry.Create("(O)908", count),
         BaitKind.GiantLobster => ItemRegistry.Create(GiantLobsterRules.Bait, count),
         BaitKind.Targeted when bait.Target != null => FlavoredBait(bait.Target, count),
         _ => ItemRegistry.Create("(O)685", count)

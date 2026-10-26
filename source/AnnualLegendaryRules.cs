@@ -13,6 +13,22 @@ internal static class AnnualLegendaryRules
     internal static readonly string[] FishIds = { "159", "160", "163", "682", "775" };
     internal const string KeyPrefix = "Eddie.BetterStardewValley/AnnualLegendaryFish/";
 
+    /// <summary>The legendary family (boss fish from Mr. Qi's "Extended Family"). Fishing machines only: one of each per year,
+    /// separate from the legendary fish. Rods keep the game's own rules for these.</summary>
+    internal static readonly string[] BossIds = { "898", "899", "900", "901", "902" };
+    internal static bool IsBoss(string? itemId)
+    {
+        if (itemId is null) return false;
+        string id = itemId.StartsWith("(O)", StringComparison.Ordinal) ? itemId[3..] : itemId;
+        return id is "898" or "899" or "900" or "901" or "902";
+    }
+    /// <summary>Legendary fish, Spirit Fish or boss fish: everything with a yearly machine quota.</summary>
+    internal static string? NormalizeMachineId(string? itemId)
+    {
+        if (NormalizeId(itemId) is { } id) return id;
+        return IsBoss(itemId) ? itemId!.StartsWith("(O)", StringComparison.Ordinal) ? itemId[3..] : itemId : null;
+    }
+
     internal static string? NormalizeId(string? itemId)
     {
         if (itemId is null) return null;

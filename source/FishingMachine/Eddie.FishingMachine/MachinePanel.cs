@@ -30,7 +30,7 @@ internal sealed partial class ProductionService
 
     internal static bool IsCollectible(Item? i)
         => i!=null && i.Stack>0 && !CrabBaitItem(i)
-           && i.QualifiedItemId is not ("(O)685" or "(O)ChallengeBait" or "(O)DeluxeBait" or "(O)SpecificBait" or GiantLobsterRules.Bait);
+           && !IsFishingBait(i.QualifiedItemId);
 
     private static PanelGeometry? PanelFor(ItemGrabMenu menu,bool upgrade,int cards,bool button)
     {
@@ -208,7 +208,7 @@ internal sealed partial class ProductionService
         string P(double p)=>(p*100).ToString("0.##",System.Globalization.CultureInfo.InvariantCulture)+"%";
         var q=MachineLevelRules.QualityShares(level);var t=MachineLevelRules.TreasureShares(level);
         string tip=Mod.T("machine.balance",new{capacity=MachineUpgrade.Capacity(level),mult=string.Join(" / ",new[]{1-twice-triple,twice,triple}.Select(P)),
-            quality=string.Join(" / ",q.Select(P)),treasure=string.Join(" / ",t.Select(P)),legend=P(CycleLegendaryRules.Chance(level))})+"\n"+Mod.T("machine.bait-quality",new{mid=string.Join(" / ",MachineLevelRules.QualityShares(level,1,BaitKind.Targeted).Select(P)),high=string.Join(" / ",MachineLevelRules.QualityShares(level,1,BaitKind.Deluxe).Select(P))})+"\n"+Mod.T(level>=2?"machine.no-trash":"machine.trash-lv1");
+            quality=string.Join(" / ",q.Select(P)),treasure=string.Join(" / ",t.Select(P)),legend=P(CycleLegendaryRules.Chance(level))})+"\n"+Mod.T("machine.bait-quality",new{mid=string.Join(" / ",MachineLevelRules.QualityShares(level,1,BaitKind.Targeted).Select(P)),high=string.Join(" / ",MachineLevelRules.QualityShares(level,1,BaitKind.Deluxe).Select(P))})+"\n"+BaitEffects(level)+"\n"+Mod.T(level>=2?"machine.no-trash":"machine.trash-lv1");
         if(s.Phase=="ready"||s.LastNormalTreasures.HasValue)
             tip+="\n"+Mod.T("status.treasures",new{normal=s.Phase=="ready"?s.NormalTreasures:s.LastNormalTreasures??0,advanced=s.Phase=="ready"?s.AdvancedTreasures:s.LastAdvancedTreasures??0});
         return tip;

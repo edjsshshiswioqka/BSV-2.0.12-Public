@@ -682,6 +682,7 @@
   "status.off": "Éteinte. Mettez {{needed}} appâts ({{count}} pour l'instant) puis ON.",
   "panel.power-need-bait": "Pas assez d'appâts : {{count}} / {{needed}}.",
   "machine.bait-quality": "Qualité avec appât ciblé / de défi : {{mid}}\nQualité avec appât de luxe : {{high}}\nVous pouvez mélanger les appâts : chacun compte selon son type.",
+  "machine.bait-effects": "Appât ciblé : {{target}} des poissons sont le poisson choisi\nAppât sauvage : {{wild}} de chances qu’une prise soit 2 poissons\nAimant : trésor / trésor doré {{magnet}} par poisson\nAppât défi (Niv. 2+) : {{challenge}} de chances d’avoir 3 poissons par prise\nAppât magique : toute saison, heure et météo. Appât de homard géant : appât magique + toujours 3 poissons\nPoissons boss (après « Famille élargie » de M. Qi) : tirage séparé, même chance que les légendaires\nLe ×2 / ×3 de la machine s’ajoute pour tous les appâts.",
   "crab.power-on-help": "ON : dès qu'il y a assez d'appâts pour un cycle complet, la machine repose ses casiers, cycle après cycle. Cliquez pour l'éteindre : elle s'arrête aussitôt, les prises restent et les appâts inutilisés reviennent dans la machine.",
   "crab.power-off-help": "OFF : la machine ne fait rien. Mettez une charge complète d'appâts (niv. 1 : 150, niv. 2 : 350 ; moitié moins avec le métier Maître des leurres), puis cliquez pour l'allumer.",
   "spirit.buff.name": "Bénédiction de l'esprit",

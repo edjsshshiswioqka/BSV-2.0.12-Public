@@ -682,6 +682,7 @@
   "status.off": "Kapalı. {{needed}} yem koy (şu an {{count}}) ve AÇ'a bas.",
   "panel.power-need-bait": "Başlatmak için yeterli yem yok: {{count}} / {{needed}}.",
   "machine.bait-quality": "Hedefli / meydan okuma yemiyle kalite: {{mid}}\nLüks yemle kalite: {{high}}\nYemleri karıştırabilirsin: her yem kendi türüne göre değerlendirilir.",
+  "machine.bait-effects": "Hedefli yem: balıkların {{target}} kadarı seçilen balık\nYabani yem: bir avın 2 balık olma şansı {{wild}}\nMıknatıs: balık başına hazine / altın hazine {{magnet}}\nMeydan okuma yemi (Sv2+): av başına 3 balık şansı {{challenge}}\nSihirli yem: her mevsim, saat ve hava. Dev ıstakoz yemi: sihirli yem + her zaman 3 balık\nPatron balıklar (Bay Qi'nin «Geniş Aile» görevinden sonra): ayrı zar, efsanevilerle aynı şans\nMakinenin ×2 / ×3'ü her yemin üzerine eklenir.",
   "crab.power-on-help": "AÇIK: tam bir yem yükü olduğu sürece makine tur tur kapanları yeniden kurar. Kapatmak için tıkla: hemen durur, o ana kadarki av kalır, kullanılmayan yem makineye geri döner.",
   "crab.power-off-help": "KAPALI: makine hiçbir şey yapmaz. Tam bir yem yükü koy (Sv. 1: 150, Sv. 2: 350; Yemci mesleğiyle yarısı), sonra açmak için tıkla.",
   "spirit.buff.name": "Ruhun Lütfu",

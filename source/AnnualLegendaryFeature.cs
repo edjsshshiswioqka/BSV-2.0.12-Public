@@ -87,11 +87,12 @@ internal sealed class AnnualLegendaryFeature
 
     internal static bool MachineAvailable(Farmer player,string qualifiedId,int year,bool committed=false,bool historical=false)
     {
-        string? id=AnnualLegendaryRules.NormalizeId(qualifiedId);
+        string? id=AnnualLegendaryRules.NormalizeMachineId(qualifiedId);
         if(id==null)return false;
         var record=ReadPlayerRecord(player,id);
         if(id==SpiritId&&!SpiritFreeForFarm(player,year))return false;
-        return Instance?.active==true && (committed||Instance.Handles(id)
+        bool boss=AnnualLegendaryRules.IsBoss(id);
+        return Instance?.active==true && (committed||boss||Instance.Handles(id)
             ? historical&&year<Game1.year||record.Year<year : record.Year==0&&record.LifetimeCount==0);
     }
     private const string SpiritId="Eddie.BetterStardewValley_SpiritFish";
@@ -109,7 +110,7 @@ internal sealed class AnnualLegendaryFeature
     }
     internal static void MarkMachineCatch(Farmer player,string qualifiedId,int year)
     {
-        string id=AnnualLegendaryRules.NormalizeId(qualifiedId) ?? throw new ArgumentException("Not a legendary fish.");
+        string id=AnnualLegendaryRules.NormalizeMachineId(qualifiedId) ?? throw new ArgumentException("Not a legendary fish.");
         var record=ReadPlayerRecord(player,id);
         player.modData[AnnualLegendaryRules.KeyPrefix+id]=new LegendaryCatchRecord(Math.Max(record.Year,year),LifetimeCount(player,id)).Serialize();
     }

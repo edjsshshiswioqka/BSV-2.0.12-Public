@@ -682,6 +682,7 @@
   "status.off": "Aus. {{needed}} Köder einlegen (jetzt {{count}}), dann AN.",
   "panel.power-need-bait": "Zu wenig Köder zum Starten: {{count}} / {{needed}}.",
   "machine.bait-quality": "Qualität mit Gezieltem/Herausforderung Köder: {{mid}}\nQualität mit Deluxe Köder: {{high}}\nGemischte Köder sind kein Problem: Jeder Köder zählt nach seiner Sorte.",
+  "machine.bait-effects": "Zielköder: {{target}} der Fische sind der gewählte Fisch\nWildköder: {{wild}} Chance, dass ein Fang 2 Fische ist\nMagnet: Schatz / Goldschatz {{magnet}} pro Fisch\nHerausforderungsköder (ab Stufe 2): {{challenge}} Chance auf 3 Fische pro Fang\nMagischer Köder: jede Jahreszeit, Uhrzeit und jedes Wetter. Riesenhummerköder: magischer Köder + immer 3 Fische\nBossfische (nach Mr. Qis „Großfamilie“): eigener Wurf, gleiche Chance wie legendäre Fische\n×2 / ×3 der Maschine gilt zusätzlich für jeden Köder.",
   "crab.power-on-help": "AN: Sobald genug Köder für eine volle Runde da sind, legt die Maschine ihre Fallen erneut aus, Runde um Runde. Klicken zum Ausschalten: Sie stoppt sofort, der bisherige Fang bleibt, unbenutzte Köder kommen zurück in die Maschine.",
   "crab.power-off-help": "AUS: Die Maschine tut nichts. Lege eine volle Ladung Köder ein (St. 1: 150, St. 2: 350; mit dem Beruf Lockmeister die Hälfte) und klicke zum Einschalten.",
   "spirit.buff.name": "Segen des Geistes",

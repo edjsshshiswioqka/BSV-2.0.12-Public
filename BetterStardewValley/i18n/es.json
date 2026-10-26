@@ -682,6 +682,7 @@
   "status.off": "Apagada. Pon {{needed}} cebos (hay {{count}}) y pulsa ON.",
   "panel.power-need-bait": "Falta cebo para empezar: {{count}} / {{needed}}.",
   "machine.bait-quality": "Calidad con cebo específico / de desafío: {{mid}}\nCalidad con cebo de lujo: {{high}}\nPuedes mezclar cebos: cada uno cuenta según su tipo.",
+  "machine.bait-effects": "Cebo dirigido: el {{target}} de los peces son el pez elegido\nCebo salvaje: {{wild}} de probabilidad de que una captura sean 2 peces\nImán: tesoro / tesoro dorado {{magnet}} por pez\nCebo de desafío (Nv2+): {{challenge}} de probabilidad de 3 peces por captura\nCebo mágico: cualquier estación, hora y clima. Cebo de langosta gigante: cebo mágico + siempre 3 peces\nPeces jefe (tras «Familia extendida» del Sr. Qi): tirada propia, misma probabilidad que los legendarios\nEl ×2 / ×3 de la máquina se aplica además a cualquier cebo.",
   "crab.power-on-help": "ON: siempre que haya cebo para un ciclo completo, la máquina vuelve a colocar sus trampas, ciclo tras ciclo. Haz clic para apagarla: se detiene al momento, conserva lo capturado y el cebo sin usar vuelve a la máquina.",
   "crab.power-off-help": "OFF: la máquina no hace nada. Pon una carga completa de cebo (niv. 1: 150, niv. 2: 350; la mitad con la profesión As del señuelo) y haz clic para encenderla.",
   "spirit.buff.name": "Bendición del espíritu",

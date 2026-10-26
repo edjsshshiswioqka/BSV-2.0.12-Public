@@ -22,6 +22,8 @@ internal static partial class MachineBalanceMigration
             next["FishCriticalChance"]=.45;next["LevelTwoCriticalChance"]=.55;next["LevelTwoTripleChance"]=.10;
             next["LevelThreeCriticalChance"]=.66;next["LevelThreeTripleChance"]=.24;next["RulesVersion"]=1;
         }
+        // BSV 2.0.14: new cycles use the bait rules of balance version 2 (wild, magnet, magic bait; per-level challenge/targeted bait).
+        if(!crab && next.Value<int?>("FishingBalanceVersion")==1) next["FishingBalanceVersion"]=2;
         if ((next.Value<int?>("LevelDurationVersion") ?? 0) >= Version) return next;
         int original10 = next.Value<int?>("CycleGameMinutes") ?? 2880;
         int uniform = untouched10 ? MachineCycleRules.DefaultMinutes : original10;

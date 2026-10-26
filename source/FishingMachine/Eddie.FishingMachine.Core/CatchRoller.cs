@@ -1,6 +1,6 @@
 namespace Eddie.FishingMachine.Core;
 
-public enum BaitKind { Normal = 0, Deluxe = 1, Targeted = 2, Challenge = 3, GiantLobster = 4 }
+public enum BaitKind { Normal = 0, Deluxe = 1, Targeted = 2, Challenge = 3, GiantLobster = 4, Wild = 5, Magnet = 6, Magic = 7 }
 public enum CatchOutcome { OrdinaryFish, TargetFish, OtherItem, Nothing }
 
 public sealed record BatchSummary(int OrdinaryFish, int TargetFish, int OtherItems, int Nothing, int CriticalFish=0,int CriticalTargetFish=0,int ChallengeExtraFish=0)
@@ -46,7 +46,7 @@ public static class CatchRoller
             var outcome = Decide(kind, rates, random.NextDouble(), random.NextDouble());
             if(outcome is CatchOutcome.OrdinaryFish or CatchOutcome.TargetFish)
             {
-                int multiplicity=kind==BaitKind.Challenge?3:1;
+                int multiplicity=config.FishingBalanceVersion>=2?BaitRules.CatchSize(kind,level,random.NextDouble()):kind==BaitKind.Challenge?3:1;
                 extra+=multiplicity-1;
                 int bonus=multiplicity*MachineLevelRules.ExtraMultiplier(config,level,criticalRandom.NextDouble());
                 critical+=bonus;if(outcome==CatchOutcome.TargetFish)criticalTargeted+=bonus;

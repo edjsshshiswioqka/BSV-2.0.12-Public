@@ -13,11 +13,25 @@ internal static class MachineLegendaryBridge
     // Spirit Fish: one per year for the whole farm, so every player shares one reservation slot (owner 0).
     private static bool FarmWide(string id)=>AnnualLegendaryRules.NormalizeId(id)=="Eddie.BetterStardewValley_SpiritFish";
     private static string Key(long owner,string id,int year)=>$"{(FarmWide(id)?0:owner)}/{year}/{id}";
-    internal static bool IsLegendary(string id)=>AnnualLegendaryRules.NormalizeId(id)!=null;
+    internal static bool IsLegendary(string id)=>AnnualLegendaryRules.NormalizeMachineId(id)!=null;
+    internal static bool IsBoss(string id)=>AnnualLegendaryRules.IsBoss(id);
+    private const string BossYearKey="Eddie.BetterStardewValley/BossFishUnlockedYear";
+    /// <summary>Host only: remember the year Mr. Qi's "Extended Family" order was first seen active.</summary>
+    internal static void ObserveBossOrder()
+    {
+        if(!Game1.IsMasterGame||Game1.getFarm() is not {} farm||farm.modData.ContainsKey(BossYearKey))return;
+        if(Game1.player.team.SpecialOrderRuleActive("LEGENDARY_FAMILY"))farm.modData[BossYearKey]=Game1.year.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    }
+    /// <summary>Boss fish can be caught by machines while the order is active, and in every later year.</summary>
+    internal static bool BossOpen(int year)
+    {
+        if(year==Game1.year&&Game1.player.team.SpecialOrderRuleActive("LEGENDARY_FAMILY"))return true;
+        return Game1.getFarm()?.modData.TryGetValue(BossYearKey,out var raw)==true&&int.TryParse(raw,out int first)&&year>first;
+    }
     internal static int CompletionYear(long minute)=>(int)(Math.Max(0,minute-360)/1440/112)+1;
     private static Dictionary<string,string> Read()=>Game1.MasterPlayer.modData.TryGetValue(LedgerKey,out var raw)
         ? JsonSerializer.Deserialize<Dictionary<string,string>>(raw) ?? throw new InvalidOperationException("Invalid legendary reservations.") : new();
-    internal static bool Reserved(long owner,string id,int year)=>Read().ContainsKey(Key(owner,"(O)"+AnnualLegendaryRules.NormalizeId(id),year));
+    internal static bool Reserved(long owner,string id,int year)=>Read().ContainsKey(Key(owner,"(O)"+AnnualLegendaryRules.NormalizeMachineId(id),year));
     internal static bool Available(Farmer owner,string id,int year)=>AnnualLegendaryFeature.MachineAvailable(owner,id,year)
         && !Reserved(owner.UniqueMultiplayerID,id,year);
     private const string SettledKey=ModEntry.Tag+"TimelineLegendarySettled/v1";
@@ -44,7 +58,7 @@ internal static class MachineLegendaryBridge
             foreach(var plan in unit.LegendaryPlans)
             {
                 if(!AvailableTimeline(owner,plan.Id,year,true))throw new InvalidOperationException("Dated legendary quota changed; opportunity retained.");
-                string record=AnnualLegendaryRules.KeyPrefix+AnnualLegendaryRules.NormalizeId(plan.Id);
+                string record=AnnualLegendaryRules.KeyPrefix+AnnualLegendaryRules.NormalizeMachineId(plan.Id);
                 before[record]=owner.modData.TryGetValue(record,out var old)?old:null;
                 string token=next.CycleToken+":"+next.Timeline!.Cursor;
                 ledger.Add(Key(owner.UniqueMultiplayerID,plan.Id,year),token);
@@ -106,7 +120,7 @@ internal static class MachineLegendaryBridge
         {
             foreach(var plan in state.LegendaryPlans)
             {
-                string recordKey=AnnualLegendaryRules.KeyPrefix+AnnualLegendaryRules.NormalizeId(plan.Id);
+                string recordKey=AnnualLegendaryRules.KeyPrefix+AnnualLegendaryRules.NormalizeMachineId(plan.Id);
                 records[recordKey]=owner.modData.TryGetValue(recordKey,out var old)?old:null;
                 string key=Key(state.OwnerId,plan.Id,state.LegendaryYear);
                 // A manually hooked fish may finish before the reservation reaches that client.

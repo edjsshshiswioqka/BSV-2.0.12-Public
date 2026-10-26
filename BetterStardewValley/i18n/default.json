@@ -682,6 +682,7 @@
   "status.off": "Switched off. Put in {{needed}} bait (now {{count}}) and press ON.",
   "panel.power-need-bait": "Not enough bait to start: {{count}} / {{needed}}.",
   "machine.bait-quality": "Quality with targeted / challenge bait: {{mid}}\nQuality with deluxe bait: {{high}}\nMixed bait is fine: every bait is judged by its own type.",
+  "machine.bait-effects": "Targeted bait: {{target}} of the fish are the chosen fish\nWild bait: {{wild}} chance a catch is 2 fish\nMagnet: treasure / golden treasure {{magnet}} per fish\nChallenge bait (Lv2+): {{challenge}} chance a catch is 3 fish\nMagic bait: any season, time and weather. Giant lobster bait: magic bait + always 3 fish\nBoss fish (after Mr. Qi's Extended Family): own roll, same chance as legendary fish\nThe machine's ×2 / ×3 applies on top of every bait.",
   "crab.power-on-help": "ON: whenever there is a full load of bait the machine sets its traps again, cycle after cycle. Click to switch off: it stops now, the catch so far stays, unused bait comes back into the machine.",
   "crab.power-off-help": "OFF: the machine does nothing. Put in a full load of bait (Lv1 150, Lv2 350; half with the Luremaster profession), then click to switch on.",
   "spirit.buff.name": "Spirit's Blessing",

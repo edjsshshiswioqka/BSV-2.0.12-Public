@@ -34,11 +34,15 @@ internal sealed partial class ProductionService
                 else
                 {
                     int time=MachineTimeline.Time(op.At),year=MachineTimeline.Year(day);
-                    var fish=env.Fish.FirstOrDefault(p=>time>=p.From&&time<p.Until)?.Fish??new();
+                    var bait=t.FishingBait[op.Bait] with{Count=1};
+                    bool rules2=(t.FishingConfig?.FishingBalanceVersion??0)>=2;
+                    // Magic bait / giant lobster bait: this water's fish at any season, time and weather.
+                    bool magic=rules2&&BaitRules.IgnoresSeasonTimeWeather(bait.Kind);
+                    var fish=(magic&&env.MagicFish is {Count:>0} magicPool?magicPool.ToList():null)??env.Fish.FirstOrDefault(p=>time>=p.From&&time<p.Until)?.Fish??new();
+                    if(!rules2)fish=fish.Where(f=>!MachineLegendaryBridge.IsBoss(f.Id)).ToList();   // cycles paid before 2.0.14 never get boss fish
                     var diag=CycleDiag.GetValueOrDefault(original.CycleToken);
                     CycleDiag[original.CycleToken]=(diag.Casts+1,diag.NoFish+(fish.Any(f=>!f.IsLegendary)?0:1),diag.Unwatched+(env.UnknownWeather?1:0));
                     fish=fish.Where(f=>!f.IsLegendary||MachineLegendaryBridge.AvailableTimeline(owner,f.Id,year,TimelineEnvironment.ObservedQuota(original.CycleToken,day,f.Id))).ToList();
-                    var bait=t.FishingBait[op.Bait] with{Count=1};
                     if(t.Version>=2)legendaryCandidates=fish.Where(f=>f.IsLegendary&&f.Id!=Production.SpiritId).ToList();
                     if(t.Version>=2)fish=fish.Where(f=>!f.IsLegendary||f.Id==Production.SpiritId).ToList();
                     var other=env.Other;
@@ -94,11 +98,13 @@ internal sealed partial class ProductionService
                     if(legendaryCandidates.Count==0)
                     {
                         int time=MachineTimeline.Time(op.At),year=MachineTimeline.Year(day);
-                        legendaryCandidates=(env.Fish.FirstOrDefault(p=>time>=p.From&&time<p.Until)?.Fish??new())
-                            .Where(f=>f.IsLegendary&&f.Id!=Production.SpiritId&&MachineLegendaryBridge.AvailableTimeline(owner,f.Id,year,TimelineEnvironment.ObservedQuota(original.CycleToken,day,f.Id))).ToList();
+                        bool rules2=(t.FishingConfig?.FishingBalanceVersion??0)>=2;
+                        bool magic=rules2&&BaitRules.IgnoresSeasonTimeWeather(t.FishingBait[op.Bait].Kind);
+                        legendaryCandidates=((magic&&env.MagicFish is {Count:>0} magicPool2?magicPool2.ToList():null)??env.Fish.FirstOrDefault(p=>time>=p.From&&time<p.Until)?.Fish??new())
+                            .Where(f=>f.IsLegendary&&f.Id!=Production.SpiritId&&(rules2||!MachineLegendaryBridge.IsBoss(f.Id))&&MachineLegendaryBridge.AvailableTimeline(owner,f.Id,year,TimelineEnvironment.ObservedQuota(original.CycleToken,day,f.Id))).ToList();
                     }
                     // Treasury shares may have the same ID; original fish quantity comes from counters.
-                    var catchItem=unit.Pending.FirstOrDefault(p=>env.Fish.Any(w=>w.Fish.Any(f=>!f.IsLegendary&&f.Id==p.Id)));
+                    var catchItem=unit.Pending.FirstOrDefault(p=>env.Fish.Any(w=>w.Fish.Any(f=>!f.IsLegendary&&f.Id==p.Id))||env.MagicFish?.Any(f=>!f.IsLegendary&&f.Id==p.Id)==true);
                     if(catchItem!=null&&legendaryCandidates.Count>0)
                         next.Timeline!.LegendaryOpportunities.Add(new(day,op.Ordinal,catchItem.Id,unit.ProducedFishCount,catchItem.Quality,legendaryCandidates));
                 }
@@ -129,22 +135,34 @@ internal sealed partial class ProductionService
         if(t==null||t.Version<2||state.Kind!=MachineKinds.Fishing||t.Cursor!=t.Plan.Count||Now<state.DueAt)return;
         var owner=Game1.GetPlayer(state.OwnerId,onlyOnline:false)??throw new InvalidOperationException("Machine owner unavailable.");
         if(state.Level>=2&&t.LegendaryOpportunities.Count>0&&MachineLegendaryBridge.ManualCatchPending(state.OwnerId))throw new InvalidOperationException("Waiting for the owner's in-flight manual catch before settling legendary quota.");
-        if(!t.LegendaryDecision.Evaluated)
+        SettleChannel(c,state,owner,boss:false);
+        // Balance version 2: boss fish have their own roll and quota, after the legendary one (never on the same catch).
+        if((t.FishingConfig?.FishingBalanceVersion??0)>=2)SettleChannel(c,state,owner,boss:true);
+    }
+    private void SettleChannel(Chest c,ProductionState state,Farmer owner,bool boss)
+    {
+        var t=state.Timeline!;
+        var d=boss?t.BossDecision:t.LegendaryDecision;
+        if(d==null||!d.Evaluated)
         {
-            var candidates=t.LegendaryOpportunities.Select(o=>o with{Species=o.Species.Where(f=>MachineLegendaryBridge.AvailableTimeline(owner,f.Id,MachineTimeline.Year(o.Day),true)).ToList()})
-                .Where(o=>o.Species.Count>0).ToList();
-            t.LegendaryDecision=CycleLegendaryRules.Decide(state.Level,state.Seed,candidates);
+            var candidates=t.LegendaryOpportunities.Select(o=>o with{Species=o.Species.Where(f=>CycleLegendaryRules.IsBoss(f.Id)==boss
+                    &&MachineLegendaryBridge.AvailableTimeline(owner,f.Id,MachineTimeline.Year(o.Day),true)).ToList()})
+                .Where(o=>o.Species.Count>0&&!(boss&&t.LegendaryDecision.Hit&&o.Ordinal==t.LegendaryDecision.Ordinal)).ToList();
+            d=CycleLegendaryRules.Decide(state.Level,state.Seed,candidates,boss?CycleLegendaryRules.BossSalt:CycleLegendaryRules.LegendarySalt);
+            if(boss)t.BossDecision=d;else t.LegendaryDecision=d;
             Commit(c,null,state); // fixed result survives crash/reload before quota reservation
         }
-        var d=t.LegendaryDecision;
         void Record()
         {
             if(d.StatsRecorded)return;
-            var stats=state.LegendaryStats;stats.Total=checked(stats.Total+1);
-            if(d.EligibleOpportunities>0)stats.Eligible=checked(stats.Eligible+1);
-            if(d.Hit)stats.Hits=checked(stats.Hits+1);
-            if(d.CompetitionFallback)stats.CompetitionFallbacks=checked(stats.CompetitionFallbacks+1);
-            if(d.Committed)stats.Submitted=checked(stats.Submitted+1);
+            if(!boss)
+            {
+                var stats=state.LegendaryStats;stats.Total=checked(stats.Total+1);
+                if(d.EligibleOpportunities>0)stats.Eligible=checked(stats.Eligible+1);
+                if(d.Hit)stats.Hits=checked(stats.Hits+1);
+                if(d.CompetitionFallback)stats.CompetitionFallbacks=checked(stats.CompetitionFallbacks+1);
+                if(d.Committed)stats.Submitted=checked(stats.Submitted+1);
+            }
             d.StatsRecorded=true;Commit(c,null,state);
         }
         if(!d.Hit||d.Committed||d.CompetitionFallback){Record();return;}

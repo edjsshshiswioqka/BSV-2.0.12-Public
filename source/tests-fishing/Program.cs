@@ -204,5 +204,40 @@ foreach (int lv in levels) Near(MachineLevelRules.QualityShares(lv).Sum(), 1, 1e
     Check(other_bait == 0, "no Spirit Fish without Giant Lobster Bait");
 }
 
+// ---- 10. BSV 2.0.14 bait rules (balance version 2): each bait's own effect grows with the level, then ×2/×3 ----
+{
+    Check(cfg.FishingBalanceVersion == 2, "new cycles use balance version 2");
+    foreach (int lv in levels)
+    {
+        var prev = new ProductionState { Level = lv };
+        (double Extra, double Treasure, double Target, int Max) Run(BaitKind kind, string? target = null)
+        {
+            long fish = 0, extra = 0, treasure = 0, hit = 0; int max = 0;
+            for (int i = 0; i < 30000; i++)
+            {
+                var u = Production.Begin(cfg, new[] { new BaitSpend(0, 1, kind, target) }, fishes, other, start, 9000 + i * 7919, prev, "(O)SeaJelly", true);
+                fish += u.FishCount; extra += u.ChallengeExtraFish; treasure += u.NormalTreasures + u.AdvancedTreasures;
+                if (u.FishCount > 0) max = Math.Max(max, u.ProducedFishCount);
+                if (target != null && u.FishCount > 0 && u.Pending.Any(p => p.Id == target)) hit++;
+            }
+            return (extra / (double)fish, treasure / (double)fish, hit / (double)fish, max);
+        }
+        var normal = Run(BaitKind.Normal);
+        Near(Run(BaitKind.Wild).Extra, BaitRules.WildDouble(lv), .015, $"Lv{lv} wild bait: chance of 2 fish");
+        var magnet = Run(BaitKind.Magnet);
+        Near(magnet.Treasure, BaitRules.MagnetTreasure(lv).Sum(), .015, $"Lv{lv} magnet: treasure per fish");
+        Check(magnet.Treasure > normal.Treasure * 2, $"Lv{lv} magnet finds far more treasure than plain bait");
+        var lobster = Run(BaitKind.GiantLobster);
+        Check(Math.Abs(lobster.Extra - 2) < 1e-9, $"Lv{lv} giant lobster bait: always 3 fish per catch");
+        Check(lobster.Max <= 9 && (lv == 1 || lobster.Max == 9), $"Lv{lv} giant lobster bait: at most 9 fish per catch (3 × triple)");
+        Check(Run(BaitKind.Magic).Extra == 0 && Run(BaitKind.Magic).Max <= 3, $"Lv{lv} magic bait: plain catch size");
+        if (lv >= 2) Near(Run(BaitKind.Challenge).Extra, 2 * BaitRules.ChallengeTriple(lv), .03, $"Lv{lv} challenge bait: chance of 3 fish");
+        Near(Run(BaitKind.Targeted, fishes[0].Id).Target, BaitRules.TargetShare(lv), .015, $"Lv{lv} targeted bait: share of the chosen fish");
+    }
+    var v1 = new BalanceConfig { FishingBalanceVersion = 1 };
+    var old = Production.Begin(v1, new[] { new BaitSpend(0, 1, BaitKind.Challenge, null) }, fishes, other, start, 4242, new ProductionState { Level = 2 }, "(O)SeaJelly", true);
+    Check(old.FishCount == 0 || old.ChallengeExtraFish == 2 * old.FishCount, "a cycle paid under the old rules keeps challenge bait at 3 fish");
+}
+
 Console.WriteLine($"{{\"suite\":\"fishing-machine\",\"passed\":{passed},\"failed\":{failed},\"status\":\"{(failed == 0 ? "PASS" : "FAIL")}\"}}");
 return failed == 0 ? 0 : 1;
