@@ -81,7 +81,6 @@ internal sealed partial class AfkFishingService
         try { InstallPatches(harmony); }
         catch { harmony.UnpatchAll(owner); Instance = null; throw; }
         helper.Events.Input.ButtonPressed += OnButton;
-        helper.Events.Input.MouseWheelScrolled += (_, _) => { if (Current.Data.Enabled) Stop(); };
         helper.Events.GameLoop.UpdateTicked += (_, _) => Guard(Tick);
         helper.Events.Content.AssetsInvalidated += (_, e) =>
         {
@@ -227,6 +226,17 @@ internal sealed partial class AfkFishingService
 
         || button is SButton.T or SButton.ControllerX or SButton.W or SButton.A or SButton.S or SButton.D or SButton.Escape
         or SButton.MouseLeft or SButton.MouseRight || button.IsActionButton() || button.IsUseToolButton();
+    internal static bool StopsAfk(SButton button)
+    {
+        if (button is SButton.MouseLeft or SButton.MouseRight or SButton.MouseMiddle
+            or SButton.W or SButton.A or SButton.S or SButton.D or SButton.Up or SButton.Down or SButton.Left or SButton.Right
+            or SButton.DPadUp or SButton.DPadDown or SButton.DPadLeft or SButton.DPadRight
+            or SButton.LeftThumbstickUp or SButton.LeftThumbstickDown or SButton.LeftThumbstickLeft or SButton.LeftThumbstickRight) return true;
+        // The player's own remapped movement keys.
+        var o = Game1.options;
+        return o != null && button.TryGetKeyboard(out var key)
+            && new[] { o.moveUpButton, o.moveDownButton, o.moveLeftButton, o.moveRightButton }.Any(list => list?.Any(b => b.key == key) == true);
+    }
     private void OnButton(object? sender, ButtonPressedEventArgs e)
     {
         if (!Context.IsWorldReady) return;
@@ -241,13 +251,11 @@ internal sealed partial class AfkFishingService
                 Helper.Input.Suppress(e.Button); Enable(); return;
             }
             if (!(Current.Data.Enabled || Current.Enabling)) return;
-            // Includes remapped movement keys and gamepad controls through SMAPI's semantic API.
-            if (e.Button.IsActionButton() || e.Button.IsUseToolButton() || (e.Button is SButton.W or SButton.A or SButton.S or SButton.D or SButton.Up or SButton.Down
-                    or SButton.Left or SButton.Right or SButton.Escape or SButton.ControllerB
-                    or SButton.DPadUp or SButton.DPadDown or SButton.DPadLeft or SButton.DPadRight
-                    or SButton.LeftThumbstickUp or SButton.LeftThumbstickDown or SButton.LeftThumbstickLeft or SButton.LeftThumbstickRight
-                    or SButton.MouseLeft or SButton.MouseRight)) Stop();
-            else if (Game1.activeClickableMenu == null) Stop(); // other explicit gameplay key: yield control.
+            // Only the four movement directions and mouse clicks hand control back. Every other key
+            // (menus, chat, hotbar, Esc...) keeps AFK running; moving the mouse or the wheel does nothing.
+            if (StopsAfk(e.Button)) { Stop(); return; }
+            // Tool/action keys would reel in or swing the rod and break the running cast: ignored while AFK.
+            if (Game1.activeClickableMenu == null && (e.Button.IsUseToolButton() || e.Button.IsActionButton())) Helper.Input.Suppress(e.Button);
         });
     }
     private bool SafeWorld => Context.IsWorldReady && !Current.Saving && !Game1.eventUp && !Game1.isFestival()
