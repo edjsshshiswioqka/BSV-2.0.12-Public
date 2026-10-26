@@ -717,5 +717,7 @@
   "afk.hint.status": "{{state}} · 기력 {{energy}}%",
   "config.professions-skill": "{{skill}}: 모든 직업",
   "config.professions-skill.help": "켜기: {{skill}}은(는) 5레벨과 10레벨에서 해당 단계의 모든 직업을 얻습니다. 끄기: {{skill}}은(는) 원래의 둘 중 하나 선택을 유지합니다. 이미 가진 직업은 유지됩니다.",
-  "professions.ui.not-chosen": "이 직업은 선택하지 않았습니다 (이 기술은 원래의 선택 방식을 사용합니다)."
+  "professions.ui.not-chosen": "이 직업은 선택하지 않았습니다 (이 기술은 원래의 선택 방식을 사용합니다).",
+  "two-story-shed.name": "2층 창고",
+  "two-story-shed.description": "1층과 똑같이 넓은 2층이 있는 큰 창고. 계단은 문 옆에 있다."
 }

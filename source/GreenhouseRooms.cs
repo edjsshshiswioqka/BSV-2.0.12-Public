@@ -51,7 +51,7 @@ internal static class GreenhouseRooms
 
     // ------------------------------------------------------------------ tile helpers
     private static string? Prop(Tile? t, string key) => GreenhouseMap.Property(t, key);
-    private static Tile? Copy(Tile? source, Layer layer)
+    internal static Tile? Copy(Tile? source, Layer layer)
     {
         if (source is null) return null;
         TileSheet sheet = layer.Map.GetTileSheet(source.TileSheet.Id)
@@ -64,8 +64,8 @@ internal static class GreenhouseRooms
         foreach (var p in source.Properties) copy.Properties[p.Key] = p.Value;
         return copy;
     }
-    private static StaticTile New(Layer layer, string sheet, int index) => new(layer, layer.Map.GetTileSheet(sheet), BlendMode.Alpha, index);
-    private static Map Blank(Map source, string id, int width, int height)
+    internal static StaticTile New(Layer layer, string sheet, int index) => new(layer, layer.Map.GetTileSheet(sheet), BlendMode.Alpha, index);
+    internal static Map Blank(Map source, string id, int width, int height)
     {
         var map = new Map(id);
         foreach (var s in source.TileSheets)
@@ -151,13 +151,26 @@ internal static class GreenhouseRooms
         // keep their own floor and edge strip, so nothing sticks out into their walkways.
         Open(grown, BaseWidth - 1, OrchardX, CorridorTop, CorridorTop + CorridorRows - 1);
         // Cells that are empty on every layer (the gap, the space under the greenhouse) become solid black, so nobody
-        // can walk off the map. Cells with any tile (e.g. the glass walls, which have no floor under them) are left alone.
-        var layersAll = grown.ToArray();
-        for (int y = 0; y < height; y++)
-            for (int x = 0; x < width; x++)
-                if (layersAll.All(l => l.Tiles[x, y] == null)) { back.Tiles[x, y] = New(back, Sheet, 0); buildings.Tiles[x, y] = New(buildings, Sheet, 0); }
+        // can walk off the map. Cells with any tile (e.g. the glass walls) and warp tiles (the front door) are left alone.
+        FillVoid(map, grown);
         foreach (var l in old) map.RemoveLayer(l);
         foreach (var l in grown) map.AddLayer(l);
+    }
+    /// <summary>Solid black on every cell that has no tile on any layer, except warp tiles (doors lead off the map edge).</summary>
+    internal static void FillVoid(Map map, IList<Layer> layers)
+    {
+        Layer back = layers.First(l => l.Id == "Back"), buildings = layers.First(l => l.Id == "Buildings");
+        var warps = new HashSet<(int, int)>();
+        if (map.Properties.TryGetValue("Warp", out var w))
+        {
+            var f = w.ToString().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i + 4 < f.Length; i += 5)
+                if (int.TryParse(f[i], out int wx) && int.TryParse(f[i + 1], out int wy)) warps.Add((wx, wy));
+        }
+        for (int y = 0; y < back.LayerHeight; y++)
+            for (int x = 0; x < back.LayerWidth; x++)
+                if (!warps.Contains((x, y)) && layers.All(l => l.Tiles[x, y] == null))
+                { back.Tiles[x, y] = New(back, Sheet, 0); buildings.Tiles[x, y] = New(buildings, Sheet, 0); }
     }
     private static void Open(List<Layer> layers, int x0, int x1, int y0, int y1)
     {

@@ -61,6 +61,7 @@
     <Compile Include="GreenhouseBackup.cs" />
     <Compile Include="GreenhouseRooms.cs" />
     <Compile Include="GreenhouseUpgrade.cs" />
+    <Compile Include="TwoStoryShed.cs" />
     <Compile Include="AnnualLegendaryRules.cs" />
     <Compile Include="AnnualLegendaryData.cs" />
     <Compile Include="AnnualLegendaryFeature.cs" />

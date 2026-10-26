@@ -717,5 +717,7 @@
   "afk.hint.status": "{{state}} · 体力 {{energy}}%",
   "config.professions-skill": "{{skill}}：全职业",
   "config.professions-skill.help": "开：{{skill}}在 5 级和 10 级获得该阶段全部职业。关：{{skill}}恢复原版二选一。已经拥有的职业会保留。",
-  "professions.ui.not-chosen": "你没有选择这个职业（这个技能使用原版二选一）。"
+  "professions.ui.not-chosen": "你没有选择这个职业（这个技能使用原版二选一）。",
+  "two-story-shed.name": "双层棚屋",
+  "two-story-shed.description": "带完整二楼的大棚屋，二楼和一楼一样大。楼梯就在门边。"
 }

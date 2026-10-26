@@ -717,5 +717,7 @@
   "afk.hint.status": "{{state}} · Energia {{energy}}%",
   "config.professions-skill": "{{skill}}: tutte le professioni",
   "config.professions-skill.help": "Attivo: {{skill}} dà tutte le professioni ai livelli 5 e 10. Disattivo: {{skill}} mantiene la scelta normale (una su due). Le professioni già ottenute restano.",
-  "professions.ui.not-chosen": "Non hai scelto questa professione (questa abilità usa la scelta normale)."
+  "professions.ui.not-chosen": "Non hai scelto questa professione (questa abilità usa la scelta normale).",
+  "two-story-shed.name": "Capanno a due piani",
+  "two-story-shed.description": "Un capanno grande con un secondo piano completo, grande quanto il piano terra. Le scale sono accanto alla porta."
 }

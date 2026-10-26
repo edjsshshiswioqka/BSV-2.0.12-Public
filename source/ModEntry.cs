@@ -98,6 +98,8 @@ public sealed partial class ModEntry : Mod
         Greenhouse = new GreenhouseFeature(helper, Monitor, () => Configuration.SharedPreferences.Current.EnableGreenhouseExpansion);
         try { GreenhouseUpgrade.Install(helper, Monitor, () => Configuration.SharedPreferences.Current.EnableGreenhouseExpansion); }
         catch (Exception ex) { Monitor.Log("BSV greenhouse upgrades are unavailable this session.\n" + ex, LogLevel.Error); }
+        try { TwoStoryShed.Install(helper, Monitor); }
+        catch (Exception ex) { Monitor.Log("BSV two-story shed is unavailable this session.\n" + ex, LogLevel.Error); }
         AnnualFish = new AnnualLegendaryFeature(helper, Monitor, ModManifest.UniqueID, Config.EnableAnnualLegendaryFish);
         Startup.Check(AnnualFish.Initialized);
         double normalized = HarvestRules.NormalizeChance(Config.SeedChance);

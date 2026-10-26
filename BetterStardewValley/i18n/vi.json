@@ -717,5 +717,7 @@
   "afk.hint.status": "{{state}} · Năng lượng {{energy}}%",
   "config.professions-skill": "{{skill}}: mọi nghề",
   "config.professions-skill.help": "Bật: {{skill}} cho mọi nghề ở cấp 5 và 10. Tắt: {{skill}} giữ cách chọn một trong hai như bình thường. Các nghề đã có vẫn được giữ.",
-  "professions.ui.not-chosen": "Bạn chưa chọn nghề này (kỹ năng này dùng cách chọn bình thường)."
+  "professions.ui.not-chosen": "Bạn chưa chọn nghề này (kỹ năng này dùng cách chọn bình thường).",
+  "two-story-shed.name": "Nhà kho hai tầng",
+  "two-story-shed.description": "Nhà kho lớn có thêm cả một tầng hai rộng bằng tầng dưới. Cầu thang ở ngay cạnh cửa."
 }

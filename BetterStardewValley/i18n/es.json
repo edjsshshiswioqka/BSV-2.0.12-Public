@@ -717,5 +717,7 @@
   "afk.hint.status": "{{state}} · Energía {{energy}}%",
   "config.professions-skill": "{{skill}}: todas las profesiones",
   "config.professions-skill.help": "Activado: {{skill}} da todas las profesiones en los niveles 5 y 10. Desactivado: {{skill}} mantiene la elección normal (una de dos). Las profesiones que ya tienes se conservan.",
-  "professions.ui.not-chosen": "No elegiste esta profesión (esta habilidad usa la elección normal)."
+  "professions.ui.not-chosen": "No elegiste esta profesión (esta habilidad usa la elección normal).",
+  "two-story-shed.name": "Cobertizo de dos pisos",
+  "two-story-shed.description": "Un cobertizo grande con un segundo piso completo, igual de grande que la planta baja. La escalera está junto a la puerta."
 }

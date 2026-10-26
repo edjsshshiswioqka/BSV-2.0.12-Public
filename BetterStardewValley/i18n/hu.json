@@ -717,5 +717,7 @@
   "afk.hint.status": "{{state}} · Energia {{energy}}%",
   "config.professions-skill": "{{skill}}: minden szakma",
   "config.professions-skill.help": "Be: a(z) {{skill}} az 5. és 10. szinten minden szakmát megad. Ki: a(z) {{skill}} a szokásos kettőből egy választást használja. A meglévő szakmák megmaradnak.",
-  "professions.ui.not-chosen": "Ezt a szakmát nem választottad (ez a készség a szokásos választást használja)."
+  "professions.ui.not-chosen": "Ezt a szakmát nem választottad (ez a készség a szokásos választást használja).",
+  "two-story-shed.name": "Emeletes fészer",
+  "two-story-shed.description": "Nagy fészer egy teljes emelettel, ugyanakkora, mint a földszint. A lépcső az ajtó mellett van."
 }

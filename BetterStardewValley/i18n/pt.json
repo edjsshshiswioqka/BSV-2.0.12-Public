@@ -717,5 +717,7 @@
   "afk.hint.status": "{{state}} · Energia {{energy}}%",
   "config.professions-skill": "{{skill}}: todas as profissões",
   "config.professions-skill.help": "Ligado: {{skill}} dá todas as profissões nos níveis 5 e 10. Desligado: {{skill}} mantém a escolha normal (uma de duas). Profissões que você já tem são mantidas.",
-  "professions.ui.not-chosen": "Você não escolheu esta profissão (esta habilidade usa a escolha normal)."
+  "professions.ui.not-chosen": "Você não escolheu esta profissão (esta habilidade usa a escolha normal).",
+  "two-story-shed.name": "Galpão de dois andares",
+  "two-story-shed.description": "Um galpão grande com um segundo andar completo, do mesmo tamanho do térreo. A escada fica ao lado da porta."
 }

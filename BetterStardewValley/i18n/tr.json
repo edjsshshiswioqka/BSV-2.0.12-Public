@@ -717,5 +717,7 @@
   "afk.hint.status": "{{state}} · Enerji %{{energy}}",
   "config.professions-skill": "{{skill}}: tüm meslekler",
   "config.professions-skill.help": "Açık: {{skill}} 5. ve 10. seviyede tüm meslekleri verir. Kapalı: {{skill}} normal ikiden birini seçme düzenini korur. Sahip olduğun meslekler kalır.",
-  "professions.ui.not-chosen": "Bu mesleği seçmedin (bu beceri normal seçimi kullanıyor)."
+  "professions.ui.not-chosen": "Bu mesleği seçmedin (bu beceri normal seçimi kullanıyor).",
+  "two-story-shed.name": "İki katlı baraka",
+  "two-story-shed.description": "Zemin kat kadar büyük, tam bir ikinci katı olan büyük baraka. Merdiven kapının yanında."
 }
