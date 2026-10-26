@@ -121,7 +121,9 @@ internal sealed class ChestsAnywhereSupport
     /// The farmer list is replaced through a by-ref argument (a change to Harmony's __args array is not passed on).
     private static void BeforeMutexUpdate(NetMutex __instance, ref FarmerCollection __0)
     {
-        if (!Context.IsMainPlayer || RemoteIds.Count == 0 || !MachineIds.TryGetValue(__instance, out var id) || !RemoteIds.Contains(id)) return;
+        if (!Context.IsMainPlayer || !MachineIds.TryGetValue(__instance, out var id)) return;
+        // Read the announcements live: a farmhand's announcement and lock request can arrive in the same frame.
+        if (!RemoteIds.Contains(id) && !Game1.getOnlineFarmers().Any(f => f.modData.TryGetValue(SessionKey, out var v) && v == id)) return;
         __0 = Game1.getOnlineFarmers();
     }
 }

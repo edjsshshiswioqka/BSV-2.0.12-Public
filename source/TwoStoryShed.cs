@@ -81,7 +81,12 @@ internal static class TwoStoryShed
             foreach (var pair in loc.objects.Pairs.Where(p => Old(p.Key)).ToList())
             {
                 var to = pair.Key + shift;
-                if (loc.objects.ContainsKey(to)) continue;
+                if (loc.objects.ContainsKey(to))
+                {   // Something already stands there: the item goes to the Lost and Found instead of staying in the void.
+                    loc.objects.Remove(pair.Key);
+                    Game1.player.team.returnedDonations.Add(pair.Value); Game1.player.team.newLostAndFoundItems.Value = true;
+                    continue;
+                }
                 loc.objects.Remove(pair.Key);
                 pair.Value.TileLocation = to;
                 loc.objects[to] = pair.Value;
