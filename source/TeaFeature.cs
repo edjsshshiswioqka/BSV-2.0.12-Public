@@ -230,6 +230,9 @@ internal sealed partial class TeaFeature
         if (!Managed(__instance)) return true;
         if (Dead(__instance) && t is Axe)
         { __instance.Location.playSound("axchop", __instance.Tile); __result = true; return false; }
+        // A withered tea plant can also be cut away with any scythe (scythe, golden or iridium).
+        if (Dead(__instance) && t is MeleeWeapon blade && blade.isScythe())
+        { __instance.Location.playSound("cut", __instance.Tile); __result = true; return false; }
         if (t is not WateringCan) return true;
         Water(__instance); __result = false; return false;
     }
