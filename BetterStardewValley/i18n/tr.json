@@ -715,6 +715,7 @@
   "afk.hint.title": "Otomatik balıkçılık",
   "afk.hint.stop": "veya durdurmak için tıkla",
   "afk.hint.status": "{{state}} · Enerji %{{energy}}",
+  "afk.hint.stop-pad": "Durdurmak için sol çubuk veya yön tuşlarıyla hareket et",
   "config.professions-skill": "{{skill}}: tüm meslekler",
   "config.professions-skill.help": "Açık: {{skill}} 5. ve 10. seviyede tüm meslekleri verir. Kapalı: {{skill}} normal ikiden birini seçme düzenini korur. Sahip olduğun meslekler kalır.",
   "professions.ui.not-chosen": "Bu mesleği seçmedin (bu beceri normal seçimi kullanıyor).",

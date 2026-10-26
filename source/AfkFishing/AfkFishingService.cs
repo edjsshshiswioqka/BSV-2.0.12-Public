@@ -253,7 +253,16 @@ internal sealed partial class AfkFishingService
             if (!(Current.Data.Enabled || Current.Enabling)) return;
             // Only the four movement directions and mouse clicks hand control back. Every other key
             // (menus, chat, hotbar, Esc...) keeps AFK running; moving the mouse or the wheel does nothing.
-            if (StopsAfk(e.Button)) { Stop(); return; }
+            // Typing (chat, naming an animal) and clicking or steering inside a menu never stop AFK; the fishing
+            // minigame is the only menu where a click hands control back.
+            bool typing = Game1.keyboardDispatcher?.Subscriber != null || Game1.chatBox?.isActive() == true;
+            bool inMenu = Game1.activeClickableMenu != null && Game1.activeClickableMenu is not StardewValley.Menus.BobberBar;
+            if (StopsAfk(e.Button) && !typing && !inMenu)
+            {
+                // The stopping click must not also start a new cast or open something in the same frame.
+                if (Game1.activeClickableMenu == null && e.Button is SButton.MouseLeft or SButton.MouseRight or SButton.MouseMiddle) Helper.Input.Suppress(e.Button);
+                Stop(); return;
+            }
             // Tool/action keys would reel in or swing the rod and break the running cast: ignored while AFK.
             if (Game1.activeClickableMenu == null && (e.Button.IsUseToolButton() || e.Button.IsActionButton())) Helper.Input.Suppress(e.Button);
         });
@@ -331,13 +340,26 @@ internal sealed partial class AfkFishingService
     }
     /// <summary>Leaving AFK puts the line away: a bobber still waiting in the water (or a cast still being charged) is reeled in
     /// without using bait or tackle. A fish already on the hook, being reeled or landed is never cancelled.</summary>
+    private readonly PerScreen<int> reelUntil = new();
+    private void ReelLanded()
+    {
+        if (reelUntil.Value == 0) return;
+        if (Game1.ticks > reelUntil.Value || Current.Data.Enabled || Current.Enabling) { reelUntil.Value = 0; return; }
+        var who = Game1.player;
+        if (who.CurrentTool is not FishingRod rod) { reelUntil.Value = 0; return; }
+        if (rod.isFishing && !rod.hit && !rod.fishCaught && !rod.isReeling) { reelUntil.Value = 0; rod.doneFishing(who, false); who.completelyStopAnimatingOrDoingAction(); }
+    }
     private void ReelIn(Farmer who)
     {
         try
         {
-            if (who.CurrentTool is not FishingRod rod || CommittedCatch(rod) && !rod.isTimingCast) return;
-            if (rod.isFishing && !rod.isNibbling) { rod.doneFishing(who, false); who.completelyStopAnimatingOrDoingAction(); }
+            reelUntil.Value = 0;
+            if (who.CurrentTool is not FishingRod rod || rod.fishCaught || rod.hit || rod.isReeling || rod.pullingOutOfWater || rod.showingTreasure) return;
+            // A nibble is not a hooked fish yet, so the line can still come in.
+            if (rod.isFishing) { rod.doneFishing(who, false); who.completelyStopAnimatingOrDoingAction(); }
             else if (rod.isTimingCast) { rod.isTimingCast = false; who.completelyStopAnimatingOrDoingAction(); }
+            // Bobber still flying: reel in as soon as it lands (give up after ~3 seconds).
+            else if (rod.isCasting || rod.castedButBobberStillInAir) reelUntil.Value = Game1.ticks + 180;
         }
         catch (Exception ex) { Monitor.Log("BSV AFK could not reel in the line on stop: " + ex.Message, LogLevel.Trace); }
     }
@@ -399,6 +421,7 @@ internal sealed partial class AfkFishingService
     private void Tick()
     {
         CaptureWalkTrace();
+        if (Context.IsWorldReady) ReelLanded();
         if (!Context.IsWorldReady || Current.Saving || !Game1.player.IsLocalPlayer || Game1.player.currentLocation?.Map == null) return;
         if (MultiplayerRescue.RescueService.SuspendsAfk(Game1.player)) { YieldForRescue(); return; }
         var s = Current; var who = Game1.player;
@@ -629,7 +652,8 @@ internal sealed partial class AfkFishingService
             || Game1.activeClickableMenu != null || Game1.eventUp || !Game1.displayHUD) return;
         string? status = Config.AfkFishing.ShowIndicator ? Tr("afk.hint.status", new { state = Tr("afk.state." + Current.Data.Phase),
             energy = (int)(100 * Game1.player.Stamina / Math.Max(1, Game1.player.MaxStamina)) }) : null;
-        DrawSign(e.SpriteBatch, Tr("afk.hint.title"), Tr("afk.hint.stop"), status, AreaText());
+        bool pad = Game1.options?.gamepadControls == true && !Game1.lastCursorMotionWasMouse;
+        DrawSign(e.SpriteBatch, Tr("afk.hint.title"), Tr(pad ? "afk.hint.stop-pad" : "afk.hint.stop"), status, AreaText(), pad ? Array.Empty<string>() : MoveKeyLabels());
     }
     /// <summary>The player's own movement keys (up, left, down, right), as shown on the sign's key caps.</summary>
     private static string[] MoveKeyLabels()
@@ -645,14 +669,13 @@ internal sealed partial class AfkFishingService
         return new[] { Label(o?.moveUpButton, "W"), Label(o?.moveLeftButton, "A"), Label(o?.moveDownButton, "S"), Label(o?.moveRightButton, "D") };
     }
     /// <summary>Wooden sign at the top centre: title, how to stop (movement keys or a click), then status lines.</summary>
-    private static void DrawSign(SpriteBatch b, string title, string stop, string? status, string area)
+    private static void DrawSign(SpriteBatch b, string title, string stop, string? status, string area, string[] keys)
     {
         const int Pad = 32, KeyH = 44, KeyGap = 6;
         const float Small = 0.85f;
         var smallFont = Game1.smallFont; var titleFont = Game1.dialogueFont;
-        var keys = MoveKeyLabels();
         var keyWidths = keys.Select(k => Math.Max(KeyH, (int)smallFont.MeasureString(k).X + 20)).ToArray();
-        int keysWidth = keyWidths.Sum() + KeyGap * (keys.Length - 1);
+        int keysWidth = keys.Length == 0 ? -12 : keyWidths.Sum() + KeyGap * (keys.Length - 1);
         int viewport = Game1.uiViewport.Width;
         int maxText = Math.Max(200, viewport - 2 * Pad - 40);
         var lines = new List<string>();
@@ -685,7 +708,7 @@ internal sealed partial class AfkFishingService
             kx += kw + KeyGap;
         }
         var ss = smallFont.MeasureString(stop);
-        b.DrawString(smallFont, stop, new Vector2(kx + 6, ky + KeyH / 2f - ss.Y / 2 + 2), Game1.textColor);
+        b.DrawString(smallFont, stop, new Vector2(keys.Length == 0 ? kx : kx + 6, ky + KeyH / 2f - ss.Y / 2 + 2), Game1.textColor);
         // Status lines in a lighter, smaller print.
         int ly = ky + KeyH + 6 + 14;
         foreach (var l in lines)

@@ -715,6 +715,7 @@
   "afk.hint.title": "自動釣り",
   "afk.hint.stop": "またはクリックで停止",
   "afk.hint.status": "{{state}}・エナジー {{energy}}%",
+  "afk.hint.stop-pad": "左スティックか十字キーで移動すると終了",
   "config.professions-skill": "{{skill}}：全職業",
   "config.professions-skill.help": "オン：{{skill}}はレベル5と10でその段階の職業をすべて得ます。オフ：{{skill}}は通常の二者択一に戻ります。取得済みの職業はそのままです。",
   "professions.ui.not-chosen": "この職業は選んでいません（このスキルは通常の二者択一です）。",
