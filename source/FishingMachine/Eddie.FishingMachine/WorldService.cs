@@ -54,6 +54,7 @@ internal sealed class WorldService
         return (Vector(target??clicked),SingleViewPlacement.Orientation);
     }
     internal void CancelOpening(){OpenGeneration.Value++;OpeningChest.Value=null;}
+    internal Chest? Opening=>OpeningChest.Value;
     internal void Reset(){CancelOpening();}
     internal void Place(ICursorPosition cursor)
     {var target=PlacementTarget(cursor);Mod.Actions.Place(Game1.currentLocation,target.Tile,target.Facing);}
@@ -133,6 +134,32 @@ internal sealed class WorldService
             if(generation!=OpenGeneration.Value)return;
             OpeningChest.Value=null;if(Context.IsWorldReady)Mod.Message("access.busy");
         });
+    }
+    /// <summary>Chests Anywhere: the full machine window from anywhere. Same lock and checks as <see cref="Open"/>, without the reach rule.</summary>
+    internal void OpenRemote(Chest c)
+    {
+        if(!Context.IsWorldReady || Mod.Saving || !Context.IsPlayerFree || OpeningChest.Value!=null)return;
+        var l=c.Location;
+        if(l==null || !l.objects.TryGetValue(c.TileLocation,out var placed) || !ReferenceEquals(c,placed))return;
+        if(!ChestsAnywhereSupport.Supported){Mod.Message("access.bank");return;}
+        OpeningChest.Value=c;
+        long generation=++OpenGeneration.Value;
+        c.GetMutex().RequestLock(()=>
+        {
+            if(generation!=OpenGeneration.Value)
+            {if(c.GetMutex().IsLockHeld())c.GetMutex().ReleaseLock();return;}
+            OpeningChest.Value=null;
+            if(!Context.IsWorldReady || Mod.Saving || !Context.IsPlayerFree || c.Location==null
+                || !c.Location.objects.TryGetValue(c.TileLocation,out var o) || !ReferenceEquals(c,o))
+            {if(c.GetMutex().IsLockHeld())c.GetMutex().ReleaseLock();return;}
+            try {c.SpecialChestType=Chest.SpecialChestTypes.BigChest;Mod.OpenChest.Value=c;c.ShowMenu();Game1.playSound("openChest");}
+            catch(Exception ex){Mod.ReleaseChest();Mod.Monitor.Log($"Could not open fishing machine remotely: {ex}",LogLevel.Error);}
+        },()=>
+        {
+            if(generation!=OpenGeneration.Value)return;
+            OpeningChest.Value=null;if(Context.IsWorldReady)Mod.Message("access.busy");
+        });
+        c.GetMutex().Update(Game1.currentLocation);
     }
     internal void RemoveHost(GameLocation l,Vector2 a,string machineId,Farmer who,Action<string> commitReceipt,Action<string?> done)
     {
@@ -220,12 +247,12 @@ internal sealed class WorldService
         }
     }
     /// <summary>The machine's storage is not an ordinary chest: Automate must not push junk into it or pull its bait
-    /// and catches out, and Chests Anywhere must not open it remotely (it would skip the machine menu and its rules).</summary>
+    /// and catches out. Chests Anywhere lists it; opening it there shows the full machine window (ChestsAnywhereSupport).</summary>
     internal static void Compat(Chest c)
     {
         if(c.modData.GetValueOrDefault("Pathoschild.Automate/StoreItems")!="Disable")c.modData["Pathoschild.Automate/StoreItems"]="Disable";
         if(c.modData.GetValueOrDefault("Pathoschild.Automate/TakeItems")!="Disable")c.modData["Pathoschild.Automate/TakeItems"]="Disable";
-        if(c.modData.GetValueOrDefault("Pathoschild.ChestsAnywhere/IsIgnored")!="true")c.modData["Pathoschild.ChestsAnywhere/IsIgnored"]="true";
+        ChestsAnywhereSupport.Show(c);
     }
     // Read-only diagnostics at the real candidate anchor. Never starts a cycle or moves inventory.
     internal void Diagnose(Vector2 a)

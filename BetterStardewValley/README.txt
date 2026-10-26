@@ -2,7 +2,8 @@ Better Stardew Valley (BSV) 2.0.14 beta
 =======================================
 
 Requirements: Stardew Valley 1.6.15 and SMAPI 4.5.2 or newer.
-Optional: Generic Mod Config Menu (in-game settings), Automate.
+Optional: Generic Mod Config Menu (in-game settings), Automate, Chests Anywhere (open fishing machines and crab
+catchers from anywhere to take out the catch and add bait).
 
 Install
 1. Quit the game.
@@ -33,7 +34,7 @@ This is a beta. Please report problems on the Nexus page (mod 53251) with your S
 Better Stardew Valley（BSV）2.0.14 测试版
 
 需要：星露谷物语 1.6.15，SMAPI 4.5.2 或更新版本。
-可选：Generic Mod Config Menu（游戏内设置菜单）、Automate。
+可选：Generic Mod Config Menu（游戏内设置菜单）、Automate、Chests Anywhere（在任何地方打开钓鱼机和捕蟹器，取鱼、放鱼饵）。
 
 安装
 1. 退出游戏。

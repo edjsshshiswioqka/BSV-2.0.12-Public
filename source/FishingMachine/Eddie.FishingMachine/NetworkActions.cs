@@ -68,7 +68,7 @@ internal sealed class NetworkActions
     {
         if(!chest.GetMutex().IsLockHeld() || HasPending || !HostAvailable() || !ModEntry.IsMachine(chest)
             || kind is not(ActionKind.Start or ActionKind.Upgrade) || kind==ActionKind.Upgrade&&!ModEntry.IsCrab(chest))return;
-        var request=NewRequest(kind,chest.Location,chest.TileLocation,WorldService.GetFacing(chest),chest.modData[ModEntry.Tag+"MachineId"]) with{ItemId=chest.ItemId};
+        var request=NewRequest(kind,chest.Location,chest.TileLocation,WorldService.GetFacing(chest),chest.modData[ModEntry.Tag+"MachineId"]) with{ItemId=chest.ItemId,Remote=ChestsAnywhereSupport.Remote(chest)};
         Game1.player.modData[PendingKey]=request.Save();Game1.player.modData[SequenceKey]=request.Sequence.ToString(System.Globalization.CultureInfo.InvariantCulture);
         chest.modData[ControlRequestKey]=request.Save();
         chest.modData[ProductionService.CrabCommandKey]=request.Id;Send(request);
@@ -162,7 +162,10 @@ internal sealed class NetworkActions
         var escrow=Pending(who);
         // Mod messages may arrive before vanilla farmer-field updates. Wait for the same persisted intent.
         if(escrow==null || escrow!=request)return;
-        var location=who.currentLocation;
+        // A remote start/upgrade (Chests Anywhere) names the machine's own location; everything else happens where the player stands.
+        var location=request.Remote
+            ? Mod.Machines.All.FirstOrDefault(p=>p.Key.modData.TryGetValue(ModEntry.Tag+"MachineId",out var id)&&id==request.MachineId).Value
+            : who.currentLocation;
         if(location==null || location.NameOrUniqueName!=request.Location
             || request.Kind==ActionKind.Place && !Mod.World.InReach(who,new(request.X,request.Y),request.Facing))
         {Finish(request,"access.bank");return;}
@@ -175,7 +178,7 @@ internal sealed class NetworkActions
         else if(request.Kind is ActionKind.Start or ActionKind.Upgrade)
         {
             if(!Mod.World.TryAnchor(location,new(request.X,request.Y),out var c) || !ModEntry.IsMachine(c) || c!.ItemId!=request.ItemId
-                || c.modData[ModEntry.Tag+"MachineId"]!=request.MachineId || !Mod.World.InReach(who,c)){Finish(request,"access.bank");return;}
+                || c.modData[ModEntry.Tag+"MachineId"]!=request.MachineId || !request.Remote&&!Mod.World.InReach(who,c)){Finish(request,"access.bank");return;}
             if(!c.modData.TryGetValue(ProductionService.CrabCommandKey,out var intent))return; // replicated after farmer intent
             if(intent!=request.Id){Finish(request,"network.pending");return;}
             c.GetMutex().Update(location);if(c.GetMutex().IsLocked())return;
@@ -184,7 +187,7 @@ internal sealed class NetworkActions
             {
                 try
                 {
-                    string? error=!Context.IsWorldReady || Mod.Saving || who.currentLocation!=location || !Mod.World.InReach(who,c)
+                    string? error=!Context.IsWorldReady || Mod.Saving || !request.Remote&&(who.currentLocation!=location || !Mod.World.InReach(who,c))
                         || !Mod.Production.MachineLive(c)?"access.bank":Mod.Production.CrabControl(c,who,request.Kind);
                     Finish(request,error,lockedControl:c);
                 }

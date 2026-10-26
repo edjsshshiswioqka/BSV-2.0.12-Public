@@ -20,6 +20,8 @@ public sealed record MachineRequest
     public string MachineId { get; init; } = "";
     public string ItemId { get; init; } = MachineKinds.FishingId;
     public string? MachineState { get; init; }
+    /// <summary>Start/upgrade sent from a machine window opened through Chests Anywhere (no reach rule).</summary>
+    public bool Remote { get; init; }
     public string Save() => JsonSerializer.Serialize(this);
     public static MachineRequest Load(string raw)
     {
@@ -31,7 +33,8 @@ public sealed record MachineRequest
         && Enum.IsDefined(typeof(ActionKind), Kind) && Enum.IsDefined(typeof(Facing), Facing)
         && Location is { Length: > 0 and <= 256 } && X >= 0 && Y >= 0 && X < 32768 && Y < 32768
         && (Kind == ActionKind.Place || Guid.TryParseExact(MachineId, "N", out _))
-        && (Kind != ActionKind.Upgrade || ItemId==MachineKinds.CrabId);
+        && (Kind != ActionKind.Upgrade || ItemId==MachineKinds.CrabId)
+        && (!Remote || Kind is ActionKind.Start or ActionKind.Upgrade);
 }
 
 public sealed record MachineReceipt

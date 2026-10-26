@@ -27,6 +27,7 @@ public sealed class ModEntry
     internal bool Saving;
     internal Artwork Art=null!;
     internal NetworkActions Actions=null!;
+    internal ChestsAnywhereSupport RemoteAccess=null!;
     internal readonly MachineIndex Machines=new();
     internal readonly PerScreen<Chest?> OpenChest=new(()=>null);
     private readonly PerScreen<long> ExplicitCloseAt=new(()=>long.MinValue);
@@ -53,7 +54,7 @@ public sealed class ModEntry
     internal void Message(string key)=>Game1.showRedMessage(T(key));
     internal void Entry(IModHelper helper)
     {
-        Instance=this; World=new(this); Production=new(this); Actions=new(this); Art=new(this); Caves=new(this);
+        Instance=this; World=new(this); Production=new(this); Actions=new(this); Art=new(this); Caves=new(this); RemoteAccess=new(this);
         // Register content before installing patches, then refresh any preloaded recipe table.
         helper.Events.Content.AssetRequested += OnAssetRequested;
         try
@@ -81,6 +82,7 @@ public sealed class ModEntry
             helper.GameContent.InvalidateCache("Data/CraftingRecipes");
             throw;
         }
+        RemoteAccess.Install(helper);
         helper.Events.GameLoop.SaveLoaded+=(_,_)=>{LastLevel.Value=-1; Unlock(); Caves.Load(); Machines.Rebuild();World.Audit();Actions.Tick();Production.Tick();};
         helper.Events.GameLoop.DayStarted+=(_,_)=>{Saving=false;Unlock();Caves.Restore();Machines.Rebuild();World.Audit();ObserveTimeline();Actions.Tick();Production.Tick();Production.LogAllFishPools();};
         helper.Events.GameLoop.TimeChanged+=(_,_)=>{ObserveTimeline();Production.Tick();};
@@ -210,7 +212,7 @@ public sealed class ModEntry
         // Publish intent while the native inventory mutex is still held. Automate cannot
         // slip a previous operator's start between closing the menu and host receipt.
         if(startCrab && c!=null && IsMachine(c) && Context.IsWorldReady && !Saving && !Actions.HasPending
-            && Game1.currentLocation==c.Location && Production.Phase(c) is "idle" or "ready")Actions.Control(c,ActionKind.Start);
+            && (Game1.currentLocation==c.Location || ChestsAnywhereSupport.Remote(c)) && Production.Phase(c) is "idle" or "ready")Actions.Control(c,ActionKind.Start);
         if(c!=null && c.GetMutex().IsLockHeld())c.GetMutex().ReleaseLock();
         OpenChest.Value=null;
     }
