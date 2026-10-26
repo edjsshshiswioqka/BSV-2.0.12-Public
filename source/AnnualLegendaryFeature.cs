@@ -81,7 +81,7 @@ internal sealed class AnnualLegendaryFeature
         player.modData.TryGetValue(key, out string? stored);
         var record = AnnualLegendaryRules.ReadRecord(stored, LifetimeCount(player, id), Game1.year);
         // Boss fish caught before BSV tracked them (Mr. Qi's order in an earlier year): not a catch this year.
-        if (stored is null && AnnualLegendaryRules.IsBoss(id)) record = new LegendaryCatchRecord(0, record.LifetimeCount);
+        if (stored is null && AnnualLegendaryRules.IsBoss(id) && record.LifetimeCount > 0 && Game1.year > 1) record = new LegendaryCatchRecord(Game1.year - 1, record.LifetimeCount);
         string serialized = record.Serialize();
         if (serialized != stored) player.modData[key] = serialized;
         return record;
