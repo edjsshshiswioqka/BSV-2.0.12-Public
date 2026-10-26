@@ -7,6 +7,7 @@
     <Compile Include="../CellarAppearance.cs" Link="CellarAppearance.cs" />
     <Compile Include="../GreenhouseMap.cs" Link="GreenhouseMap.cs" />
     <Compile Include="../GreenhouseLayout.cs" Link="GreenhouseLayout.cs" />
+    <Compile Include="../GreenhouseRooms.cs" Link="GreenhouseRooms.cs" />
     <Reference Include="xTile"><HintPath>$(GamePath)/xTile.dll</HintPath></Reference>
     <Reference Include="MonoGame.Framework"><HintPath>$(GamePath)/MonoGame.Framework.dll</HintPath></Reference>
   </ItemGroup>
