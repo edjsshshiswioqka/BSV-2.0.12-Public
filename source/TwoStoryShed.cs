@@ -21,7 +21,9 @@ internal static class TwoStoryShed
     internal const string Id = "Eddie.BetterStardewValley_TwoStoryShed";
     internal const string MapAsset = "Maps/" + Id, MarkerKey = "Eddie.BetterStardewValley/TwoStoryShed";
     internal const string Sheet = "untitled tile sheet";
-    internal const int RoomWidth = 19, RoomHeight = 17, Gap = 3, UpperX = RoomWidth + Gap;   // upper floor starts at x = 22
+    // The gap is wider than half of any screen, so only one floor is ever in view (the camera also stays on one floor).
+    internal const int RoomWidth = 19, RoomHeight = 17, Gap = 64, UpperX = RoomWidth + Gap;  // upper floor starts at x = 83
+    private const int OldUpperX = 22;                                                          // first test build
     internal const int StairX = 12, StairTop = RoomHeight - 1;                                 // stairs at x 12, 13; rows 16, 17
     internal const int Gold = 60_000, Wood = 500, Stone = 500;
     private static IModHelper Helper = null!;
@@ -33,6 +35,56 @@ internal static class TwoStoryShed
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.GameLoop.UpdateTicked += (_, _) => { try { Stairs(); } catch (Exception ex) { Monitor.LogOnce("BSV two-story shed stairs: " + ex.Message, LogLevel.Warn); } };
         helper.Events.Content.LocaleChanged += (_, _) => helper.GameContent.InvalidateCache("Data/Buildings");
+        helper.Events.GameLoop.SaveLoaded += (_, _) => Migrate();
+        helper.Events.GameLoop.DayStarted += (_, _) => Migrate();
+        try
+        {
+            var h = new HarmonyLib.Harmony(helper.ModRegistry.ModID + ".TwoStoryShed");
+            var post = new HarmonyLib.HarmonyMethod(typeof(TwoStoryShed), nameof(Camera));
+            foreach (var m in typeof(Game1).GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+                         .Where(m => m.Name is "UpdateViewPort" or "clampViewportToGameMap"))
+                h.Patch(m, postfix: post);
+        }
+        catch (Exception ex) { Monitor.Log("BSV two-story shed camera: " + ex.Message, LogLevel.Warn); }
+    }
+
+    /// <summary>Keeps the camera on the floor the player is on, centred like a vanilla room when it is smaller than the screen.</summary>
+    private static void Camera()
+    {
+        try
+        {
+            var here = Game1.currentLocation; var who = Game1.player;
+            if (here?.Map?.Properties.ContainsKey(MarkerKey) != true || who?.currentLocation != here) return;
+            int left = who.Position.X >= (RoomWidth + Gap / 2) * Game1.tileSize ? UpperX * Game1.tileSize : 0;
+            int w = RoomWidth * Game1.tileSize, vw = Game1.viewport.Width;
+            Game1.viewport.X = w <= vw ? left - (vw - w) / 2 : Math.Clamp(Game1.viewport.X, left, left + w - vw);
+        }
+        catch { }
+    }
+
+    /// <summary>Things placed upstairs in the first test build (upper floor at x 22) move to the new upper floor.</summary>
+    private static void Migrate()
+    {
+        if (!Context.IsMainPlayer) return;
+        Utility.ForEachLocation(loc =>
+        {
+            if (loc.Map?.Properties.ContainsKey(MarkerKey) != true) return true;
+            bool Old(Vector2 t) => t.X >= RoomWidth && t.X < UpperX;
+            var shift = new Vector2(UpperX - OldUpperX, 0);
+            foreach (var pair in loc.objects.Pairs.Where(p => Old(p.Key)).ToList())
+            {
+                loc.objects.Remove(pair.Key);
+                pair.Value.TileLocation = pair.Key + shift;
+                loc.objects[pair.Key + shift] = pair.Value;
+            }
+            foreach (var f in loc.furniture.Where(f => Old(f.TileLocation)).ToList())
+            {
+                f.TileLocation += shift;
+                f.boundingBox.Value = new Microsoft.Xna.Framework.Rectangle((int)f.TileLocation.X * 64, (int)f.TileLocation.Y * 64, f.boundingBox.Value.Width, f.boundingBox.Value.Height);
+                f.updateDrawPosition();
+            }
+            return true;
+        });
     }
     private static string T(string key) => BsvI18n.Get(Helper, "two-story-shed." + key);
 
@@ -67,7 +119,7 @@ internal static class TwoStoryShed
             }, AssetLoadPriority.Exclusive);
     }
 
-    /// <summary>The two floors side by side; the gap between them is solid black.</summary>
+    /// <summary>The two floors side by side, far apart; the gap between them is solid black.</summary>
     internal static Map Build(Map big)
     {
         Layer srcBack = big.GetLayer("Back");
