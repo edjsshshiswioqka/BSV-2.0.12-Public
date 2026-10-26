@@ -96,6 +96,7 @@ internal static class Program
         Check(up.Layers.All(l => l.LayerWidth == 75 && l.LayerHeight == 38), "orchard grows every layer to 75 x 38");
         Check(Enumerable.Range(0, 43).All(x => Enumerable.Range(0, 34).All(y => GreenhouseMap.Property(ub.Tiles[x, y], "Diggable") == GreenhouseMap.Property(fixedMap.GetLayer("Back").Tiles[x, y], "Diggable"))), $"greenhouse soil unchanged (soil tiles now {Count(up, "Diggable")}, before {soilBefore})");
         Check(Enumerable.Range(0, 43).All(x => Enumerable.Range(0, 34).All(y => x is >= 41 && y is >= 18 and <= 20 || GreenhouseMap.SameBehaviour(fixedMap.GetLayer("Buildings").Tiles[x, y], ubu.Tiles[x, y]))), "greenhouse walls unchanged except the orchard corridor");
+        Check(Enumerable.Range(1, 6).All(y => ubu.Tiles[GreenhouseRooms.OrchardX + 6, y]?.TileIndex is int i && i != 0), "orchard glass wall is drawn (not blacked out)");
         var trees = GreenhouseRooms.OrchardTrees().ToList();
         Check(trees.Count == 36 && trees.Distinct().Count() == 36, "36 tree spots");
         Check(trees.All(t => ub.Tiles[t.X, t.Y] != null && ubu.Tiles[t.X, t.Y] == null && up.GetLayer("Front").Tiles[t.X, t.Y] == null), "every tree spot is open floor");

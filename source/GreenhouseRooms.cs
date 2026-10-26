@@ -147,12 +147,15 @@ internal static class GreenhouseRooms
                     int i = top ? (side ? 2078 : 1885) : bottom ? (side ? 2078 : 2079) : side ? 2106 : 2075;
                     back.Tiles[x, y] = New(back, Sheet, i);
                 }
-        // Corridor from the greenhouse's right wall into the orchard.
-        Open(grown, BaseWidth - 2, OrchardX + 1, CorridorTop, CorridorTop + CorridorRows - 1);
-        // Everything outside the two rooms and the corridor is solid black: nobody can walk off the map.
+        // Corridor through the two walls only (greenhouse wall column 42, the gap, orchard wall column 46): both rooms
+        // keep their own floor and edge strip, so nothing sticks out into their walkways.
+        Open(grown, BaseWidth - 1, OrchardX, CorridorTop, CorridorTop + CorridorRows - 1);
+        // Cells that are empty on every layer (the gap, the space under the greenhouse) become solid black, so nobody
+        // can walk off the map. Cells with any tile (e.g. the glass walls, which have no floor under them) are left alone.
+        var layersAll = grown.ToArray();
         for (int y = 0; y < height; y++)
             for (int x = 0; x < width; x++)
-                if (back.Tiles[x, y] == null) { back.Tiles[x, y] = New(back, Sheet, 0); buildings.Tiles[x, y] = New(buildings, Sheet, 0); }
+                if (layersAll.All(l => l.Tiles[x, y] == null)) { back.Tiles[x, y] = New(back, Sheet, 0); buildings.Tiles[x, y] = New(buildings, Sheet, 0); }
         foreach (var l in old) map.RemoveLayer(l);
         foreach (var l in grown) map.AddLayer(l);
     }
