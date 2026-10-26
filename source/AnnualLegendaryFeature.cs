@@ -75,13 +75,11 @@ internal sealed class AnnualLegendaryFeature
     private static int LifetimeCount(Farmer player, string id) =>
         player.fishCaught.TryGetValue("(O)" + id, out int[] count) && count.Length > 0 ? count[0] : 0;
 
-    // Boss fish: the machine's own yearly record only; rod catches (vanilla rules) never use up a machine year.
-    private static int QuotaCount(Farmer player, string id) => AnnualLegendaryRules.IsBoss(id) ? 0 : LifetimeCount(player, id);
     private static LegendaryCatchRecord ReadPlayerRecord(Farmer player, string id)
     {
         string key = AnnualLegendaryRules.KeyPrefix + id;
         player.modData.TryGetValue(key, out string? stored);
-        var record = AnnualLegendaryRules.ReadRecord(stored, QuotaCount(player, id), Game1.year);
+        var record = AnnualLegendaryRules.ReadRecord(stored, LifetimeCount(player, id), Game1.year);
         string serialized = record.Serialize();
         if (serialized != stored) player.modData[key] = serialized;
         return record;
@@ -114,7 +112,7 @@ internal sealed class AnnualLegendaryFeature
     {
         string id=AnnualLegendaryRules.NormalizeMachineId(qualifiedId) ?? throw new ArgumentException("Not a legendary fish.");
         var record=ReadPlayerRecord(player,id);
-        player.modData[AnnualLegendaryRules.KeyPrefix+id]=new LegendaryCatchRecord(Math.Max(record.Year,year),QuotaCount(player,id)).Serialize();
+        player.modData[AnnualLegendaryRules.KeyPrefix+id]=new LegendaryCatchRecord(Math.Max(record.Year,year),LifetimeCount(player,id)).Serialize();
     }
 
     private void InitializeLocalPlayer()
@@ -123,6 +121,8 @@ internal sealed class AnnualLegendaryFeature
         try
         {
             foreach (string id in AnnualLegendaryRules.FishIds.Append("Eddie.BetterStardewValley_SpiritFish").Where(Handles)) ReadPlayerRecord(Game1.player, id);
+            // Boss fish: rod and fishing machine share one catch per species per year (always on).
+            foreach (string id in AnnualLegendaryRules.BossIds) ReadPlayerRecord(Game1.player, id);
         }
         catch (Exception ex) { LogError(ex); }
     }
@@ -131,7 +131,7 @@ internal sealed class AnnualLegendaryFeature
     // season, weather, skill, magic-bait and quest rules keep running normally.
     private static void AfterRequirements(Item fish, Farmer player, ref bool __result)
     {
-        string? id = AnnualLegendaryRules.NormalizeId(fish?.QualifiedItemId);
+        string? id = AnnualLegendaryRules.NormalizeMachineId(fish?.QualifiedItemId);
         if (!Instance.active || !__result || id is null) return;
         try
         {
@@ -154,7 +154,7 @@ internal sealed class AnnualLegendaryFeature
         bool from_fish_pond, int numberCaught, out CatchState? __state)
     {
         __state = null;
-        string? id = AnnualLegendaryRules.NormalizeId(itemId);
+        string? id = AnnualLegendaryRules.NormalizeMachineId(itemId);
         if (!Instance.active || !Context.IsWorldReady || id is null || from_fish_pond || numberCaught <= 0) return;
         try
         {
