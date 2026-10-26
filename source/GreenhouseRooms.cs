@@ -31,9 +31,18 @@ internal static class GreenhouseRooms
     // Upper floor stairs (upgrade 3) in the middle of the greenhouse's back wall.
     internal const int StairsX = 20, StairsTop = 4;
     internal static readonly int[] StairCols = { StairsX + 1, StairsX + 2 };
-    // Mushroom cave (upgrade 2).
-    internal const int CaveWidth = 20, CaveHeight = 28, CaveCorridorTop = 15;
+    // Mushroom cave (upgrade 2): an underground room reached by stairs down in the greenhouse's bottom wall.
+    internal const int CaveWidth = 24, CaveHeight = 30, CaveLadderX = 12, CaveLadderY = 5, CaveArrivalY = 6;
+    internal const int CaveStairsX = 6, CaveStairsTop = BaseHeight - 1;   // two columns (6, 7); the walls sit at 5 and 8
+    internal const string CaveLayoutKey = "Eddie.BetterStardewValley/MushroomCaveLayout", CaveLayout = "2";
     internal static IEnumerable<(int X, int Y)> MushroomBoxes()
+    {
+        foreach (int y in new[] { 10, 13, 16, 19, 22 })
+            for (int x = 3; x <= 21; x += 3)
+                yield return (x, y);
+    }
+    /// <summary>Box spots of the first cave layout (20 x 28), in the same order as <see cref="MushroomBoxes"/>.</summary>
+    internal static IEnumerable<(int X, int Y)> OldMushroomBoxes()
     {
         foreach (int y in new[] { 8, 11, 14, 19, 22 })
             for (int x = 3; x <= 15; x += 2)
@@ -140,6 +149,10 @@ internal static class GreenhouseRooms
                 }
         // Corridor from the greenhouse's right wall into the orchard.
         Open(grown, BaseWidth - 2, OrchardX + 1, CorridorTop, CorridorTop + CorridorRows - 1);
+        // Everything outside the two rooms and the corridor is solid black: nobody can walk off the map.
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
+                if (back.Tiles[x, y] == null) { back.Tiles[x, y] = New(back, Sheet, 0); buildings.Tiles[x, y] = New(buildings, Sheet, 0); }
         foreach (var l in old) map.RemoveLayer(l);
         foreach (var l in grown) map.AddLayer(l);
     }
@@ -151,12 +164,25 @@ internal static class GreenhouseRooms
         for (int y = y0; y <= y1; y++) for (int x = x0; x <= x1; x++) back.Tiles[x, y] = New(back, Sheet, y == y0 ? 1887 : 2109);
     }
 
-    // ------------------------------------------------------------------ upgrade 2: door to the mushroom cave
+    // ------------------------------------------------------------------ upgrade 2: stairs down to the mushroom cave
+    /// <summary>Stairs down through the bottom wall, drawn like the vanilla farmhouse cellar stairs (same tilesheet).</summary>
     internal static void AddCaveDoor(Map map, string caveName)
     {
-        var layers = map.Layers.ToList();
-        Open(layers, 0, 2, CorridorTop, CorridorTop + CorridorRows - 1);
-        AddWarps(map, string.Join(" ", Enumerable.Range(0, CorridorRows).Select(i => $"0 {CorridorTop + i} {caveName} {CaveWidth - 2} {CaveCorridorTop + i}")));
+        Layer back = map.GetLayer("Back"), buildings = map.GetLayer("Buildings"), front = map.GetLayer("Front");
+        if (back.LayerHeight < CaveStairsTop + 3) throw new InvalidOperationException("The greenhouse map is too short for the cave stairs.");
+        int x0 = CaveStairsX, l = x0 - 1, r = x0 + 2, y = CaveStairsTop;
+        void Set(Layer layer, int x, int yy, int index) => layer.Tiles[x, yy] = index < 0 ? null : New(layer, Sheet, index);
+        // Wall caps on the floor row above the opening.
+        Set(front, l, y - 1, 162); Set(front, r, y - 1, 163); Set(front, x0, y - 1, -1); Set(front, x0 + 1, y - 1, -1);
+        for (int x = x0; x <= x0 + 1; x++)
+        {
+            Set(back, x, y, 1043); Set(buildings, x, y, -1); Set(front, x, y, -1);
+            Set(back, x, y + 1, 1075); Set(buildings, x, y + 1, -1); Set(front, x, y + 1, 165);
+        }
+        Set(back, l, y, 0); Set(buildings, l, y, 64); Set(front, l, y, 64); Set(back, r, y, 0); Set(buildings, r, y, 68); Set(front, r, y, 68);
+        Set(back, l, y + 1, 0); Set(buildings, l, y + 1, 96); Set(front, l, y + 1, 96); Set(back, r, y + 1, 0); Set(buildings, r, y + 1, 130); Set(front, r, y + 1, 130);
+        for (int x = l; x <= r; x++) { Set(back, x, y + 2, 0); Set(buildings, x, y + 2, 0); Set(front, x, y + 2, 0); }
+        AddWarps(map, $"{x0} {y + 1} {caveName} {CaveLadderX} {CaveArrivalY} {x0 + 1} {y + 1} {caveName} {CaveLadderX} {CaveArrivalY}");
     }
 
     // ------------------------------------------------------------------ upgrade 3: stairs
@@ -226,7 +252,7 @@ internal static class GreenhouseRooms
     }
 
     // ------------------------------------------------------------------ the mushroom cave
-    /// <summary>The vanilla farm cave stretched to 20 x 28 (same rock walls, ground and mine tilesheet).</summary>
+    /// <summary>The vanilla farm cave stretched to 24 x 30 (same rock walls, ground and mine tilesheet), lit, with a ladder up.</summary>
     internal static Map BuildCave(Map farmCave, string id, string greenhouse)
     {
         Layer srcBack = farmCave.GetLayer("Back");
@@ -258,12 +284,19 @@ internal static class GreenhouseRooms
                 }
             }
         }
-        // Corridor out to the greenhouse on the right wall.
-        foreach (var l in map.Layers)
-            for (int y = CaveCorridorTop; y < CaveCorridorTop + CorridorRows; y++)
-                for (int x = W - 3; x < W; x++)
-                    l.Tiles[x, y] = l.Id == "Back" ? New(l, cave, 138) : null;
-        AddWarps(map, string.Join(" ", Enumerable.Range(0, CorridorRows).Select(i => $"{W - 1} {CaveCorridorTop + i} {greenhouse} 1 {CorridorTop + i}")));
+        Layer back = map.GetLayer("Back"), buildings = map.GetLayer("Buildings"), front = map.GetLayer("Front");
+        // Mine ladder up the back wall (the cave is underground); stepping onto its foot climbs back to the greenhouse.
+        int lx = CaveLadderX;
+        foreach (var (y, index) in new[] { (2, 67), (3, 83), (4, 99) }) { buildings.Tiles[lx, y] = New(buildings, cave, index); front.Tiles[lx, y] = null; }
+        back.Tiles[lx, CaveLadderY] = New(back, cave, 115); buildings.Tiles[lx, CaveLadderY] = null; front.Tiles[lx, CaveLadderY] = null;
+        AddWarps(map, $"{lx} {CaveLadderY} {greenhouse} {CaveStairsX} {CaveStairsTop - 1}");
+        // Light: wall lanterns from the mine tilesheet along the back wall, plus soft lamps over the floor
+        // (Paths tile 8 is the game's own light marker, as in the cellar and the mines).
+        var paths = map.GetLayer("Paths");
+        foreach (int x in new[] { 4, 8, 16, 20 }) { buildings.Tiles[x, 4] = New(buildings, cave, 82); front.Tiles[x, 4] = null; paths.Tiles[x, 4] = New(paths, "paths", 8); }
+        foreach (var (x, y) in new[] { (6, 11), (18, 11), (12, 14), (6, 20), (18, 20), (12, 24) }) paths.Tiles[x, y] = New(paths, "paths", 8);
+        paths.Tiles[lx, CaveArrivalY + 1] = New(paths, "paths", 8);
+        map.Properties["AmbientLight"] = "60 60 25";
         return map;
     }
 }

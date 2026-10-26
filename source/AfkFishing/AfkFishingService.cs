@@ -324,9 +324,22 @@ internal sealed partial class AfkFishingService
         Current.Data.RestReason = AfkRestReason.None; Current.Data.RestDay = -1;
         Current.Route = null; Current.Search = null; Current.Navigation.Clear(); Current.RouteFailures = 0; Current.Goal = null; Current.AutoCasting = false; Current.HomeIntent = false;
         if (Game1.player.controller == null) Game1.player.Halt();
+        ReelIn(Game1.player);
         Persist(); TraceState(previous, "manual stop: automatic rest/resume canceled"); Notice("afk.disabled");
         // Do not cancel/roll back a fish, eating animation or sleep transaction already committed.
         // Deferred outputs remain in the native queue and will return to free backpack slots.
+    }
+    /// <summary>Leaving AFK puts the line away: a bobber still waiting in the water (or a cast still being charged) is reeled in
+    /// without using bait or tackle. A fish already on the hook, being reeled or landed is never cancelled.</summary>
+    private void ReelIn(Farmer who)
+    {
+        try
+        {
+            if (who.CurrentTool is not FishingRod rod || CommittedCatch(rod) && !rod.isTimingCast) return;
+            if (rod.isFishing && !rod.isNibbling) { rod.doneFishing(who, false); who.completelyStopAnimatingOrDoingAction(); }
+            else if (rod.isTimingCast) { rod.isTimingCast = false; who.completelyStopAnimatingOrDoingAction(); }
+        }
+        catch (Exception ex) { Monitor.Log("BSV AFK could not reel in the line on stop: " + ex.Message, LogLevel.Trace); }
     }
     private void BindChest(Chest chest)
     {

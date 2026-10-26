@@ -46,7 +46,7 @@ internal static class GreenhouseUpgrade
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.GameLoop.DayStarted += (_, _) => Safe(Complete);
         helper.Events.GameLoop.SaveLoaded += (_, _) => Safe(Sync);
-        helper.Events.GameLoop.OneSecondUpdateTicked += (_, _) => { if (Context.IsWorldReady) Safe(Sync); };
+        helper.Events.GameLoop.OneSecondUpdateTicked += (_, _) => { if (Context.IsWorldReady) { Safe(Sync); Safe(MigrateCave); } };
         helper.Events.GameLoop.ReturnedToTitle += (_, _) => { Failed = false; LastRefresh = -1; helper.GameContent.InvalidateCache(a => IsOurMap(a.NameWithoutLocale)); };
     }
     private static bool IsOurMap(IAssetName name) => name.IsEquivalentTo("Maps/Greenhouse") || name.IsEquivalentTo(CaveMap) || name.IsEquivalentTo(UpperMap);
@@ -115,6 +115,7 @@ internal static class GreenhouseUpgrade
     private static void Offer()
     {
         int tier = Tier;
+        Monitor.Log($"BSV greenhouse upgrade: Robin asked at tier {tier} (due={Due?.ToString() ?? "none"}, building={Game1.IsThereABuildingUnderConstruction("Robin")}, house={Game1.player.daysUntilHouseUpgrade.Value}).", LogLevel.Info);
         if (tier >= Costs.Length) { Game1.drawObjectDialogue(T("done-all")); return; }
         if (RobinBusy) { Game1.drawObjectDialogue(T("busy")); return; }
         var cost = Costs[tier];
@@ -128,17 +129,27 @@ internal static class GreenhouseUpgrade
         Game1.drawObjectDialogue(text);
         Game1.afterDialogues = () => Game1.currentLocation.createQuestionDialogue(T("ask"),
             new[] { new Response("Yes", T("yes")), new Response("No", T("no")) },
-            (who, answer) => { if (answer == "Yes") Safe(() => Order(who, tier)); else Game1.drawObjectDialogue(T("later")); });
+            (who, answer) =>
+            {
+                Monitor.Log($"BSV greenhouse upgrade {tier + 1}: answer '{answer}'.", LogLevel.Info);
+                if (answer == "Yes") Safe(() => Order(who, tier)); else Game1.drawObjectDialogue(T("later"));
+            });
     }
     private static void Order(Farmer who, int tier)
     {
-        if (!Context.IsMainPlayer || Tier != tier || RobinBusy) { Game1.drawObjectDialogue(T("busy")); return; }
+        if (!Context.IsMainPlayer || Tier != tier || RobinBusy)
+        {
+            Monitor.Log($"BSV greenhouse upgrade {tier + 1} not ordered: host={Context.IsMainPlayer}, tier now {Tier}, busy={RobinBusy}.", LogLevel.Info);
+            Game1.drawObjectDialogue(T("busy")); return;
+        }
         var cost = Costs[tier];
         var missing = Missing(who, cost);
         if (who.Money < cost.Gold || missing.Count > 0)
         {
             var parts = missing.Select(m => T("material", new { count = m.Missing, name = Name(m.Id) })).ToList();
             if (who.Money < cost.Gold) parts.Insert(0, T("gold-missing", new { gold = BsvI18n.Number(Helper, cost.Gold - who.Money, "N0") }));
+            Monitor.Log($"BSV greenhouse upgrade {tier + 1} not ordered, missing: gold {Math.Max(0, cost.Gold - who.Money)}; "
+                + string.Join(", ", missing.Select(m => $"{m.Id} x{m.Missing}")), LogLevel.Info);
             Game1.drawObjectDialogue(T("missing", new { list = string.Join(T("separator"), parts) }));
             return;
         }
@@ -175,7 +186,23 @@ internal static class GreenhouseUpgrade
             cave.objects.Add(tile, box);
             placed++;
         }
+        cave.modData[GreenhouseRooms.CaveLayoutKey] = GreenhouseRooms.CaveLayout;
         Monitor.Log($"BSV placed {placed} mushroom boxes in the mushroom cave.", LogLevel.Debug);
+    }
+    /// <summary>A cave built with the first (20 x 28) layout: its mushroom boxes move to the matching spots of the bigger cave.</summary>
+    private static void MigrateCave()
+    {
+        if (!Context.IsMainPlayer || Tier < 2 || Game1.getLocationFromName(CaveName) is not { } cave) return;
+        if (cave.modData.TryGetValue(GreenhouseRooms.CaveLayoutKey, out var layout) && layout == GreenhouseRooms.CaveLayout) return;
+        int moved = 0;
+        foreach (var (from, to) in GreenhouseRooms.OldMushroomBoxes().Zip(GreenhouseRooms.MushroomBoxes()))
+        {
+            var a = new Vector2(from.X, from.Y); var b = new Vector2(to.X, to.Y);
+            if (a == b || !cave.objects.TryGetValue(a, out var obj) || obj.QualifiedItemId != "(BC)128" || cave.objects.ContainsKey(b)) continue;
+            cave.objects.Remove(a); obj.TileLocation = b; cave.objects.Add(b, obj); moved++;
+        }
+        cave.modData[GreenhouseRooms.CaveLayoutKey] = GreenhouseRooms.CaveLayout;
+        Monitor.Log($"BSV mushroom cave enlarged; {moved} mushroom boxes moved to the new layout.", LogLevel.Info);
     }
     /// <summary>Reloads the greenhouse map when the saved upgrade level differs from the loaded map.</summary>
     private static void Sync()

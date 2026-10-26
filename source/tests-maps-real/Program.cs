@@ -105,8 +105,12 @@ internal static class Program
         while (queue.Count > 0) { var (x, y) = queue.Dequeue(); foreach (var (dx, dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) }) { int nx = x + dx, ny = y + dy; if (nx >= 0 && ny >= 0 && nx < 75 && ny < 38 && Walk(nx, ny) && seen.Add((nx, ny))) queue.Enqueue((nx, ny)); } }
         Check(trees.All(t => seen.Contains((t.X, t.Y))), "every tree spot can be reached on foot from the greenhouse");
         Check(!seen.Any(p => p.Item1 >= 43 && p.Item2 >= 37), "orchard has a closed bottom wall");
+        Check(!seen.Any(p => p.Item1 is >= 43 and <= 45 && p.Item2 is < 18 or > 20), "nobody can walk into the black gap between greenhouse and orchard");
+        Check(!seen.Any(p => p.Item1 < 43 && p.Item2 >= 34), "nobody can walk below the greenhouse");
         GreenhouseRooms.AddCaveDoor(up, "Cave");
-        Check(up.Properties["Warp"].ToString().Contains("0 19 Cave 18 16"), "cave door warps into the mushroom cave");
+        Check(up.Properties["Warp"].ToString().Contains("6 34 Cave 12 6 7 34 Cave 12 6"), "stairs down in the bottom wall warp into the mushroom cave");
+        Check(Walk(6, 32) && Walk(6, 33) && Walk(7, 34) && !Walk(5, 33) && !Walk(8, 34) && !Walk(6, 35), "cave stairs are walkable between their walls");
+        Check(Enumerable.Range(0, 43).Count(x => ub.Tiles[x, 33]?.TileIndex == 2109) == 1, "the greenhouse's own front door is untouched");
         GreenhouseRooms.AddStairs(up, "Upper");
         Check(up.Properties["Warp"].ToString().Contains("21 4 Upper 21 7"), "stairs warp to the upper floor");
         Check(Walk(21, 5) && Walk(22, 5) && Walk(21, 7), "stairs are walkable");
@@ -124,11 +128,18 @@ internal static class Program
         {
             caveMap = GreenhouseRooms.BuildCave(Load(dir, "FarmCave"), "Cave", "Greenhouse");
             var cb = caveMap.GetLayer("Back"); var cbu = caveMap.GetLayer("Buildings");
-            Check(caveMap.Layers.All(l => l.LayerWidth == 20 && l.LayerHeight == 28), "mushroom cave is 20 x 28");
+            Check(caveMap.Layers.All(l => l.LayerWidth == 24 && l.LayerHeight == 30), "mushroom cave is 24 x 30");
             var boxes = GreenhouseRooms.MushroomBoxes().ToList();
             Check(boxes.Count == 35 && boxes.All(b => cb.Tiles[b.X, b.Y] != null && cbu.Tiles[b.X, b.Y] == null), "35 mushroom box spots on open cave floor");
-            Check(caveMap.Properties["Warp"].ToString() == "19 15 Greenhouse 1 18 19 16 Greenhouse 1 19 19 17 Greenhouse 1 20", "cave exit warps back to the greenhouse");
-            Check(Enumerable.Range(15, 3).All(y => cb.Tiles[18, y] != null && cbu.Tiles[18, y] == null), "cave arrival tiles are walkable");
+            Check(caveMap.Properties["Warp"].ToString() == "12 5 Greenhouse 6 32", "cave ladder climbs back to the greenhouse stairs");
+            Check(cb.Tiles[12, 6] != null && cbu.Tiles[12, 6] == null && cbu.Tiles[12, 5] == null, "cave arrival and ladder foot are walkable");
+            var cp = caveMap.GetLayer("Paths");
+            int lights = Enumerable.Range(0, 24).Sum(x => Enumerable.Range(0, 30).Count(y => cp.Tiles[x, y]?.TileIndex == 8));
+            Check(lights >= 8, $"mushroom cave has {lights} light sources");
+            var cseen = new HashSet<(int, int)>(); var cq = new Queue<(int, int)>(); cq.Enqueue((12, 6)); cseen.Add((12, 6));
+            bool CWalk(int x, int y) => x >= 0 && y >= 0 && x < 24 && y < 30 && cb.Tiles[x, y] != null && cbu.Tiles[x, y] == null && !boxes.Contains((x, y));
+            while (cq.Count > 0) { var (x, y) = cq.Dequeue(); foreach (var (dx, dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) }) if (CWalk(x + dx, y + dy) && cseen.Add((x + dx, y + dy))) cq.Enqueue((x + dx, y + dy)); }
+            Check(boxes.All(b => new[] { (1, 0), (-1, 0), (0, 1), (0, -1) }.Any(d => cseen.Contains((b.X + d.Item1, b.Y + d.Item2)))), "every mushroom box can be reached from the ladder");
         }
         else Console.WriteLine("SKIP: FarmCave.tbin not found; mushroom cave checked in game only.");
 
