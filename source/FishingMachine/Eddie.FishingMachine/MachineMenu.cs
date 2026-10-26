@@ -29,8 +29,22 @@ internal static class MachineMenuDrawPatch
     }
 }
 
+/// <summary>The machine window reports a lower top edge to other mods (see Apply), so clicks are judged against the
+/// windows actually drawn: a click inside them is never "outside the menu" (which would drop a held item).</summary>
+[HarmonyPatch]
+internal static class MachineMenuBoundsPatch
+{
+    static System.Reflection.MethodBase TargetMethod()=>AccessTools.Method(typeof(ItemGrabMenu),nameof(IClickableMenu.isWithinBounds),new[]{typeof(int),typeof(int)});
+    static void Postfix(IClickableMenu __instance,int __0,int __1,ref bool __result)
+    {
+        if(__result||__instance is not ItemGrabMenu menu)return;
+        try{if(ModEntry.Instance?.Production.InsideWindows(menu,__0,__1)==true)__result=true;}catch{}
+    }
+}
+
 internal sealed partial class ProductionService
 {
+    internal bool InsideWindows(ItemGrabMenu m,int x,int y)=>ReferenceEquals(FullMenu,m)&&FullGeometry is {} g&&(g.Window.Contains(x,y)||g.BagWindow.Contains(x,y));
     internal sealed class FullLayout
     {
         public Rectangle Window,BagWindow,Title,Badge,ColorButton,Power,Status,Bar,Stats,Catch,Take,UpgradeTitle,Button,Note,Locked;
@@ -230,7 +244,16 @@ internal sealed partial class ProductionService
         }
         // Clicks anywhere inside the windows count as inside the menu (no accidental item drops).
         menu.xPositionOnScreen=g.Window.X;menu.yPositionOnScreen=g.Window.Y;
-        menu.width=g.Window.Width;menu.height=g.BagWindow.Bottom-g.Window.Y;
+        // Chests Anywhere puts its chest list at the menu's top edge minus 80 px for a 5-row chest (36 px otherwise;
+        // 8 px less with the colour strip open), because a native chest draws its grid above that edge. Report the
+        // edge that much lower so the list sits right above this window. Clicks still use the real windows (bounds patch).
+        if(ModEntry.Instance.Helper.ModRegistry.IsLoaded("Pathoschild.ChestsAnywhere"))
+        {
+            bool big=menu.ItemsToGrabMenu.rows>=5,pickerOpen=menu.chestColorPicker?.visible==true;
+            int offset=(big?-80:-36)+(pickerOpen?8+(big?2:0):0);
+            menu.yPositionOnScreen=g.Window.Y-4-offset;
+        }
+        menu.width=g.Window.Width;menu.height=g.BagWindow.Bottom-menu.yPositionOnScreen;
     }
 
     /// <summary>Draws the whole machine menu. Returns false when the native draw should run instead.</summary>
