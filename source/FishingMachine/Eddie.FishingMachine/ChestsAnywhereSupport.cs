@@ -117,7 +117,8 @@ internal sealed class ChestsAnywhereSupport
             var screen = new Rectangle(0, 0, Game1.uiViewport.Width, Game1.uiViewport.Height);
             bool Off(ClickableComponent? c) => c != null && (c.bounds.Top < 0 || c.bounds.Left < 0 || c.bounds.Right > screen.Right || c.bounds.Bottom > screen.Bottom);
             if (!Off(chest) && !Off(category) && !Off(edit)) return;
-            // Left of the window: chest list (with its edit button) on top, category list under it.
+            // Left of the window: category list on top, chest list (with its edit button) under it. Both lists open
+            // downwards, so the chest list - the one used most - never opens under the other box.
             int editWidth = edit?.bounds.Width ?? 0, gap = 8;
             int width = Math.Max(chest.bounds.Width + editWidth, category?.bounds.Width ?? 0);
             int x = Math.Max(4, g.Window.X - 12 - width), y = Math.Max(4, g.Window.Y);
@@ -126,9 +127,10 @@ internal sealed class ChestsAnywhereSupport
                 c.bounds = new Rectangle(nx, ny, c.bounds.Width, c.bounds.Height);
                 c.GetType().GetMethod("ReinitializeComponents", BindingFlags.Instance | BindingFlags.Public)?.Invoke(c, null);
             }
-            Move(chest, x, y);
-            if (edit != null) edit.bounds = new Rectangle(x + chest.bounds.Width, y, edit.bounds.Width, edit.bounds.Height);
-            if (category != null) Move(category, x, y + chest.bounds.Height + gap);
+            int chestY = y;
+            if (category != null) { Move(category, x, y); chestY = y + category.bounds.Height + gap; }
+            Move(chest, x, chestY);
+            if (edit != null) edit.bounds = new Rectangle(x + chest.bounds.Width, chestY, edit.bounds.Width, edit.bounds.Height);
         }
         catch (Exception ex) { CaFailed = true; Mod.Monitor.Log("BSV could not move Chests Anywhere's lists next to the machine window: " + ex.Message, LogLevel.Trace); }
     }
