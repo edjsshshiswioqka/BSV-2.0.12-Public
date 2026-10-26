@@ -247,7 +247,7 @@ internal static class GreenhouseRooms
                 {
                     int sx = top ? (x < 4 ? x : x >= W - 3 ? 12 - (W - x) : 4 + (x - 4) % 4)
                         : bottom ? (x < 3 ? x : x >= W - 2 ? 12 - (W - x) : 3 + (x - 3) % 4)
-                        : (x < 2 ? x : x >= W - 2 ? 12 - (W - x) : 3 + (x - 3) % 6);
+                        : (x < 2 ? x : x >= W - 2 ? 12 - (W - x) : 3 + ((x - 3) % 6 + 6) % 6);   // x = 2 wraps like the drawing, not onto the wall shadow
                     int ssy = !top && !bottom && (x < 2 || x >= W - 2) ? 7 + (y - 6) % 2 : sy;
                     Tile? t = src.Tiles[sx, ssy];
                     if (src.Id == "Back" && ssy is >= 6 and <= 9 && sx is >= 2 and <= 9) { dst.Tiles[x, y] = New(dst, cave, 138); continue; }
