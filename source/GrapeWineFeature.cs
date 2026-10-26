@@ -33,14 +33,14 @@ public sealed class GrapeWineFeature
             prefix: new HarmonyMethod(typeof(GrapeWineFeature), nameof(BeforeMinutes)) { priority = Priority.First });
         harmony.Patch(AccessTools.Method(typeof(SObject), nameof(SObject.checkForAction), new[] { typeof(Farmer), typeof(bool) }),
             prefix: new HarmonyMethod(typeof(GrapeWineFeature), nameof(BeforeCollect)) { priority = Priority.First });
-        }
-        catch { harmony.UnpatchAll(WineRules.Prefix + ".Wine"); throw; }
         // Serialized bottles can retain their old NetInt price. Normalize this exact ID before
         // native pricing, preserving native quality, artisan and profit-margin calculations.
         foreach (var method in new[] { AccessTools.PropertyGetter(typeof(SObject), nameof(SObject.Price)),
             AccessTools.Method(typeof(SObject), nameof(SObject.sellToStorePrice)),
             AccessTools.Method(typeof(SObject), nameof(SObject.salePrice)) })
             harmony.Patch(method, prefix: new HarmonyMethod(typeof(GrapeWineFeature), nameof(NormalizePrice)));
+        }
+        catch { harmony.UnpatchAll(WineRules.Prefix + ".Wine"); throw; }
         helper.Events.GameLoop.SaveLoaded += (_, _) =>
         {
             if (Context.IsMainPlayer) Utility.ForEachItem(item => { if (item is SObject obj) NormalizePrice(obj); return true; });
