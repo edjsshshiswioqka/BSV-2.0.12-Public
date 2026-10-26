@@ -75,7 +75,8 @@ internal static class SpaceCoreSkills
         {
             var skill=getSkill.Invoke(null,new object[]{id});
             if(skill==null||Get(skill,"ShouldShowOnSkillsPage") is false)continue;
-            var row=Build(id,skill,level);
+            SkillRow? row=null;
+            try{row=Build(id,skill,level);}catch(Exception ex){ProfessionService.Trace($"SpaceCore skill '{id}' could not be read: "+ex.Message);}
             if(row==null){ProfessionService.Trace($"SpaceCore skill '{id}' does not use the standard 5/10 profession tree; BSV leaves it to SpaceCore.");continue;}
             yield return row;
         }
@@ -96,8 +97,8 @@ internal static class SpaceCoreSkills
         var profs=new[]{a,b,Prof(underA,"First"),Prof(underA,"Second"),Prof(underB,"First"),Prof(underB,"Second")};
         if(profs.Any(p=>p==null))return null;
         int Vid(object p)=>(int)AccessTools.Method(p.GetType(),"GetVanillaId")!.Invoke(p,null)!;
+        if(profs.Select(p=>Vid(p!)).Distinct().Count()!=6)return null;
         var byId=profs.ToDictionary(p=>Vid(p!),p=>p!);
-        if(byId.Count!=6)return null;
         return new SkillRow
         {
             Key=id,Ids=profs.Select(p=>Vid(p!)).ToArray(),
@@ -105,7 +106,7 @@ internal static class SpaceCoreSkills
             Level=f=>(int)level.Invoke(null,new object[]{f,id})!,
             Title=pid=>byId.TryGetValue(pid,out var p)?Call(p,"GetName"):"",
             Description=pid=>byId.TryGetValue(pid,out var p)?Call(p,"GetDescription"):"",
-            Icon=pid=>byId.TryGetValue(pid,out var p)&&Get(p,"Icon") is Texture2D t?(t,t.Bounds):null
+            Icon=pid=>byId.TryGetValue(pid,out var p)&&Get(p,"Icon") is Texture2D t?(t,new Rectangle(0,0,16,16)):null
         };
     }
 }

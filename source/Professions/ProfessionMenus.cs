@@ -94,6 +94,9 @@ internal static class ProfessionMenus
         return false;
     }
     private static FieldInfo? CustomSkill,CustomLevel,CustomUpdated;
+    private static readonly ConditionalWeakTable<IClickableMenu,object> CustomConverted=new();
+    /// <summary>SpaceCore never gives the level perk at 5/10 (the profession perk replaces it); a converted page keeps that.</summary>
+    internal static bool CustomPerk(IClickableMenu __instance)=>!CustomConverted.TryGetValue(__instance,out _);
     /// <summary>SpaceCore's SkillLevelUpMenu: once it has picked its profession pair, turn the chooser into a normal page
     /// and grant every profession of the stage (skills switched off in the config keep the choice).</summary>
     internal static void CustomLevelUp(IClickableMenu __instance)
@@ -108,7 +111,15 @@ internal static class ProfessionMenus
             string skill=CustomSkill.GetValue(__instance) as string??"";int level=(int)CustomLevel.GetValue(__instance)!;
             var row=SkillRows.Custom.FirstOrDefault(r=>r.Key==skill);
             if(row==null||!ProfessionService.SkillActive(skill)||!ProfessionGrant.Owns(Game1.player))return;
-            foreach(int id in row.Expected(level))if(!Game1.player.professions.Contains(id))Game1.player.professions.Add(id);
+            var perk=AccessTools.Method(type,"getImmediateProfessionPerk",new[]{typeof(int)});
+            foreach(int id in row.Expected(level))
+                if(!Game1.player.professions.Contains(id))
+                {
+                    Game1.player.professions.Add(id);
+                    // Same as choosing it in SpaceCore: the profession's own perk, then full health and energy.
+                    try{perk?.Invoke(__instance,new object[]{id});}catch(Exception ex){ProfessionService.Trace($"SpaceCore profession perk {id}: "+(ex.InnerException??ex).Message);}
+                }
+            CustomConverted.AddOrUpdate(__instance,true);
             chooser.SetValue(__instance,false);
             AccessTools.Field(type,"leftProfession")?.SetValue(__instance,null);AccessTools.Field(type,"rightProfession")?.SetValue(__instance,null);
             __instance.populateClickableComponentList();

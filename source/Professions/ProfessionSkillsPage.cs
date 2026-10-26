@@ -357,15 +357,16 @@ internal static class ProfessionSkillsPage
         index=index<0?s.First*6:Math.Clamp(index+direction,0,ids.Length-1);s.Focus=ids[index];
         int row=index/6;if(row<s.First)s.First=row;if(row>=s.First+s.Visible)s.First=row-s.Visible+1;Build(s);
     }
-    private static bool NativeFocus(IClickableMenu page,State s)=>s.Focus<0&&page.currentlySnappedComponent is {} c
-        && !(c.myID is >=0 and <=4 or >=100 and <=104 or >=200 and <=204 or >=60000 and <61000);
+    /// <summary>Skill rows and profession bars (vanilla 0-4/100-104/200-204, SpaceCore adds 5+/105+/205+ per custom skill) are BSV's own.</summary>
+    private static bool Ours(State s,int id)=>id>=60000&&id<61000||id>=0&&id<300&&id%100<Math.Max(5,s.Count);
+    private static bool NativeFocus(IClickableMenu page,State s)=>s.Focus<0&&page.currentlySnappedComponent is {} c&&!Ours(s,c.myID);
     private static bool Navigate(IClickableMenu page,State s,int direction)
     {
         if(NativeFocus(page,s))return false;
         int[] ids=s.AllIds;int index=Array.IndexOf(ids,s.Focus);
         if(index>=0&&(index+direction<0||index+direction>=ids.Length))
         {
-            var next=page.allClickableComponents?.Where(c=>c.myID<60000&&!(c.myID is >=0 and <=4 or >=100 and <=104 or >=200 and <=204))
+            var next=page.allClickableComponents?.Where(c=>!Ours(s,c.myID))
                 .Where(c=>direction>0?c.bounds.Top>=s.Bounds.Bottom:c.bounds.Bottom<=s.Bounds.Top)
                 .OrderBy(c=>Math.Abs(c.bounds.Center.Y-s.Bounds.Center.Y)).FirstOrDefault();
             if(next!=null){s.Focus=s.Hover=-1;page.currentlySnappedComponent=next;page.snapCursorToCurrentSnappedComponent();return true;}

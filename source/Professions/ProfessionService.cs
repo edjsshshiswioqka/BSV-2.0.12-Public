@@ -16,7 +16,7 @@ internal sealed class ProfessionService
     internal static bool SkillActive(string key)=>Active&&!(Configuration.SharedPreferences.Current.AllProfessionsExcludedSkills??Array.Empty<string>()).Contains(key);
     internal static bool SkillActive(int vanillaSkill)=>ProfessionRules.Find(vanillaSkill) is {} s&&SkillActive(s.Name);
     private readonly StardewModdingAPI.Utilities.PerScreen<bool> Waiting=new(()=>true);
-    private readonly StardewModdingAPI.Utilities.PerScreen<bool> WasActive=new(()=>false);
+    private readonly StardewModdingAPI.Utilities.PerScreen<string> WasActive=new(()=>"");
     private bool WaitingForPolicy {get=>Waiting.Value;set=>Waiting.Value=value;}
     private static ProfessionService? Instance;
     private readonly IModHelper Helper;private readonly IMonitor Monitor;private readonly Harmony Patches;
@@ -30,7 +30,10 @@ internal sealed class ProfessionService
         helper.Events.GameLoop.UpdateTicked+=(_,e)=>
         {
             if(!e.IsMultipleOf(30)||!Context.IsWorldReady||!Configuration.SharedPreferences.Ready)return;
-            bool active=Active;if(active!=WasActive.Value){WasActive.Value=active;WaitingForPolicy=active;}
+            bool active=Active;
+            // Turning a single skill back on in the settings also repairs its professions right away.
+            string state=active?"on:"+string.Join(",",Configuration.SharedPreferences.Current.AllProfessionsExcludedSkills??Array.Empty<string>()):"off";
+            if(state!=WasActive.Value){WasActive.Value=state;WaitingForPolicy=active;}
             if(WaitingForPolicy)MigrateLocal();
             if(active&&Game1.activeClickableMenu is LevelUpMenu page)ProfessionMenus.Convert(page);
         };
@@ -79,6 +82,8 @@ internal sealed class ProfessionService
                 var custom=AccessTools.TypeByName("SpaceCore.Interface.SkillLevelUpMenu");
                 var customUpdate=custom==null?null:AccessTools.Method(custom,"update",new[]{typeof(GameTime)});
                 if(customUpdate!=null)Patches.Patch(customUpdate,postfix:Menu(nameof(ProfessionMenus.CustomLevelUp)));
+                var customPerk=custom==null?null:AccessTools.Method(custom,"getLevelPerk",new[]{typeof(string),typeof(int)});
+                if(customPerk!=null)Patches.Patch(customPerk,prefix:Menu(nameof(ProfessionMenus.CustomPerk)));
             }
             catch(Exception sc){Monitor.Log("BSV could not attach to SpaceCore's level-up page; custom skills keep their own choice.\n"+sc,LogLevel.Warn);}
             Enabled=true;Reason="active";Monitor.Log("All Professions initialized (vanilla five skills; owner-local grants).",LogLevel.Debug);return true;
@@ -129,8 +134,18 @@ internal sealed class ProfessionService
     internal static bool IsVanillaRespec(string? response)=>RespecSkill(response)!=null;
     private static string? RespecSkill(string? response)=>response switch{"professionForget_farming"=>"Farming","professionForget_mining"=>"Mining",
         "professionForget_foraging"=>"Foraging","professionForget_fishing"=>"Fishing","professionForget_combat"=>"Combat",_=>null};
-    private static bool Statue(string questionAndAnswer,ref bool __result)
+    private static bool Statue(ref string questionAndAnswer,ref bool __result)
     {
+        // SpaceCore skills: SpaceCore takes the 10,000g in a postfix, so the answer itself is neutralised as well.
+        if(questionAndAnswer!=null&&questionAndAnswer.StartsWith("professionForget_")&&RespecSkill(questionAndAnswer)==null)
+        {
+            string id=questionAndAnswer.Split('_',2)[1];
+            if(SkillRows.Custom.Any(r=>r.Key==id)&&SkillActive(id)&&ProfessionGrant.Owns(Game1.player))
+            {
+                Game1.drawObjectDialogue(Text("professions.statue"));
+                questionAndAnswer="BSV_professionForget_blocked";__result=true;return false;
+            }
+        }
         // Do not intercept the whole dog statue or custom response IDs: third-party menu
         // entries remain reachable. These five native answers precede the 10,000g debit.
         if(RespecSkill(questionAndAnswer) is not {} key || !SkillActive(key) || !ProfessionGrant.Owns(Game1.player))return true;
