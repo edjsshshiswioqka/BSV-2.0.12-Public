@@ -85,7 +85,7 @@ internal static class SpaceCoreSkills
         var pairs=(Get(skill,"ProfessionsForLevels") as IEnumerable)?.Cast<object>().ToList();
         if(pairs==null||pairs.Count!=3)return null;
         object? Prof(object pair,string side)=>Get(pair,side);
-        int Lv(object pair)=>Get(pair,"Level") as int???0;
+        int Lv(object pair)=>(Get(pair,"Level") as int?)??0;
         var five=pairs.Where(p=>Lv(p)==5&&Get(p,"Requires")==null).ToList();
         if(five.Count!=1)return null;
         var a=Prof(five[0],"First");var b=Prof(five[0],"Second");
