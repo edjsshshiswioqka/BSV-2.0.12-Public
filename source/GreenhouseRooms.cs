@@ -304,7 +304,13 @@ internal static class GreenhouseRooms
         // Light: wall lanterns from the mine tilesheet along the back wall, plus soft lamps over the floor
         // (Paths tile 8 is the game's own light marker, as in the cellar and the mines).
         var paths = map.GetLayer("Paths");
-        foreach (int x in new[] { 4, 8, 16, 20 }) { buildings.Tiles[x, 4] = New(buildings, cave, 82); front.Tiles[x, 4] = null; paths.Tiles[x, 4] = New(paths, "paths", 8); }
+        // The mine's own 2 x 2 wall-lantern block (65 66 / 81 82), set into the rock of the back wall like in the mine entrance.
+        foreach (int x in new[] { 4, 8, 15, 19 })
+        {
+            foreach (var (dx, dy, index) in new[] { (0, 2, 65), (1, 2, 66), (0, 3, 81), (1, 3, 82) })
+            { buildings.Tiles[x + dx, dy] = New(buildings, cave, index); front.Tiles[x + dx, dy] = null; }
+            paths.Tiles[x + 1, 3] = New(paths, "paths", 8);
+        }
         foreach (var (x, y) in new[] { (6, 11), (18, 11), (12, 14), (6, 20), (18, 20), (12, 24) }) paths.Tiles[x, y] = New(paths, "paths", 8);
         paths.Tiles[lx, CaveArrivalY + 1] = New(paths, "paths", 8);
         map.Properties["AmbientLight"] = "60 60 25";
