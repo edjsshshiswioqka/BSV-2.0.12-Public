@@ -62,20 +62,29 @@ internal static class TwoStoryShed
         catch { }
     }
 
-    /// <summary>Things placed upstairs in the first test build (upper floor at x 22) move to the new upper floor.</summary>
+    private static bool Buildable()
+    {
+        try { Build(Helper.GameContent.Load<Map>("Maps/Shed2")); return true; }
+        catch { return false; }
+    }
+
+    /// <summary>Things placed upstairs in the first test build (upper floor at x 22) move to the new upper floor, once per shed.</summary>
     private static void Migrate()
     {
         if (!Context.IsMainPlayer) return;
+        const string Done = MarkerKey + "/Layout2";
         Utility.ForEachLocation(loc =>
         {
-            if (loc.Map?.Properties.ContainsKey(MarkerKey) != true) return true;
-            bool Old(Vector2 t) => t.X >= RoomWidth && t.X < UpperX;
+            if (loc.Map?.Properties.ContainsKey(MarkerKey) != true || loc.modData.ContainsKey(Done)) return true;
+            bool Old(Vector2 t) => t.X >= OldUpperX && t.X < OldUpperX + RoomWidth;
             var shift = new Vector2(UpperX - OldUpperX, 0);
             foreach (var pair in loc.objects.Pairs.Where(p => Old(p.Key)).ToList())
             {
+                var to = pair.Key + shift;
+                if (loc.objects.ContainsKey(to)) continue;
                 loc.objects.Remove(pair.Key);
-                pair.Value.TileLocation = pair.Key + shift;
-                loc.objects[pair.Key + shift] = pair.Value;
+                pair.Value.TileLocation = to;
+                loc.objects[to] = pair.Value;
             }
             foreach (var f in loc.furniture.Where(f => Old(f.TileLocation)).ToList())
             {
@@ -83,6 +92,7 @@ internal static class TwoStoryShed
                 f.boundingBox.Value = new Microsoft.Xna.Framework.Rectangle((int)f.TileLocation.X * 64, (int)f.TileLocation.Y * 64, f.boundingBox.Value.Width, f.boundingBox.Value.Height);
                 f.updateDrawPosition();
             }
+            loc.modData[Done] = "T";
             return true;
         });
     }
@@ -104,6 +114,9 @@ internal static class TwoStoryShed
                 shed.BuildDays = 1;
                 shed.BuildMaterials = new List<BuildingMaterial> { new() { ItemId = "(O)388", Amount = Wood }, new() { ItemId = "(O)390", Amount = Stone } };
                 shed.IndoorMap = Id;
+                // Another mod changed the Big Shed room so the second floor can't be built: Robin doesn't sell it
+                // (sheds already upgraded keep working as one floor).
+                if (!Buildable()) { shed.Builder = null; Monitor.LogOnce("BSV two-story shed: this Big Shed map can't take a second floor; Robin won't offer the upgrade.", LogLevel.Warn); }
                 data[Id] = shed;
             }, BsvAssets.EditPriority);
         else if (e.NameWithoutLocale.IsEquivalentTo(MapAsset))
@@ -114,7 +127,7 @@ internal static class TwoStoryShed
                 catch (Exception ex)
                 {
                     Monitor.Log("BSV could not build the two-story shed from this Big Shed map; it stays one floor. " + ex.Message, LogLevel.Warn);
-                    return GreenhouseRooms.CopyOf(big, Id);
+                    return GreenhouseRooms.CopyOf(big, Id, keepWarps: true);
                 }
             }, AssetLoadPriority.Exclusive);
     }

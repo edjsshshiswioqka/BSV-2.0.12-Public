@@ -32,22 +32,36 @@ internal static class GreenhouseUpgrade
     private static Func<bool> Enabled = () => true;
     private static bool Failed;
     private static int LastRefresh = -1;
+    /// <summary>Whether the cave / upper floor could be built on this game's maps (null = not built yet this session).
+    /// Their door and stairs are only added, and the next upgrade only offered, when the room really exists.</summary>
+    private static bool? CaveOk, UpperOk;
+    private static bool RefreshGreenhouse, UpperRetried;
+    internal const string FallbackKey = Prefix + "/GreenhouseRoomFallback";
 
     internal static void Install(IModHelper helper, IMonitor monitor, Func<bool> enabled)
     {
         Helper = helper; Monitor = monitor; Enabled = enabled;
-        var h = new Harmony(Prefix + ".GreenhouseUpgrade");
-        h.Patch(AccessTools.Method(typeof(GameLocation), nameof(GameLocation.createQuestionDialogue), new[] { typeof(string), typeof(Response[]), typeof(string) })
-                ?? throw new MissingMethodException(nameof(GameLocation), nameof(GameLocation.createQuestionDialogue)),
-            prefix: new HarmonyMethod(typeof(GreenhouseUpgrade), nameof(BeforeQuestion)));
-        h.Patch(AccessTools.Method(typeof(GameLocation), nameof(GameLocation.answerDialogueAction), new[] { typeof(string), typeof(string[]) })
-                ?? throw new MissingMethodException(nameof(GameLocation), nameof(GameLocation.answerDialogueAction)),
-            prefix: new HarmonyMethod(typeof(GreenhouseUpgrade), nameof(BeforeAnswer)));
+        // The rooms and their saved contents never depend on the Robin patches below.
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.GameLoop.DayStarted += (_, _) => Safe(Complete);
         helper.Events.GameLoop.SaveLoaded += (_, _) => Safe(Sync);
         helper.Events.GameLoop.OneSecondUpdateTicked += (_, _) => { if (Context.IsWorldReady) { Safe(Sync); Safe(MigrateCave); } };
-        helper.Events.GameLoop.ReturnedToTitle += (_, _) => { Failed = false; LastRefresh = -1; helper.GameContent.InvalidateCache(a => IsOurMap(a.NameWithoutLocale)); };
+        helper.Events.GameLoop.ReturnedToTitle += (_, _) =>
+        {
+            Failed = false; LastRefresh = -1; CaveOk = UpperOk = null; RefreshGreenhouse = UpperRetried = false;
+            helper.GameContent.InvalidateCache(a => IsOurMap(a.NameWithoutLocale));
+        };
+        try
+        {
+            var h = new Harmony(Prefix + ".GreenhouseUpgrade");
+            h.Patch(AccessTools.Method(typeof(GameLocation), nameof(GameLocation.createQuestionDialogue), new[] { typeof(string), typeof(Response[]), typeof(string) })
+                    ?? throw new MissingMethodException(nameof(GameLocation), nameof(GameLocation.createQuestionDialogue)),
+                prefix: new HarmonyMethod(typeof(GreenhouseUpgrade), nameof(BeforeQuestion)));
+            h.Patch(AccessTools.Method(typeof(GameLocation), nameof(GameLocation.answerDialogueAction), new[] { typeof(string), typeof(string[]) })
+                    ?? throw new MissingMethodException(nameof(GameLocation), nameof(GameLocation.answerDialogueAction)),
+                prefix: new HarmonyMethod(typeof(GreenhouseUpgrade), nameof(BeforeAnswer)));
+        }
+        catch (Exception ex) { Monitor.Log("BSV: Robin can't offer greenhouse upgrades in this game build; finished upgrades keep working.\n" + ex, LogLevel.Warn); }
     }
     private static bool IsOurMap(IAssetName name) => name.IsEquivalentTo("Maps/Greenhouse") || name.IsEquivalentTo(CaveMap) || name.IsEquivalentTo(UpperMap);
     private static string T(string key, object? tokens = null) => BsvI18n.Get(Helper, "greenhouse-upgrade." + key, tokens);
@@ -97,6 +111,9 @@ internal static class GreenhouseUpgrade
         try
         {
             if (dialogKey != "carpenter" || !Context.IsMainPlayer || !Repaired || !BsvGreenhouse || answerChoices.Any(r => r.responseKey == ResponseKey)) return;
+            // The next room could not be built on this game's maps (another map mod): don't sell it.
+            int next = Tier + 1;
+            if (next == 2 && CaveOk == false || next == 3 && UpperOk == false) return;
             var list = answerChoices.ToList();
             int at = list.FindIndex(r => r.responseKey is "Construct" or "Leave");
             list.Insert(at < 0 ? list.Count : at, new Response(ResponseKey, T("option")));
@@ -170,7 +187,7 @@ internal static class GreenhouseUpgrade
         farm.modData[TierKey] = tier.ToString();
         farm.modData.Remove(DueKey);
         Sync();
-        if (tier == 2) PlaceMushroomBoxes();
+        if (tier == 2 && CaveOk != false) PlaceMushroomBoxes();
         Game1.addHUDMessage(new HUDMessage(T("finished" + tier)) { noIcon = true });
         Monitor.Log($"BSV greenhouse upgrade {tier} finished.", LogLevel.Info);
     }
@@ -192,14 +209,24 @@ internal static class GreenhouseUpgrade
     /// <summary>A cave built with the first (20 x 28) layout: its mushroom boxes move to the matching spots of the bigger cave.</summary>
     private static void MigrateCave()
     {
-        if (!Context.IsMainPlayer || Tier < 2 || Game1.getLocationFromName(CaveName) is not { } cave) return;
+        if (!Context.IsMainPlayer || Tier < 2 || CaveOk != true || Game1.getLocationFromName(CaveName) is not { } cave) return;
         if (cave.modData.TryGetValue(GreenhouseRooms.CaveLayoutKey, out var layout) && layout == GreenhouseRooms.CaveLayout) return;
-        int moved = 0;
+        // No boxes at all (placing them failed on the upgrade morning): place them now.
+        if (!cave.objects.Values.Any(o => o.QualifiedItemId == "(BC)128")) { PlaceMushroomBoxes(); return; }
+        // Lift every old box first, then set them down, so a box never waits on a spot another old box still holds.
+        var lifted = new List<(Vector2 To, StardewValley.Object Box)>();
         foreach (var (from, to) in GreenhouseRooms.OldMushroomBoxes().Zip(GreenhouseRooms.MushroomBoxes()))
         {
             var a = new Vector2(from.X, from.Y); var b = new Vector2(to.X, to.Y);
-            if (a == b || !cave.objects.TryGetValue(a, out var obj) || obj.QualifiedItemId != "(BC)128" || cave.objects.ContainsKey(b)) continue;
-            cave.objects.Remove(a); obj.TileLocation = b; cave.objects.Add(b, obj); moved++;
+            if (a == b || !cave.objects.TryGetValue(a, out var obj) || obj.QualifiedItemId != "(BC)128") continue;
+            cave.objects.Remove(a); lifted.Add((b, obj));
+        }
+        int moved = 0;
+        foreach (var (to, box) in lifted)
+        {
+            // Something the player placed already stands there: the box goes to the Lost and Found instead of vanishing.
+            if (cave.objects.ContainsKey(to)) { Game1.player.team.returnedDonations.Add(box); Game1.player.team.newLostAndFoundItems.Value = true; continue; }
+            box.TileLocation = to; cave.objects.Add(to, box); moved++;
         }
         cave.modData[GreenhouseRooms.CaveLayoutKey] = GreenhouseRooms.CaveLayout;
         Monitor.Log($"BSV mushroom cave enlarged; {moved} mushroom boxes moved to the new layout.", LogLevel.Info);
@@ -211,13 +238,26 @@ internal static class GreenhouseUpgrade
         if (greenhouse?.Map == null) return;
         int tier = Tier;
         string current = greenhouse.Map.Properties.TryGetValue(MapTierKey, out var v) ? v.ToString() : "0";
-        if (current == tier.ToString() || tier == 0 && !greenhouse.Map.Properties.ContainsKey(MapTierKey)) return;
-        if (!greenhouse.Map.Properties.ContainsKey(GreenhouseMap.LayoutKey)) return;  // not a BSV greenhouse: nothing to add
-        if (LastRefresh == tier) return;   // one attempt per level; a failed map edit is logged once, not retried every second
-        LastRefresh = tier;
+        bool bsv = greenhouse.Map.Properties.ContainsKey(GreenhouseMap.LayoutKey);
+        // The upper floor was built while the greenhouse wasn't expanded yet (settings arrived later): build it again once.
+        if (bsv && tier >= 3 && !UpperRetried && Game1.getLocationFromName(UpperName)?.Map?.Properties.ContainsKey(FallbackKey) == true)
+        {
+            UpperRetried = true;   // UpperOk stays false, so a successful rebuild refreshes the greenhouse (adds the stairs)
+            Helper.GameContent.InvalidateCache(UpperMap);
+            Monitor.Log("BSV rebuilding the greenhouse upper floor now that the greenhouse is expanded.", LogLevel.Trace);
+        }
+        bool refresh = RefreshGreenhouse; RefreshGreenhouse = false;
+        if (!bsv) return;  // not a BSV greenhouse: nothing to add
+        if (!refresh)
+        {
+            if (current == tier.ToString() || tier == 0 && !greenhouse.Map.Properties.ContainsKey(MapTierKey)) return;
+            if (LastRefresh == tier) return;   // one attempt per level; a failed map edit is logged once, not retried every second
+            LastRefresh = tier;
+        }
         Helper.GameContent.InvalidateCache("Maps/Greenhouse");
         greenhouse.loadMap(greenhouse.mapPath.Value, force_reload: true);
         greenhouse.updateWarps();
+        greenhouse.ParentBuilding?.updateInteriorWarps(greenhouse);   // keep the exit right if the greenhouse was moved
         Monitor.Log($"BSV greenhouse map refreshed for upgrade level {tier}.", LogLevel.Trace);
     }
     private static void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
@@ -232,8 +272,8 @@ internal static class GreenhouseUpgrade
                 try
                 {
                     GreenhouseRooms.AddOrchard(map);
-                    if (tier >= 2) GreenhouseRooms.AddCaveDoor(map, CaveName);
-                    if (tier >= 3) GreenhouseRooms.AddStairs(map, UpperName);
+                    if (tier >= 2 && CaveOk != false) GreenhouseRooms.AddCaveDoor(map, CaveName);
+                    if (tier >= 3 && UpperOk != false) GreenhouseRooms.AddStairs(map, UpperName);
                     map.Properties[MapTierKey] = tier.ToString();
                 }
                 catch (Exception ex) { Monitor.Log("BSV could not add the greenhouse upgrades to this map; the 700-tile greenhouse stays as it is.\n" + ex, LogLevel.Error); }
@@ -249,19 +289,27 @@ internal static class GreenhouseUpgrade
             }, BsvAssets.EditPriority);
         }
         else if (e.NameWithoutLocale.IsEquivalentTo(CaveMap))
-            e.LoadFrom(() => Room("mushroom cave", () => GreenhouseRooms.BuildCave(Helper.GameContent.Load<Map>("Maps/FarmCave"), CaveName, "Greenhouse"), "Maps/FarmCave"), AssetLoadPriority.Exclusive);
+            e.LoadFrom(() => Room("mushroom cave", () => GreenhouseRooms.BuildCave(Helper.GameContent.Load<Map>("Maps/FarmCave"), CaveName, "Greenhouse"), "Maps/FarmCave", ok => CaveOk = ok), AssetLoadPriority.Exclusive);
         else if (e.NameWithoutLocale.IsEquivalentTo(UpperMap))
-            e.LoadFrom(() => Room("upper floor", () => GreenhouseRooms.BuildUpper(Helper.GameContent.Load<Map>("Maps/Greenhouse"), UpperName, "Greenhouse"), "Maps/Greenhouse"), AssetLoadPriority.Exclusive);
+            e.LoadFrom(() => Room("upper floor", () => GreenhouseRooms.BuildUpper(Helper.GameContent.Load<Map>("Maps/Greenhouse"), UpperName, "Greenhouse"), "Maps/Greenhouse", ok => UpperOk = ok), AssetLoadPriority.Exclusive);
     }
     /// <summary>These locations always exist (so their contents are saved); if a room cannot be built on another
-    /// mod's maps, a plain copy of the source map is used instead. It is unreachable because no upgrade is offered.</summary>
-    private static Map Room(string what, Func<Map> build, string fallback)
+    /// mod's maps, a marked plain copy of the source map is used instead: no door or stairs lead to it and the
+    /// upgrade isn't offered, so nobody can get in.</summary>
+    private static Map Room(string what, Func<Map> build, string fallback, Action<bool> result)
     {
-        try { return build(); }
+        bool? before = what == "mushroom cave" ? CaveOk : UpperOk;
+        Map map; bool ok;
+        try { map = build(); ok = true; }
         catch (Exception ex)
         {
             Monitor.Log($"BSV could not build the greenhouse {what}; it stays closed. {ex.Message}", LogLevel.Warn);
-            return GreenhouseRooms.CopyOf(Helper.GameContent.Load<Map>(fallback), "BSV fallback " + what);
+            map = GreenhouseRooms.CopyOf(Helper.GameContent.Load<Map>(fallback), "BSV fallback " + what);
+            map.Properties[FallbackKey] = "T"; ok = false;
         }
+        result(ok);
+        // The greenhouse may already be loaded with (or without) this room's door: refresh it on the next update.
+        if ((before ?? true) != ok) RefreshGreenhouse = true;
+        return map;
     }
 }

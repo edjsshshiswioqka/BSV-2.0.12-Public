@@ -64,7 +64,8 @@ internal static class GreenhouseRooms
         foreach (var p in source.Properties) copy.Properties[p.Key] = p.Value;
         return copy;
     }
-    internal static StaticTile New(Layer layer, string sheet, int index) => new(layer, layer.Map.GetTileSheet(sheet), BlendMode.Alpha, index);
+    internal static StaticTile New(Layer layer, string sheet, int index) =>
+        new(layer, layer.Map.GetTileSheet(sheet) ?? throw new MapConflictException($"Tilesheet '{sheet}' is missing from this map."), BlendMode.Alpha, index);
     internal static Map Blank(Map source, string id, int width, int height)
     {
         var map = new Map(id);
@@ -227,7 +228,7 @@ internal static class GreenhouseRooms
         AddWarps(map, string.Join(" ", StairCols.Select(x => $"{x} {StairsTop} {target} {x} {StairsTop + 3}")));
     }
 
-    internal static Map CopyOf(Map source, string id)
+    internal static Map CopyOf(Map source, string id, bool keepWarps = false)
     {
         Layer b = source.GetLayer("Back");
         var map = Blank(source, id, b.LayerWidth, b.LayerHeight);
@@ -236,7 +237,7 @@ internal static class GreenhouseRooms
             var dst = map.GetLayer(src.Id);
             for (int y = 0; y < src.LayerHeight; y++) for (int x = 0; x < src.LayerWidth; x++) dst.Tiles[x, y] = Copy(src.Tiles[x, y], dst);
         }
-        foreach (var p in source.Properties) if (p.Key is not ("Warp" or "NPCWarp" or "Doors")) map.Properties[p.Key] = p.Value;
+        foreach (var p in source.Properties) if (keepWarps || p.Key is not ("Warp" or "NPCWarp" or "Doors")) map.Properties[p.Key] = p.Value;
         return map;
     }
 
