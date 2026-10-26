@@ -53,7 +53,7 @@ internal sealed class WorldService
             p=>!ModEntry.IsCrab(Game1.player.ActiveObject)||SpriteGeometry.CrabWaterValid(p,x=>Water(l,x)));
         return (Vector(target??clicked),SingleViewPlacement.Orientation);
     }
-    internal void CancelOpening(){OpenGeneration.Value++;OpeningChest.Value=null;}
+    internal void CancelOpening(){OpenGeneration.Value++;OpeningChest.Value=null;RemotePending.Value=null;ChestsAnywhereSupport.Unregister();}
     internal Chest? Opening=>OpeningChest.Value;
     internal void Reset(){CancelOpening();}
     internal void Place(ICursorPosition cursor)
@@ -135,31 +135,47 @@ internal sealed class WorldService
             OpeningChest.Value=null;if(Context.IsWorldReady)Mod.Message("access.busy");
         });
     }
-    /// <summary>Chests Anywhere: the full machine window from anywhere. Same lock and checks as <see cref="Open"/>, without the reach rule.</summary>
+    /// <summary>Chests Anywhere: the full machine window from anywhere. Same lock and checks as <see cref="Open"/>, without the reach rule.
+    /// The player first announces the remote session (so the host keeps the lock for a player who isn't there), then asks for the lock.</summary>
     internal void OpenRemote(Chest c)
     {
-        if(!Context.IsWorldReady || Mod.Saving || !Context.IsPlayerFree || OpeningChest.Value!=null)return;
+        if(!Context.IsWorldReady || Mod.Saving || !Context.IsPlayerFree)return;
+        if(OpeningChest.Value!=null){Mod.Message("access.busy");return;}
         var l=c.Location;
-        if(l==null || !l.objects.TryGetValue(c.TileLocation,out var placed) || !ReferenceEquals(c,placed))return;
+        if(l==null || !l.objects.TryGetValue(c.TileLocation,out var placed) || !ReferenceEquals(c,placed)){Mod.Message("access.busy");return;}
         if(!ChestsAnywhereSupport.Supported){Mod.Message("access.bank");return;}
         OpeningChest.Value=c;
-        long generation=++OpenGeneration.Value;
+        ChestsAnywhereSupport.Register(c);
+        RemotePending.Value=(++OpenGeneration.Value,Game1.ticks+10,Game1.ticks+600,false);
+    }
+    private readonly PerScreen<(long Generation,int RequestAt,int GiveUpAt,bool Requested)?> RemotePending=new(()=>null);
+    /// <summary>Each tick while a remote open is pending: ask for the lock once the announcement has reached the host; give up after ~10 s.</summary>
+    internal void TickRemote()
+    {
+        if(RemotePending.Value is not {} p)return;
+        var c=OpeningChest.Value;
+        if(c==null || p.Generation!=OpenGeneration.Value){RemotePending.Value=null;return;}
+        if(Game1.ticks>p.GiveUpAt){RemotePending.Value=null;CancelOpening();ChestsAnywhereSupport.Unregister();Mod.Message("access.busy");return;}
+        if(p.Requested || Game1.ticks<p.RequestAt)return;
+        RemotePending.Value=p with{Requested=true};
+        long generation=p.Generation;
         c.GetMutex().RequestLock(()=>
         {
+            RemotePending.Value=null;
             if(generation!=OpenGeneration.Value)
             {if(c.GetMutex().IsLockHeld())c.GetMutex().ReleaseLock();return;}
             OpeningChest.Value=null;
             if(!Context.IsWorldReady || Mod.Saving || !Context.IsPlayerFree || c.Location==null
                 || !c.Location.objects.TryGetValue(c.TileLocation,out var o) || !ReferenceEquals(c,o))
-            {if(c.GetMutex().IsLockHeld())c.GetMutex().ReleaseLock();return;}
+            {if(c.GetMutex().IsLockHeld())c.GetMutex().ReleaseLock();ChestsAnywhereSupport.Unregister();return;}
             try {c.SpecialChestType=Chest.SpecialChestTypes.BigChest;Mod.OpenChest.Value=c;c.ShowMenu();Game1.playSound("openChest");}
             catch(Exception ex){Mod.ReleaseChest();Mod.Monitor.Log($"Could not open fishing machine remotely: {ex}",LogLevel.Error);}
         },()=>
         {
+            RemotePending.Value=null;
             if(generation!=OpenGeneration.Value)return;
-            OpeningChest.Value=null;if(Context.IsWorldReady)Mod.Message("access.busy");
+            OpeningChest.Value=null;ChestsAnywhereSupport.Unregister();if(Context.IsWorldReady)Mod.Message("access.busy");
         });
-        c.GetMutex().Update(Game1.currentLocation);
     }
     internal void RemoveHost(GameLocation l,Vector2 a,string machineId,Farmer who,Action<string> commitReceipt,Action<string?> done)
     {

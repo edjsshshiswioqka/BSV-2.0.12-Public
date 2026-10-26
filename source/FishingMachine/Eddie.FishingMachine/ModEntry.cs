@@ -215,6 +215,7 @@ public sealed class ModEntry
             && (Game1.currentLocation==c.Location || ChestsAnywhereSupport.Remote(c)) && Production.Phase(c) is "idle" or "ready")Actions.Control(c,ActionKind.Start);
         if(c!=null && c.GetMutex().IsLockHeld())c.GetMutex().ReleaseLock();
         OpenChest.Value=null;
+        ChestsAnywhereSupport.Unregister();
     }
     internal static bool IsMachine(Item? i)=>i?.QualifiedItemId is QualifiedId or CrabQualifiedId;
     internal static bool IsCrab(Item? i)=>i?.QualifiedItemId==CrabQualifiedId;

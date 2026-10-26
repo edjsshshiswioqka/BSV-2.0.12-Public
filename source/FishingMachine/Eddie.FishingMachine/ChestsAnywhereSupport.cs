@@ -13,16 +13,20 @@ namespace Eddie.FishingMachine;
 /// Chests Anywhere: fishing machines and crab catchers appear in its chest list. Opening one there shows the full
 /// machine window (bait, catches, status, level) instead of a plain chest, with the same rules as standing next to
 /// it; closing a crab catcher remotely starts it the same way.
-/// Remote access keeps the machine's inventory lock: the host grants and keeps that lock for any online player,
-/// not only for players standing in the machine's location (the game's own rule for chests).
+/// The machine keeps its inventory lock during remote use: a player announces the remote session in their farmer
+/// data, and for that machine only the host keeps the lock for any online player instead of only players standing in
+/// the machine's location (the game's rule for chests). Everything else (in-person use, abandoned requests) keeps the
+/// game's own rule.
 /// </summary>
 internal sealed class ChestsAnywhereSupport
 {
     internal const string IgnoredKey = "Pathoschild.ChestsAnywhere/IsIgnored";
     internal const string ShownKey = ModEntry.Tag + "ChestsAnywhereShown";
+    internal const string SessionKey = ModEntry.Tag + "RemoteMachine";
     private static ModEntry Mod = null!;
-    private static MethodInfo? UpdateFarmers;
-    private static readonly HashSet<NetMutex> Mutexes = new(ReferenceEqualityComparer.Instance);
+    private static readonly Dictionary<NetMutex, string> MachineIds = new(ReferenceEqualityComparer.Instance);
+    private static readonly HashSet<string> RemoteIds = new(StringComparer.Ordinal);
+    private static readonly StardewModdingAPI.Utilities.PerScreen<(Chest? Chest, int Tick)> OpenedAt = new(() => (null, 0));
     /// <summary>Whether a machine can be opened from another location (the lock patch is in place).</summary>
     internal static bool Supported { get; private set; }
 
@@ -32,14 +36,16 @@ internal sealed class ChestsAnywhereSupport
     {
         helper.Events.Display.MenuChanged += OnMenuChanged;
         helper.Events.GameLoop.UpdateTicked += (_, _) => { try { Tick(); } catch (Exception ex) { Mod.Monitor.LogOnce("BSV machine remote access: " + ex.Message, LogLevel.Warn); } };
-        helper.Events.GameLoop.ReturnedToTitle += (_, _) => Mutexes.Clear();
+        helper.Events.GameLoop.SaveLoaded += (_, _) => Game1.player.modData.Remove(SessionKey);   // never carried over from a saved session
+        helper.Events.GameLoop.ReturnedToTitle += (_, _) => { MachineIds.Clear(); RemoteIds.Clear(); };
         try
         {
-            var online = AccessTools.Method(typeof(Game1), nameof(Game1.getOnlineFarmers));
-            var update = AccessTools.Method(typeof(NetMutex), nameof(NetMutex.Update), new[] { typeof(GameLocation) });
-            UpdateFarmers = online == null ? null : typeof(NetMutex).GetMethods().FirstOrDefault(m => m.Name == nameof(NetMutex.Update)
-                && m.GetParameters() is { Length: 1 } p && p[0].ParameterType != typeof(GameLocation) && p[0].ParameterType.IsAssignableFrom(online.ReturnType));
-            if (update == null || UpdateFarmers == null) throw new MissingMethodException("NetMutex.Update(FarmerCollection) not found.");
+            // NetMutex.Update(GameLocation) only forwards location.farmers to Update(FarmerCollection); the larger one is patched
+            // (a tiny forwarding method can be inlined into its callers, which would skip a patch on it).
+            var online = AccessTools.Method(typeof(Game1), nameof(Game1.getOnlineFarmers))?.ReturnType;
+            var update = typeof(NetMutex).GetMethods(BindingFlags.Instance | BindingFlags.Public).FirstOrDefault(m => m.Name == nameof(NetMutex.Update)
+                && m.GetParameters() is { Length: 1 } p && p[0].ParameterType != typeof(GameLocation) && online != null && p[0].ParameterType.IsAssignableFrom(online));
+            if (update == null) throw new MissingMethodException("NetMutex.Update(FarmerCollection) not found.");
             new Harmony(ModEntry.Tag + "ChestsAnywhere").Patch(update, prefix: new HarmonyMethod(typeof(ChestsAnywhereSupport), nameof(BeforeMutexUpdate)));
             Supported = true;
         }
@@ -58,12 +64,25 @@ internal sealed class ChestsAnywhereSupport
         c.modData[ShownKey] = "T";
     }
 
+    internal static void Register(Chest c)
+    {
+        if (c.modData.TryGetValue(ModEntry.Tag + "MachineId", out var id)) Game1.player.modData[SessionKey] = id;
+    }
+    /// <summary>Ends the announced remote session, unless a remote open is still waiting for its lock.</summary>
+    internal static void Unregister()
+    {
+        if (Mod.World?.Opening != null) return;
+        if (Context.IsWorldReady && Game1.player.modData.ContainsKey(SessionKey)) Game1.player.modData.Remove(SessionKey);
+    }
+
     /// <summary>Chests Anywhere (or any other mod) opened a machine as a plain chest: open the machine window instead.</summary>
     private static void OnMenuChanged(object? sender, MenuChangedEventArgs e)
     {
         if (!Mod.Ready || !Context.IsWorldReady || e.NewMenu is not ItemGrabMenu menu || menu.context is not Chest c
             || !ModEntry.IsAnchor(c) || ReferenceEquals(c, Mod.OpenChest.Value)) return;
         if (ReferenceEquals(Game1.activeClickableMenu, menu)) Game1.exitActiveMenu();
+        // Switching from another machine's window (Chests Anywhere's chest list): that machine's lock is given back first.
+        if (Mod.OpenChest.Value != null) Mod.ReleaseChest();
         if (c.Location == Game1.currentLocation && Mod.World.InReach(Game1.player, c)) Mod.World.Open(c);
         else Mod.World.OpenRemote(c);
     }
@@ -74,24 +93,34 @@ internal sealed class ChestsAnywhereSupport
     private static void Tick()
     {
         if (!Context.IsWorldReady || !Supported) return;
-        // The host processes lock requests for machines nobody is standing next to.
         if (Context.IsMainPlayer)
         {
-            Mutexes.Clear();
-            foreach (var (chest, _) in Mod.Machines.All) Mutexes.Add(chest.GetMutex());
+            MachineIds.Clear(); RemoteIds.Clear();
+            foreach (var (chest, _) in Mod.Machines.All)
+                if (chest.modData.TryGetValue(ModEntry.Tag + "MachineId", out var id)) MachineIds[chest.GetMutex()] = id;
+            foreach (Farmer f in Game1.getOnlineFarmers())
+                if (f.modData.TryGetValue(SessionKey, out var id)) RemoteIds.Add(id);
+            // Lock requests for a machine nobody is standing next to are processed here.
             foreach (var (chest, location) in Mod.Machines.All)
                 if (location != Game1.currentLocation) chest.GetMutex().Update(location);
         }
-        // A remote opener (host or farmhand) sees its own lock being granted.
+        Mod.World.TickRemote();
+        // A remote opener (host or farmhand) sees its own lock being granted or refused.
         foreach (var c in new[] { Mod.World.Opening, Mod.OpenChest.Value })
             if (c?.Location != null && c.Location != Game1.currentLocation) c.GetMutex().Update(c.Location);
+        // The lock was lost during a remote session (host left, disconnect...): close the window instead of editing without it.
+        var open = Mod.OpenChest.Value;
+        if (open != null && Game1.player.modData.ContainsKey(SessionKey) && Game1.activeClickableMenu is ItemGrabMenu m && ReferenceEquals(m.context, open))
+        {
+            if (OpenedAt.Value.Chest != open) OpenedAt.Value = (open, Game1.ticks);
+            else if (Game1.ticks - OpenedAt.Value.Tick > 30 && !open.GetMutex().IsLockHeld()) { Game1.exitActiveMenu(); Mod.Message("access.busy"); }
+        }
     }
 
-    /// <summary>Machine locks follow every online player, not only the ones in the machine's location.</summary>
-    private static bool BeforeMutexUpdate(NetMutex __instance)
+    /// <summary>For a machine in an announced remote session, its lock follows every online player.</summary>
+    private static void BeforeMutexUpdate(NetMutex __instance, object[] __args)
     {
-        if (!Context.IsMainPlayer || UpdateFarmers == null || !Mutexes.Contains(__instance)) return true;
-        try { UpdateFarmers.Invoke(__instance, new object[] { Game1.getOnlineFarmers() }); return false; }
-        catch { return true; }
+        if (!Context.IsMainPlayer || RemoteIds.Count == 0 || !MachineIds.TryGetValue(__instance, out var id) || !RemoteIds.Contains(id)) return;
+        __args[0] = Game1.getOnlineFarmers();
     }
 }
