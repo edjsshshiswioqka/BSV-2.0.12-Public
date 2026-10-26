@@ -156,6 +156,14 @@ internal static class InventoryScroll
         }
         catch (Exception ex) { Warn(ex); return true; }
     }
+    /// <summary>The mouse in menu (UI) coordinates. SMAPI input events run outside UI mode, where the game reports
+    /// zoom-scaled coordinates that miss the bar whenever the UI scale differs from the zoom level.</summary>
+    private static Point MouseUi()
+    {
+        Game1.PushUIMode();
+        try { return new Point(Game1.getMouseX(), Game1.getMouseY()); }
+        finally { Game1.PopUIMode(); }
+    }
     private static void OnButton(object? sender, ButtonPressedEventArgs e)
     {
         try
@@ -163,7 +171,7 @@ internal static class InventoryScroll
             if (Game1.activeClickableMenu == null) return;
             if (e.Button == SButton.MouseLeft)
             {
-                int x = Game1.getMouseX(), y = Game1.getMouseY();
+                var mouse = MouseUi(); int x = mouse.X, y = mouse.Y;
                 var grid = Grids().FirstOrDefault(m => For(m) != null && Track(m).Contains(x, y));
                 if (grid == null) return;
                 // The bar sits just outside the grid: the menu must not treat this click as "outside" (dropping a held item).
@@ -185,7 +193,7 @@ internal static class InventoryScroll
         try
         {
             foreach (var m in Grids())
-                if (States.TryGetValue(m, out var s) && s.Dragging && For(m) != null) JumpTo(m, Game1.getMouseY());
+                if (States.TryGetValue(m, out var s) && s.Dragging && For(m) != null) JumpTo(m, MouseUi().Y);
         }
         catch (Exception ex) { Warn(ex); }
     }
