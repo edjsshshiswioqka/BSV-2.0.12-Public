@@ -232,7 +232,15 @@ internal sealed partial class TeaFeature
         { __instance.Location.playSound("axchop", __instance.Tile); __result = true; return false; }
         // A withered tea plant can also be cut away with any scythe (scythe, golden or iridium).
         if (Dead(__instance) && t is MeleeWeapon blade && blade.isScythe())
-        { __instance.Location.playSound("cut", __instance.Tile); __result = true; return false; }
+        {
+            var l = __instance.Location; var at = __instance.Tile * 64f;
+            l.playSound("cut", __instance.Tile);
+            // The burst of a cut dead crop (the game's own leaf animation), tinted withered brown, over the whole plant.
+            var brown = new Color(168, 128, 72);
+            l.temporarySprites.Add(new TemporaryAnimatedSprite(12, at, brown, 8, Game1.random.NextDouble() < .5, 50f));
+            l.temporarySprites.Add(new TemporaryAnimatedSprite(12, at + new Vector2(0, -48), brown, 8, Game1.random.NextDouble() < .5, 50f) { delayBeforeAnimationStart = 60 });
+            __result = true; return false;
+        }
         if (t is not WateringCan) return true;
         Water(__instance); __result = false; return false;
     }
