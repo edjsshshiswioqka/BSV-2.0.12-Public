@@ -711,5 +711,8 @@
   "greenhouse-upgrade.finished2": "Грибная пещера теплицы готова!",
   "greenhouse-upgrade.finished3": "Второй этаж теплицы готов!",
   "greenhouse-upgrade.cave-name": "Грибная пещера теплицы",
-  "greenhouse-upgrade.upper-name": "Второй этаж теплицы"
+  "greenhouse-upgrade.upper-name": "Второй этаж теплицы",
+  "afk.hint.title": "Авторыбалка",
+  "afk.hint.stop": "или щелчок мыши — стоп",
+  "afk.hint.status": "{{state}} · Энергия {{energy}}%"
 }

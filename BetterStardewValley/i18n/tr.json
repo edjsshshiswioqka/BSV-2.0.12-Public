@@ -711,5 +711,8 @@
   "greenhouse-upgrade.finished2": "Seranın mantar mağarası tamamlandı!",
   "greenhouse-upgrade.finished3": "Seranın ikinci katı tamamlandı!",
   "greenhouse-upgrade.cave-name": "Seranın mantar mağarası",
-  "greenhouse-upgrade.upper-name": "Seranın ikinci katı"
+  "greenhouse-upgrade.upper-name": "Seranın ikinci katı",
+  "afk.hint.title": "Otomatik balıkçılık",
+  "afk.hint.stop": "veya durdurmak için tıkla",
+  "afk.hint.status": "{{state}} · Enerji %{{energy}}"
 }

@@ -711,5 +711,8 @@
   "greenhouse-upgrade.finished2": "温室のキノコ洞窟が完成しました！",
   "greenhouse-upgrade.finished3": "温室の2階が完成しました！",
   "greenhouse-upgrade.cave-name": "温室のキノコ洞窟",
-  "greenhouse-upgrade.upper-name": "温室の2階"
+  "greenhouse-upgrade.upper-name": "温室の2階",
+  "afk.hint.title": "自動釣り",
+  "afk.hint.stop": "またはクリックで停止",
+  "afk.hint.status": "{{state}}・エナジー {{energy}}%"
 }

@@ -711,5 +711,8 @@
   "greenhouse-upgrade.finished2": "温室蘑菇洞完工了！",
   "greenhouse-upgrade.finished3": "温室二楼完工了！",
   "greenhouse-upgrade.cave-name": "温室蘑菇洞",
-  "greenhouse-upgrade.upper-name": "温室二楼"
+  "greenhouse-upgrade.upper-name": "温室二楼",
+  "afk.hint.title": "挂机钓鱼",
+  "afk.hint.stop": "或点击鼠标退出",
+  "afk.hint.status": "{{state}} · 体力 {{energy}}%"
 }

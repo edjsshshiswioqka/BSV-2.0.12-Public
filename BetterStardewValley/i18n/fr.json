@@ -711,5 +711,8 @@
   "greenhouse-upgrade.finished2": "La grotte à champignons de la serre est terminée !",
   "greenhouse-upgrade.finished3": "L'étage de la serre est terminé !",
   "greenhouse-upgrade.cave-name": "Grotte à champignons de la serre",
-  "greenhouse-upgrade.upper-name": "Étage de la serre"
+  "greenhouse-upgrade.upper-name": "Étage de la serre",
+  "afk.hint.title": "Pêche automatique",
+  "afk.hint.stop": "ou cliquez pour arrêter",
+  "afk.hint.status": "{{state}} · Énergie {{energy}}%"
 }

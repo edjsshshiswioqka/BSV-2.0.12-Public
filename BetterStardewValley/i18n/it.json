@@ -711,5 +711,8 @@
   "greenhouse-upgrade.finished2": "La grotta dei funghi della serra è pronta!",
   "greenhouse-upgrade.finished3": "Il secondo piano della serra è pronto!",
   "greenhouse-upgrade.cave-name": "Grotta dei funghi della serra",
-  "greenhouse-upgrade.upper-name": "Secondo piano della serra"
+  "greenhouse-upgrade.upper-name": "Secondo piano della serra",
+  "afk.hint.title": "Pesca automatica",
+  "afk.hint.stop": "o clicca per fermare",
+  "afk.hint.status": "{{state}} · Energia {{energy}}%"
 }

@@ -711,5 +711,8 @@
   "greenhouse-upgrade.finished2": "Elkészült az üvegház gombabarlangja!",
   "greenhouse-upgrade.finished3": "Elkészült az üvegház emelete!",
   "greenhouse-upgrade.cave-name": "Az üvegház gombabarlangja",
-  "greenhouse-upgrade.upper-name": "Az üvegház emelete"
+  "greenhouse-upgrade.upper-name": "Az üvegház emelete",
+  "afk.hint.title": "Automata horgászat",
+  "afk.hint.stop": "vagy kattints a leállításhoz",
+  "afk.hint.status": "{{state}} · Energia {{energy}}%"
 }

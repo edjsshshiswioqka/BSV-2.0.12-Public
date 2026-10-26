@@ -711,5 +711,8 @@
   "greenhouse-upgrade.finished2": "A caverna de cogumelos da estufa está pronta!",
   "greenhouse-upgrade.finished3": "O segundo andar da estufa está pronto!",
   "greenhouse-upgrade.cave-name": "Caverna de cogumelos da estufa",
-  "greenhouse-upgrade.upper-name": "Segundo andar da estufa"
+  "greenhouse-upgrade.upper-name": "Segundo andar da estufa",
+  "afk.hint.title": "Pesca automática",
+  "afk.hint.stop": "ou clique para parar",
+  "afk.hint.status": "{{state}} · Energia {{energy}}%"
 }

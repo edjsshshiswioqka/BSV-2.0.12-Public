@@ -711,5 +711,8 @@
   "greenhouse-upgrade.finished2": "Hang nấm của nhà kính đã hoàn thành!",
   "greenhouse-upgrade.finished3": "Tầng hai của nhà kính đã hoàn thành!",
   "greenhouse-upgrade.cave-name": "Hang nấm của nhà kính",
-  "greenhouse-upgrade.upper-name": "Tầng hai nhà kính"
+  "greenhouse-upgrade.upper-name": "Tầng hai nhà kính",
+  "afk.hint.title": "Câu cá tự động",
+  "afk.hint.stop": "hoặc nhấp chuột để dừng",
+  "afk.hint.status": "{{state}} · Năng lượng {{energy}}%"
 }

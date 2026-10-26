@@ -711,5 +711,8 @@
   "greenhouse-upgrade.finished2": "¡La cueva de setas del invernadero está terminada!",
   "greenhouse-upgrade.finished3": "¡La segunda planta del invernadero está terminada!",
   "greenhouse-upgrade.cave-name": "Cueva de setas del invernadero",
-  "greenhouse-upgrade.upper-name": "Segunda planta del invernadero"
+  "greenhouse-upgrade.upper-name": "Segunda planta del invernadero",
+  "afk.hint.title": "Pesca automática",
+  "afk.hint.stop": "o haz clic para parar",
+  "afk.hint.status": "{{state}} · Energía {{energy}}%"
 }

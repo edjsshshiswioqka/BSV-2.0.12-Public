@@ -711,5 +711,8 @@
   "greenhouse-upgrade.finished2": "The greenhouse mushroom cave is finished!",
   "greenhouse-upgrade.finished3": "The greenhouse's second floor is finished!",
   "greenhouse-upgrade.cave-name": "Greenhouse Mushroom Cave",
-  "greenhouse-upgrade.upper-name": "Greenhouse Second Floor"
+  "greenhouse-upgrade.upper-name": "Greenhouse Second Floor",
+  "afk.hint.title": "AFK fishing",
+  "afk.hint.stop": "or click to stop",
+  "afk.hint.status": "{{state}} · Energy {{energy}}%"
 }

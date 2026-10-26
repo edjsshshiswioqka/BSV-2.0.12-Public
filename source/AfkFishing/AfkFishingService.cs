@@ -612,16 +612,73 @@ internal sealed partial class AfkFishingService
     }
     private void Draw(object? sender, RenderedHudEventArgs e)
     {
-        if (!Context.IsWorldReady || !Current.Data.Enabled 
+        if (!Context.IsWorldReady || !Current.Data.Enabled
             || Game1.activeClickableMenu != null || Game1.eventUp || !Game1.displayHUD) return;
-        string text = Tr("afk.indicator", new { state = Tr("afk.state." + Current.Data.Phase),
-            energy = (int)(100 * Game1.player.Stamina / Math.Max(1, Game1.player.MaxStamina)), key = Config.AfkFishing.ToggleKey });
-        text = (Config.AfkFishing.ShowIndicator ? text + "\n" : "") + AreaText();
-        var measured = Game1.smallFont.MeasureString(text);
-        float scale = Math.Min(0.8f, (Game1.uiViewport.Width - 24) / Math.Max(1f, measured.X));
-        var size = measured * scale;
-        int x = Math.Max(8, Game1.uiViewport.Width / 2 - (int)size.X / 2);
-        e.SpriteBatch.Draw(Game1.staminaRect, new Rectangle(x - 6, 4, (int)size.X + 12, (int)size.Y + 8), Color.Black * 0.7f);
-        e.SpriteBatch.DrawString(Game1.smallFont, text, new Vector2(x, 8), Color.Wheat, 0, Vector2.Zero, scale, SpriteEffects.None, 1);
+        string? status = Config.AfkFishing.ShowIndicator ? Tr("afk.hint.status", new { state = Tr("afk.state." + Current.Data.Phase),
+            energy = (int)(100 * Game1.player.Stamina / Math.Max(1, Game1.player.MaxStamina)) }) : null;
+        DrawSign(e.SpriteBatch, Tr("afk.hint.title"), Tr("afk.hint.stop"), status, AreaText());
+    }
+    /// <summary>The player's own movement keys (up, left, down, right), as shown on the sign's key caps.</summary>
+    private static string[] MoveKeyLabels()
+    {
+        var o = Game1.options;
+        string Label(InputButton[]? list, string fallback)
+        {
+            var key = list?.FirstOrDefault(b => b.key != Keys.None).key ?? Keys.None;
+            if (key == Keys.None) return fallback;
+            string name = key.ToString();
+            return name.Length == 2 && name[0] == 'D' && char.IsDigit(name[1]) ? name[1].ToString() : name;
+        }
+        return new[] { Label(o?.moveUpButton, "W"), Label(o?.moveLeftButton, "A"), Label(o?.moveDownButton, "S"), Label(o?.moveRightButton, "D") };
+    }
+    /// <summary>Wooden sign at the top centre: title, how to stop (movement keys or a click), then status lines.</summary>
+    private static void DrawSign(SpriteBatch b, string title, string stop, string? status, string area)
+    {
+        const int Pad = 32, KeyH = 44, KeyGap = 6;
+        const float Small = 0.85f;
+        var smallFont = Game1.smallFont; var titleFont = Game1.dialogueFont;
+        var keys = MoveKeyLabels();
+        var keyWidths = keys.Select(k => Math.Max(KeyH, (int)smallFont.MeasureString(k).X + 20)).ToArray();
+        int keysWidth = keyWidths.Sum() + KeyGap * (keys.Length - 1);
+        int viewport = Game1.uiViewport.Width;
+        int maxText = Math.Max(200, viewport - 2 * Pad - 40);
+        var lines = new List<string>();
+        foreach (var t in new[] { status, area })
+            if (!string.IsNullOrWhiteSpace(t))
+                lines.AddRange(Game1.parseText(t, smallFont, (int)(maxText / Small)).Split('\n'));
+        var titleSize = titleFont.MeasureString(title);
+        float width = Math.Max(64 + 12 + titleSize.X, keysWidth + 12 + smallFont.MeasureString(stop).X);
+        foreach (var l in lines) width = Math.Max(width, smallFont.MeasureString(l).X * Small);
+        int lineH = (int)(smallFont.LineSpacing * Small);
+        int w = (int)width + 2 * Pad, h = Pad + 64 + 10 + KeyH + 6 + 14 + lines.Count * lineH + (lines.Count > 0 ? 6 : 0) + Pad - 8;
+        int x = Math.Max(8, viewport / 2 - w / 2), y = 16;
+        IClickableMenu.drawTextureBox(b, Game1.mouseCursors, new Rectangle(293, 360, 24, 24), x, y, w, h, Color.White, 4f, false);
+        // Title row: a fish icon from the player's own game and the title.
+        var fish = ItemRegistry.GetDataOrErrorItem("(O)145");
+        b.Draw(fish.GetTexture(), new Vector2(x + Pad - 4, y + Pad - 8), fish.GetSourceRect(), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 1f);
+        b.DrawString(titleFont, title, new Vector2(x + Pad + 68, y + Pad - 8 + 32 - titleSize.Y / 2), Game1.textColor);
+        // Key caps with the movement keys, then "or click to stop".
+        int kx = x + Pad, ky = y + Pad + 64 + 6;
+        var edge = new Color(110, 46, 18); var side = new Color(214, 150, 84); var face = new Color(255, 232, 180);
+        for (int i = 0; i < keys.Length; i++)
+        {
+            int kw = keyWidths[i];
+            b.Draw(Game1.staminaRect, new Rectangle(kx + 3, ky, kw - 6, KeyH + 6), edge);
+            b.Draw(Game1.staminaRect, new Rectangle(kx, ky + 3, kw, KeyH), edge);
+            b.Draw(Game1.staminaRect, new Rectangle(kx + 3, ky + 3, kw - 6, KeyH), side);
+            b.Draw(Game1.staminaRect, new Rectangle(kx + 3, ky + 3, kw - 6, KeyH - 6), face);
+            var ls = smallFont.MeasureString(keys[i]);
+            b.DrawString(smallFont, keys[i], new Vector2(kx + kw / 2f - ls.X / 2, ky + KeyH / 2f - ls.Y / 2 + 1), Game1.textColor);
+            kx += kw + KeyGap;
+        }
+        var ss = smallFont.MeasureString(stop);
+        b.DrawString(smallFont, stop, new Vector2(kx + 6, ky + KeyH / 2f - ss.Y / 2 + 2), Game1.textColor);
+        // Status lines in a lighter, smaller print.
+        int ly = ky + KeyH + 6 + 14;
+        foreach (var l in lines)
+        {
+            b.DrawString(smallFont, l, new Vector2(x + Pad + 2, ly), new Color(140, 80, 40), 0f, Vector2.Zero, Small, SpriteEffects.None, 1f);
+            ly += lineH;
+        }
     }
 }

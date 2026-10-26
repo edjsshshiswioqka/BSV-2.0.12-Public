@@ -711,5 +711,8 @@
   "greenhouse-upgrade.finished2": "온실 버섯 동굴이 완성되었습니다!",
   "greenhouse-upgrade.finished3": "온실 2층이 완성되었습니다!",
   "greenhouse-upgrade.cave-name": "온실 버섯 동굴",
-  "greenhouse-upgrade.upper-name": "온실 2층"
+  "greenhouse-upgrade.upper-name": "온실 2층",
+  "afk.hint.title": "자동 낚시",
+  "afk.hint.stop": "또는 클릭하면 중단",
+  "afk.hint.status": "{{state}} · 기력 {{energy}}%"
 }

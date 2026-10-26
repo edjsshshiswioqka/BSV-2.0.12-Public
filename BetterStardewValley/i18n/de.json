@@ -711,5 +711,8 @@
   "greenhouse-upgrade.finished2": "Die Pilzhöhle des Gewächshauses ist fertig!",
   "greenhouse-upgrade.finished3": "Das Obergeschoss des Gewächshauses ist fertig!",
   "greenhouse-upgrade.cave-name": "Pilzhöhle des Gewächshauses",
-  "greenhouse-upgrade.upper-name": "Obergeschoss des Gewächshauses"
+  "greenhouse-upgrade.upper-name": "Obergeschoss des Gewächshauses",
+  "afk.hint.title": "Automatisch angeln",
+  "afk.hint.stop": "oder klicken zum Beenden",
+  "afk.hint.status": "{{state}} · Energie {{energy}}%"
 }
