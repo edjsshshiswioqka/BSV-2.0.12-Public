@@ -116,19 +116,30 @@ internal sealed class ChestsAnywhereSupport
             if (chest == null) return;
             var screen = new Rectangle(0, 0, Game1.uiViewport.Width, Game1.uiViewport.Height);
             bool Off(ClickableComponent? c) => c != null && (c.bounds.Top < 0 || c.bounds.Left < 0 || c.bounds.Right > screen.Right || c.bounds.Bottom > screen.Bottom);
-            if (!Off(chest) && !Off(category) && !Off(edit)) return;
-            // Left of the window: category list on top, chest list (with its edit button) under it. Both lists open
-            // downwards, so the chest list - the one used most - never opens under the other box.
+            // Left of the window: category list on top, chest list (with its edit button) under it. An open category
+            // list takes up its full height, so the chest list moves down below it instead of covering it.
             int editWidth = edit?.bounds.Width ?? 0, gap = 8;
             int width = Math.Max(chest.bounds.Width + editWidth, category?.bounds.Width ?? 0);
             int x = Math.Max(4, g.Window.X - 12 - width), y = Math.Max(4, g.Window.Y);
+            // Already beside the window (moved earlier), or about to leave the screen: lay them out on the left.
+            bool beside = chest.bounds.X == x;
+            if (!beside && !Off(chest) && !Off(category) && !Off(edit)) return;
             void Move(ClickableComponent c, int nx, int ny)
             {
+                if (c.bounds.X == nx && c.bounds.Y == ny) return;
                 c.bounds = new Rectangle(nx, ny, c.bounds.Width, c.bounds.Height);
                 c.GetType().GetMethod("ReinitializeComponents", BindingFlags.Instance | BindingFlags.Public)?.Invoke(c, null);
             }
             int chestY = y;
-            if (category != null) { Move(category, x, y); chestY = y + category.bounds.Height + gap; }
+            if (category != null)
+            {
+                Move(category, x, y);
+                int open = 0;
+                if (category.GetType().GetProperty("IsExpanded")?.GetValue(category) is true
+                    && AccessTools.Field(category.GetType(), "List")?.GetValue(category) is ClickableComponent list)
+                    open = list.bounds.Height;
+                chestY = y + category.bounds.Height + gap + open;
+            }
             Move(chest, x, chestY);
             if (edit != null) edit.bounds = new Rectangle(x + chest.bounds.Width, chestY, edit.bounds.Width, edit.bounds.Height);
         }
