@@ -75,11 +75,13 @@ internal sealed class AnnualLegendaryFeature
     private static int LifetimeCount(Farmer player, string id) =>
         player.fishCaught.TryGetValue("(O)" + id, out int[] count) && count.Length > 0 ? count[0] : 0;
 
+    // Boss fish: the machine's own yearly record only; rod catches (vanilla rules) never use up a machine year.
+    private static int QuotaCount(Farmer player, string id) => AnnualLegendaryRules.IsBoss(id) ? 0 : LifetimeCount(player, id);
     private static LegendaryCatchRecord ReadPlayerRecord(Farmer player, string id)
     {
         string key = AnnualLegendaryRules.KeyPrefix + id;
         player.modData.TryGetValue(key, out string? stored);
-        var record = AnnualLegendaryRules.ReadRecord(stored, LifetimeCount(player, id), Game1.year);
+        var record = AnnualLegendaryRules.ReadRecord(stored, QuotaCount(player, id), Game1.year);
         string serialized = record.Serialize();
         if (serialized != stored) player.modData[key] = serialized;
         return record;
@@ -112,7 +114,7 @@ internal sealed class AnnualLegendaryFeature
     {
         string id=AnnualLegendaryRules.NormalizeMachineId(qualifiedId) ?? throw new ArgumentException("Not a legendary fish.");
         var record=ReadPlayerRecord(player,id);
-        player.modData[AnnualLegendaryRules.KeyPrefix+id]=new LegendaryCatchRecord(Math.Max(record.Year,year),LifetimeCount(player,id)).Serialize();
+        player.modData[AnnualLegendaryRules.KeyPrefix+id]=new LegendaryCatchRecord(Math.Max(record.Year,year),QuotaCount(player,id)).Serialize();
     }
 
     private void InitializeLocalPlayer()

@@ -293,7 +293,8 @@ internal sealed partial class ProductionService
     {
         var hold=new Dictionary<(string,int),long>();
         var t=s.Timeline;
-        if(t!=null&&!t.LegendaryDecision.Committed)
+        bool bossSettled=(t?.FishingConfig?.FishingBalanceVersion??0)<2||t!.BossDecision is {StatsRecorded:true};
+        if(t!=null&&(!t.LegendaryDecision.StatsRecorded&&!t.LegendaryDecision.Committed||!bossSettled))
             foreach(var o in t.LegendaryOpportunities){var k=(o.OrdinaryId,o.Quality);hold[k]=hold.GetValueOrDefault(k)+o.Count;}
         var result=new List<StoredCatch>();
         foreach(var p in s.Pending)

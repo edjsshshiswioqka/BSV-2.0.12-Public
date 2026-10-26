@@ -38,7 +38,10 @@ internal sealed partial class ProductionService
                     bool rules2=(t.FishingConfig?.FishingBalanceVersion??0)>=2;
                     // Magic bait / giant lobster bait: this water's fish at any season, time and weather.
                     bool magic=rules2&&BaitRules.IgnoresSeasonTimeWeather(bait.Kind);
-                    var fish=(magic&&env.MagicFish is {Count:>0} magicPool?magicPool.ToList():null)??env.Fish.FirstOrDefault(p=>time>=p.From&&time<p.Until)?.Fish??new();
+                    var window=env.Fish.FirstOrDefault(p=>time>=p.From&&time<p.Until)?.Fish??new();
+                    var fish=(magic&&env.MagicFish is {Count:>0} magicPool?magicPool.ToList():null)??window.ToList();
+                    // The Spirit Fish keeps its own evening rule: it comes from the cast's real time window, not the magic pool.
+                    if(magic&&fish!=window&&window.FirstOrDefault(f=>f.Id==Production.SpiritId) is {} spirit&&!fish.Any(f=>f.Id==spirit.Id))fish.Add(spirit);
                     if(!rules2)fish=fish.Where(f=>!MachineLegendaryBridge.IsBoss(f.Id)).ToList();   // cycles paid before 2.0.14 never get boss fish
                     var diag=CycleDiag.GetValueOrDefault(original.CycleToken);
                     CycleDiag[original.CycleToken]=(diag.Casts+1,diag.NoFish+(fish.Any(f=>!f.IsLegendary)?0:1),diag.Unwatched+(env.UnknownWeather?1:0));

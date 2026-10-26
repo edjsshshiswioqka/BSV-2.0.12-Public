@@ -118,7 +118,8 @@ public sealed class BalanceConfig
     public BaitRates GetRates(BaitKind kind, int level=1)
     {
         var rates=BaseRates(kind);
-        double target=kind==BaitKind.Targeted&&FishingBalanceVersion>=2?BaitRules.TargetShare(level):rates.TargetShareOfFish;
+        // The per-level share replaces only the default 70%; a share the player set in fishing-machine.json is kept.
+        double target=kind==BaitKind.Targeted&&FishingBalanceVersion>=2&&Math.Abs(rates.TargetShareOfFish-.70)<1e-9?BaitRules.TargetShare(level):rates.TargetShareOfFish;
         if(level<3)return target==rates.TargetShareOfFish?rates:new(){Fish=rates.Fish,OtherItem=rates.OtherItem,TargetShareOfFish=target};
         double other=rates.OtherShare/2;
         return new(){Fish=1-other,OtherItem=other,TargetShareOfFish=target};

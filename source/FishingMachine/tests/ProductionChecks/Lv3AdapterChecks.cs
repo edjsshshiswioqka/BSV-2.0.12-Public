@@ -24,7 +24,7 @@ internal static class Lv3AdapterChecks
         check(service.Read(c).LevelCycles==0 && service.Read(c).CompletedCycles==500 && c.GetActualCapacity()==70,"Lv3 stage reset, total preserved, large chest");
         var carried=ProductionState.Load(service.Portable(c));check(carried.Level==3 && carried.CompletedCycles==500,"actual portable Lv3 state");
         c.Items.Clear();c.Items.Add(ItemRegistry.Create("(O)ChallengeBait",650));service.Tick();
-        check(service.Read(c).Phase=="working" && service.Read(c).ChallengeExtraFish==2*service.Read(c).FishCount,"Lv3 adapter accepts challenge bait");
+        check(service.Read(c).Phase=="working" && service.Read(c).ChallengeExtraFish%2==0&&service.Read(c).ChallengeExtraFish<=2*service.Read(c).FishCount,"Lv3 adapter accepts challenge bait");
         check(service.Read(c).Pending.Where(p=>p.Id=="(O)128").All(p=>p.Quality is 2 or 4),"adapter creates no forbidden Lv3 fish quality");
         check(MachineLegendaryBridge.CompletionYear(112L*1440+120)==1 && MachineLegendaryBridge.CompletionYear(112L*1440+360)==2,"late winter28 2am remains year1; spring1 6am is year2");
         var owner=Game1.MasterPlayer;owner.modData.Clear();

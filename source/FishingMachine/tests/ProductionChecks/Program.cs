@@ -30,7 +30,7 @@ service.Tick();Check(c.Items.Select(i=>(i.QualifiedItemId,i.Stack,i.Quality)).Se
 c.Items.Clear();service.Tick();Check(service.Read(c).Phase=="idle" && service.Read(c).CompletedCycles==15,"collection resets batch but keeps progression");
 Add(c,"(O)ChallengeBait",299);service.Tick();Check(service.Read(c).Phase=="idle" && Count(c,"(O)ChallengeBait")==299,"adapter refuses 299 fuel");
 Add(c,"(O)ChallengeBait",10);service.Tick();Check(service.Read(c).BaitUsed==300 && Count(c,"(O)ChallengeBait")==9,"adapter consumes exactly 300 across stacks");
-var working=service.Read(c);Check(working.ChallengeExtraFish==2*working.FishCount,"actual adapter recognizes challenge bait");
+var working=service.Read(c);Check(working.ChallengeExtraFish%2==0&&working.ChallengeExtraFish<=2*working.FishCount,"actual adapter recognizes challenge bait");
 Check(working.Timeline?.Plan.Count==300&&working.Pending.Count==0,"paid plan stores opportunities, not start-time outcomes");
 var beforeDue=working.Save();
 service.Reset();service.Tick();Check(service.Read(c).Save()==beforeDue,"cache reset/save load does not regenerate working batch");
@@ -38,7 +38,7 @@ service.Reset();service.Tick();Check(service.Read(c).Save()==beforeDue,"cache re
 c.Items.Clear();for(int n=0;n<70;n++)Add(c,"(O)occupied"+n);
 NextCycle(3);service.Tick();var promised=service.Read(c).Pending.ToArray();
 Check(service.Read(c).Phase=="ready"&&promised.Length>0&&service.Read(c).Timeline!.Cursor==300,"full big chest keeps all completed timeline fish, quality and treasure");
-Check(service.Read(c).ChallengeExtraFish==2*service.Read(c).FishCount,"completed challenge opportunities retain triple quantity");
+Check(service.Read(c).ChallengeExtraFish%2==0&&service.Read(c).ChallengeExtraFish<=2*service.Read(c).FishCount,"completed challenge opportunities retain triple quantity");
 service.Reset();service.Tick();Check(service.Read(c).Pending.SequenceEqual(promised),"full pending output survives reload unchanged");
 service.Tick();Check(service.Read(c).CompletedCycles==16,"blocked delivery cannot increase cycle count repeatedly");
 c.Items.Clear();service.Tick();

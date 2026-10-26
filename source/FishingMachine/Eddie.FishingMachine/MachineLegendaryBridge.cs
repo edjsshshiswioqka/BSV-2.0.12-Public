@@ -20,7 +20,23 @@ internal static class MachineLegendaryBridge
     internal static void ObserveBossOrder()
     {
         if(!Game1.IsMasterGame||Game1.getFarm() is not {} farm||farm.modData.ContainsKey(BossYearKey))return;
-        if(Game1.player.team.SpecialOrderRuleActive("LEGENDARY_FAMILY"))farm.modData[BossYearKey]=Game1.year.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        int? year=Game1.player.team.SpecialOrderRuleActive("LEGENDARY_FAMILY")?Game1.year
+            // Finished before this version was installed: the year is unknown, so boss fish open from now on.
+            :FamilyOrderCompleted()?Game1.year-1:null;
+        if(year!=null)farm.modData[BossYearKey]=year.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    }
+    private static bool FamilyOrderCompleted()
+    {
+        try
+        {
+            // A set of order ids (1.6) or an id -> bool dictionary (older builds): read either without depending on its type.
+            var done=((System.Collections.IEnumerable)Game1.player.team.completedSpecialOrders).Cast<object>()
+                .Select(x=>x is string s?s:x is KeyValuePair<string,bool> kv?kv.Key:null).Where(x=>x!=null).ToHashSet();
+            foreach(var pair in DataLoader.SpecialOrders(Game1.content))
+                if(pair.Value.SpecialRule?.Contains("LEGENDARY_FAMILY",StringComparison.OrdinalIgnoreCase)==true&&done.Contains(pair.Key))return true;
+        }
+        catch{}
+        return false;
     }
     /// <summary>Boss fish can be caught by machines while the order is active, and in every later year.</summary>
     internal static bool BossOpen(int year)
