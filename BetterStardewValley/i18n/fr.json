@@ -714,5 +714,8 @@
   "greenhouse-upgrade.upper-name": "Étage de la serre",
   "afk.hint.title": "Pêche automatique",
   "afk.hint.stop": "ou cliquez pour arrêter",
-  "afk.hint.status": "{{state}} · Énergie {{energy}}%"
+  "afk.hint.status": "{{state}} · Énergie {{energy}}%",
+  "config.professions-skill": "{{skill}} : toutes les professions",
+  "config.professions-skill.help": "Activé : {{skill}} donne toutes les professions aux niveaux 5 et 10. Désactivé : {{skill}} garde le choix normal (une sur deux). Les professions déjà obtenues sont conservées.",
+  "professions.ui.not-chosen": "Vous n'avez pas choisi cette profession (cette compétence utilise le choix normal)."
 }

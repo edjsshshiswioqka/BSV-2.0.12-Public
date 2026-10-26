@@ -714,5 +714,8 @@
   "greenhouse-upgrade.upper-name": "Tầng hai nhà kính",
   "afk.hint.title": "Câu cá tự động",
   "afk.hint.stop": "hoặc nhấp chuột để dừng",
-  "afk.hint.status": "{{state}} · Năng lượng {{energy}}%"
+  "afk.hint.status": "{{state}} · Năng lượng {{energy}}%",
+  "config.professions-skill": "{{skill}}: mọi nghề",
+  "config.professions-skill.help": "Bật: {{skill}} cho mọi nghề ở cấp 5 và 10. Tắt: {{skill}} giữ cách chọn một trong hai như bình thường. Các nghề đã có vẫn được giữ.",
+  "professions.ui.not-chosen": "Bạn chưa chọn nghề này (kỹ năng này dùng cách chọn bình thường)."
 }

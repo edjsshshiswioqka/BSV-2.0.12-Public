@@ -42,6 +42,7 @@ internal static class ProfessionMenus
         if(!ProfessionService.Active || __instance.GetType()!=typeof(LevelUpMenu) || !__instance.isActive
             || !__instance.informationUp || !__instance.isProfessionChooser)return;
         int skill=(int)Skill.GetValue(__instance)!,level=(int)Level.GetValue(__instance)!;
+        if(!ProfessionService.SkillActive(skill))return; // this skill keeps the native one-of-two choice
         // There is never a profession choice: the chooser becomes a normal level-up page.
         // A queued stage is granted on OK (native flow); a chooser opened without a queued
         // level (e.g. by another mod or a cheat) grants the stage immediately.
@@ -92,10 +93,35 @@ internal static class ProfessionMenus
         }
         return false;
     }
+    private static FieldInfo? CustomSkill,CustomLevel,CustomUpdated;
+    /// <summary>SpaceCore's SkillLevelUpMenu: once it has picked its profession pair, turn the chooser into a normal page
+    /// and grant every profession of the stage (skills switched off in the config keep the choice).</summary>
+    internal static void CustomLevelUp(IClickableMenu __instance)
+    {
+        try
+        {
+            var type=__instance.GetType();
+            CustomSkill??=AccessTools.Field(type,"currentSkill");CustomLevel??=AccessTools.Field(type,"currentLevel");CustomUpdated??=AccessTools.Field(type,"hasUpdatedProfessions");
+            var chooser=AccessTools.Field(type,"isProfessionChooser");
+            if(chooser==null||CustomSkill==null||CustomLevel==null||CustomUpdated==null)return;
+            if(chooser.GetValue(__instance) is not true||CustomUpdated.GetValue(__instance) is not true)return;
+            string skill=CustomSkill.GetValue(__instance) as string??"";int level=(int)CustomLevel.GetValue(__instance)!;
+            var row=SkillRows.Custom.FirstOrDefault(r=>r.Key==skill);
+            if(row==null||!ProfessionService.SkillActive(skill)||!ProfessionGrant.Owns(Game1.player))return;
+            foreach(int id in row.Expected(level))if(!Game1.player.professions.Contains(id))Game1.player.professions.Add(id);
+            chooser.SetValue(__instance,false);
+            AccessTools.Field(type,"leftProfession")?.SetValue(__instance,null);AccessTools.Field(type,"rightProfession")?.SetValue(__instance,null);
+            __instance.populateClickableComponentList();
+            if(Game1.options.SnappyMenus)__instance.snapToDefaultClickableComponent();
+            ProfessionService.Trace($"Player {Game1.player.UniqueMultiplayerID}: {skill} level {level}, all professions of the stage granted.");
+        }
+        catch(Exception ex){ProfessionService.Trace("BSV could not convert SpaceCore's level-up page: "+ex.Message);}
+    }
     internal static bool BeforeRemove(LevelUpMenu __instance) => !Pages.TryGetValue(__instance,out var page) || page.Confirmed;
     internal static void SkillHover(SkillsPage __instance,ref string ___hoverText,int ___professionImage)
     {
         if(!ProfessionService.Active || __instance.GetType()!=typeof(SkillsPage) || ___professionImage<0)return;
+        if(ProfessionRules.Skills.FirstOrDefault(s=>s.All.Contains(___professionImage)) is {} k&&!ProfessionService.SkillActive(k.Name))return;
         var skill=ProfessionRules.Skills.FirstOrDefault(s=>s.All.Contains(___professionImage));
         if(skill==null)return;
         var names=skill.All.Where(Game1.player.professions.Contains).Select(LevelUpMenu.getProfessionTitleFromNumber).ToArray();

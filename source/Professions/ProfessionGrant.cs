@@ -28,8 +28,23 @@ internal static class ProfessionGrant
         try { LevelUpMenu.RevalidateHealth(who); }
         finally { who.health=health;who.Stamina=energy; }
         foreach(var skill in ProfessionRules.Skills)
-            if(!ProfessionRules.Pending(who,skill.Id))added+=Missing(who,skill.Id,who.GetUnmodifiedSkillLevel(skill.Id));
+            if(ProfessionService.SkillActive(skill.Name)&&!ProfessionRules.Pending(who,skill.Id))added+=Missing(who,skill.Id,who.GetUnmodifiedSkillLevel(skill.Id));
+        added+=MigrateCustom(who);
         who.health=health;who.Stamina=energy;
+        return added;
+    }
+    /// <summary>SpaceCore skills (e.g. YACS cooking): every profession of each reached stage, like SpaceCore's own All Professions support.
+    /// No perk calls and no health changes, the same as SpaceCore.</summary>
+    internal static int MigrateCustom(Farmer who)
+    {
+        if(!Owns(who))return 0;
+        int added=0;
+        foreach(var row in SkillRows.Custom)
+        {
+            if(!ProfessionService.SkillActive(row.Key))continue;
+            foreach(int id in row.Expected(row.Level(who)))
+                if(!who.professions.Contains(id)){who.professions.Add(id);added++;}
+        }
         return added;
     }
     internal static bool CanConfirm(Farmer who,int skill,int level) => Owns(who)

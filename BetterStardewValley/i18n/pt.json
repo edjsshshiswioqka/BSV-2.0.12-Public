@@ -714,5 +714,8 @@
   "greenhouse-upgrade.upper-name": "Segundo andar da estufa",
   "afk.hint.title": "Pesca automática",
   "afk.hint.stop": "ou clique para parar",
-  "afk.hint.status": "{{state}} · Energia {{energy}}%"
+  "afk.hint.status": "{{state}} · Energia {{energy}}%",
+  "config.professions-skill": "{{skill}}: todas as profissões",
+  "config.professions-skill.help": "Ligado: {{skill}} dá todas as profissões nos níveis 5 e 10. Desligado: {{skill}} mantém a escolha normal (uma de duas). Profissões que você já tem são mantidas.",
+  "professions.ui.not-chosen": "Você não escolheu esta profissão (esta habilidade usa a escolha normal)."
 }

@@ -33,6 +33,7 @@ internal static class SharedPreferences
         [JsonProperty] public bool OnlyOwnersRide=true;
         // Map size is the host's decision: every player must load the same greenhouse and cellar map.
         [JsonProperty] public bool EnableGreenhouseExpansion=true,EnableCellarExpansion=true;
+        [JsonProperty] public string[] AllProfessionsExcludedSkills=Array.Empty<string>();
     }
     internal static ModConfig Current=>local==null?Waiting:Effective(local);
     internal static bool HasLocal=>local!=null;
@@ -86,7 +87,8 @@ internal static class SharedPreferences
             FishLevelTwoMinutes=Eddie.FishingMachine.ModEntry.Instance?.Config.MinutesForLevel(2)??4320,
             FishLevelThreeMinutes=Eddie.FishingMachine.ModEntry.Instance?.Config.MinutesForLevel(3)??5760,
             CrabLevelTwoMinutes=Eddie.FishingMachine.ModEntry.Instance?.CrabConfig.MinutesForLevel(2)??5760,OnlyOwnersRide=c.OnlyOwnersRide,
-            EnableGreenhouseExpansion=c.EnableGreenhouseExpansion,EnableCellarExpansion=c.EnableCellarExpansion};
+            EnableGreenhouseExpansion=c.EnableGreenhouseExpansion,EnableCellarExpansion=c.EnableCellarExpansion,
+            AllProfessionsExcludedSkills=c.AllProfessionsExcludedSkills??Array.Empty<string>()};
         Game1.MasterPlayer.modData[Key]=JsonConvert.SerializeObject(snapshot);
     }
     private static ModConfig? Read()
@@ -106,7 +108,8 @@ internal static class SharedPreferences
                 AutoRestartProduction=s.AutoRestartProduction,EnableAllProfessions=s.EnableAllProfessions,
                 EnableAnnualLegendaryFish=s.EnableAnnualLegendaryFish,EnableHorseSpeedBonus=s.EnableHorseSpeedBonus,
                 HorseSpeedBonus=s.HorseSpeedBonus,EnableOrdersSystem=s.EnableOrdersSystem,OnlyOwnersRide=s.OnlyOwnersRide,
-                EnableGreenhouseExpansion=s.EnableGreenhouseExpansion,EnableCellarExpansion=s.EnableCellarExpansion};
+                EnableGreenhouseExpansion=s.EnableGreenhouseExpansion,EnableCellarExpansion=s.EnableCellarExpansion,
+                AllProfessionsExcludedSkills=s.AllProfessionsExcludedSkills??Array.Empty<string>()};
             cachedPolicy=s;
         }
         catch(JsonException){return null;}

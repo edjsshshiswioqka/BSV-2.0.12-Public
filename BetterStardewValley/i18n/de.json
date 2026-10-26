@@ -714,5 +714,8 @@
   "greenhouse-upgrade.upper-name": "Obergeschoss des Gewächshauses",
   "afk.hint.title": "Automatisch angeln",
   "afk.hint.stop": "oder klicken zum Beenden",
-  "afk.hint.status": "{{state}} · Energie {{energy}}%"
+  "afk.hint.status": "{{state}} · Energie {{energy}}%",
+  "config.professions-skill": "{{skill}}: alle Berufe",
+  "config.professions-skill.help": "An: {{skill}} gibt auf Stufe 5 und 10 alle Berufe. Aus: {{skill}} behält die normale Auswahl (einer von zwei). Bereits erhaltene Berufe bleiben.",
+  "professions.ui.not-chosen": "Diesen Beruf hast du nicht gewählt (diese Fertigkeit nutzt die normale Auswahl)."
 }

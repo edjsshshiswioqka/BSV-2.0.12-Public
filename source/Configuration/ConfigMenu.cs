@@ -14,7 +14,14 @@ internal sealed class ConfigMenu
     private readonly CrabSettings crab;
     private static bool HostEditable=>!Context.IsWorldReady||Context.IsMainPlayer;
     internal static void Register(IModHelper h,IMonitor m,IManifest id,ModConfig c)
-        =>h.Events.GameLoop.GameLaunched+=(_,_)=>new ConfigMenu(h,m,id,c).Install();
+    {
+        // One tick after launch: other mods (e.g. SpaceCore skills) have finished their own GameLaunched setup.
+        h.Events.GameLoop.GameLaunched+=(_,_)=>
+        {
+            void Once(object? s,StardewModdingAPI.Events.UpdateTickedEventArgs e){h.Events.GameLoop.UpdateTicked-=Once;new ConfigMenu(h,m,id,c).Install();}
+            h.Events.GameLoop.UpdateTicked+=Once;
+        };
+    }
     private ConfigMenu(IModHelper h,IMonitor m,IManifest id,ModConfig c)
     {
         helper=h;monitor=m;manifest=id;live=c;draft=ConfigPolicy.Copy(c);saved=ConfigPolicy.Copy(c);
@@ -60,7 +67,7 @@ internal sealed class ConfigMenu
         if(!HostEditable)return;
         draft.EnableHarvestSeeds=true;draft.SeedChance=.50;draft.HarvestBonus.Enabled=true;
         draft.EnableBsvSpeedGro=true;draft.HarvestBonus.EnableFertilizerYieldBonus=true;draft.AutoRestartProduction=true;
-        draft.EnableAllProfessions=true;draft.EnableAnnualLegendaryFish=true;draft.EnableHorseSpeedBonus=true;
+        draft.EnableAllProfessions=true;draft.AllProfessionsExcludedSkills=Array.Empty<string>();draft.EnableAnnualLegendaryFish=true;draft.EnableHorseSpeedBonus=true;
         draft.HorseSpeedBonus=.20;draft.EnableOrdersSystem=true;draft.EnableLargeHorses=true;draft.OnlyOwnersRide=true;
         draft.EnableGreenhouseExpansion=true;draft.EnableCellarExpansion=true;draft.EnableCellarAppearance=true;
         if(MachineMod.Instance?.Ready==true){fish.CycleGameMinutes=2880;fish.LevelTwoCycleGameMinutes=4320;fish.LevelThreeCycleGameMinutes=5760;fish.LevelDurationVersion=1;crab.CycleGameMinutes=2880;crab.LevelTwoCycleGameMinutes=5760;crab.LevelDurationVersion=1;}
@@ -83,6 +90,7 @@ internal sealed class ConfigMenu
                 next.EnableBsvSpeedGro=draft.EnableBsvSpeedGro;next.HarvestBonus.Enabled=draft.HarvestBonus.Enabled;
                 next.HarvestBonus.EnableFertilizerYieldBonus=draft.HarvestBonus.EnableFertilizerYieldBonus;
                 next.AutoRestartProduction=draft.AutoRestartProduction;next.EnableAllProfessions=draft.EnableAllProfessions;
+                next.AllProfessionsExcludedSkills=draft.AllProfessionsExcludedSkills.ToArray();
                 next.EnableAnnualLegendaryFish=draft.EnableAnnualLegendaryFish;
                 next.EnableHorseSpeedBonus=draft.EnableHorseSpeedBonus;next.HorseSpeedBonus=draft.HorseSpeedBonus;
                 next.EnableOrdersSystem=draft.EnableOrdersSystem;next.OnlyOwnersRide=draft.OnlyOwnersRide;
@@ -185,6 +193,15 @@ internal sealed class ConfigMenu
             Flag("afk-chests",()=>draft.AfkFishing.EnableChestConnection,v=>draft.AfkFishing.EnableChestConnection=v,true);
             Page("skills");
             Flag("professions",()=>draft.EnableAllProfessions,v=>draft.EnableAllProfessions=v);
+            // One switch per skill (vanilla five, then SpaceCore skills such as YACS cooking): off = native one-of-two choice.
+            Professions.SkillRows.Reset();
+            foreach(var row in Professions.SkillRows.All)
+            {
+                string key=row.Key;
+                api.AddBoolOption(manifest,()=>!draft.AllProfessionsExcludedSkills.Contains(key),
+                    v=>{if(!HostEditable)return;var set=draft.AllProfessionsExcludedSkills.Where(k=>k!=key);draft.AllProfessionsExcludedSkills=(v?set:set.Append(key)).ToArray();},
+                    ()=>"    "+BsvI18n.Get(helper,"config.professions-skill",new{skill=row.Name()}),()=>BsvI18n.Get(helper,"config.professions-skill.help",new{skill=row.Name()}),"professions-skill-"+key);
+            }
             Flag("annual-fish",()=>draft.EnableAnnualLegendaryFish,v=>draft.EnableAnnualLegendaryFish=v);
             Page("maps");
             api.AddParagraph(manifest,()=>T("maps-note"));

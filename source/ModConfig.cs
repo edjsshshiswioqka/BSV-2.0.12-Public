@@ -5,6 +5,8 @@ public sealed class ModConfig
     public int ConfigSchemaVersion { get; set; } = 5;
     public bool AutoRestartProduction { get; set; } = true;
     public bool EnableAllProfessions { get; set; } = true;
+    /// <summary>Skills that keep the native one-of-two choice although All Professions is on ("Farming", "Mining", "Foraging", "Fishing", "Combat" or a SpaceCore skill id).</summary>
+    public string[] AllProfessionsExcludedSkills { get; set; } = Array.Empty<string>();
     public bool EnableHorseSpeedBonus { get; set; } = true;
     public bool EnableOrdersSystem { get; set; } = true;
     /// <summary>Applied to unexpanded maps. Already expanded saves keep their recorded layout.</summary>

@@ -12,6 +12,9 @@ internal sealed class ProfessionService
     internal const string AuditedMvid="aa1f513a-94f0-4ef6-a35f-2d5b4a3721bf";
     internal static bool Enabled {get;private set;}
     internal static bool Active=>Enabled && (!Configuration.SharedPreferences.HasLocal||Configuration.SharedPreferences.Current.EnableAllProfessions);
+    /// <summary>All Professions is on and this skill ("Farming"... or a SpaceCore skill id) is not switched back to the native choice.</summary>
+    internal static bool SkillActive(string key)=>Active&&!(Configuration.SharedPreferences.Current.AllProfessionsExcludedSkills??Array.Empty<string>()).Contains(key);
+    internal static bool SkillActive(int vanillaSkill)=>ProfessionRules.Find(vanillaSkill) is {} s&&SkillActive(s.Name);
     private readonly StardewModdingAPI.Utilities.PerScreen<bool> Waiting=new(()=>true);
     private readonly StardewModdingAPI.Utilities.PerScreen<bool> WasActive=new(()=>false);
     private bool WaitingForPolicy {get=>Waiting.Value;set=>Waiting.Value=value;}
@@ -23,7 +26,7 @@ internal sealed class ProfessionService
     {
         Helper=helper;Monitor=monitor;Patches=new Harmony(id+".AllProfessions");Instance=this;
         helper.Events.GameLoop.GameLaunched+=(_,_)=>{Install();startup(Enabled);};
-        helper.Events.GameLoop.SaveLoaded+=(_,_)=>{WaitingForPolicy=true;MigrateLocal();};
+        helper.Events.GameLoop.SaveLoaded+=(_,_)=>{SkillRows.Reset();WaitingForPolicy=true;MigrateLocal();};
         helper.Events.GameLoop.UpdateTicked+=(_,e)=>
         {
             if(!e.IsMultipleOf(30)||!Context.IsWorldReady||!Configuration.SharedPreferences.Ready)return;
@@ -70,6 +73,14 @@ internal sealed class ProfessionService
             Patches.Patch(M(typeof(GameLocation),"answerDialogueAction",typeof(bool),typeof(string),typeof(string[])),
                 prefix:new HarmonyMethod(typeof(ProfessionService),nameof(Statue)));
             try { ProfessionSkillsPage.Install(Patches); } catch(Exception ui) { Monitor.Log("BSV skill page could not initialize; native display retained.\n"+ui,LogLevel.Error); }
+            // SpaceCore skills (e.g. YACS cooking): its level-up chooser becomes a plain page and every profession of the stage is granted.
+            try
+            {
+                var custom=AccessTools.TypeByName("SpaceCore.Interface.SkillLevelUpMenu");
+                var customUpdate=custom==null?null:AccessTools.Method(custom,"update",new[]{typeof(GameTime)});
+                if(customUpdate!=null)Patches.Patch(customUpdate,postfix:Menu(nameof(ProfessionMenus.CustomLevelUp)));
+            }
+            catch(Exception sc){Monitor.Log("BSV could not attach to SpaceCore's level-up page; custom skills keep their own choice.\n"+sc,LogLevel.Warn);}
             Enabled=true;Reason="active";Monitor.Log("All Professions initialized (vanilla five skills; owner-local grants).",LogLevel.Debug);return true;
         }
         catch(Exception ex)
@@ -115,13 +126,14 @@ internal sealed class ProfessionService
         }
         catch(Exception ex){Monitor.Log("BSV profession migration failed; pending upgrades retained.\n"+ex,LogLevel.Error);}
     }
-    internal static bool IsVanillaRespec(string? response)=>response is "professionForget_farming" or "professionForget_mining"
-        or "professionForget_foraging" or "professionForget_fishing" or "professionForget_combat";
+    internal static bool IsVanillaRespec(string? response)=>RespecSkill(response)!=null;
+    private static string? RespecSkill(string? response)=>response switch{"professionForget_farming"=>"Farming","professionForget_mining"=>"Mining",
+        "professionForget_foraging"=>"Foraging","professionForget_fishing"=>"Fishing","professionForget_combat"=>"Combat",_=>null};
     private static bool Statue(string questionAndAnswer,ref bool __result)
     {
         // Do not intercept the whole dog statue or custom response IDs: third-party menu
         // entries remain reachable. These five native answers precede the 10,000g debit.
-        if(!Active || !IsVanillaRespec(questionAndAnswer) || !ProfessionGrant.Owns(Game1.player))return true;
+        if(RespecSkill(questionAndAnswer) is not {} key || !SkillActive(key) || !ProfessionGrant.Owns(Game1.player))return true;
         Game1.drawObjectDialogue(Text("professions.statue"));__result=true;return false;
     }
     private void Status()

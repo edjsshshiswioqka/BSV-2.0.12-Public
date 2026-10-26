@@ -714,5 +714,8 @@
   "greenhouse-upgrade.upper-name": "Greenhouse Second Floor",
   "afk.hint.title": "AFK fishing",
   "afk.hint.stop": "or click to stop",
-  "afk.hint.status": "{{state}} · Energy {{energy}}%"
+  "afk.hint.status": "{{state}} · Energy {{energy}}%",
+  "config.professions-skill": "{{skill}}: all professions",
+  "config.professions-skill.help": "On: {{skill}} gives every profession at levels 5 and 10. Off: {{skill}} keeps the normal one-of-two choice. Professions you already have are kept.",
+  "professions.ui.not-chosen": "You did not choose this profession (this skill uses the normal one-of-two choice)."
 }

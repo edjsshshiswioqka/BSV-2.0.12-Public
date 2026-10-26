@@ -714,5 +714,8 @@
   "greenhouse-upgrade.upper-name": "Az üvegház emelete",
   "afk.hint.title": "Automata horgászat",
   "afk.hint.stop": "vagy kattints a leállításhoz",
-  "afk.hint.status": "{{state}} · Energia {{energy}}%"
+  "afk.hint.status": "{{state}} · Energia {{energy}}%",
+  "config.professions-skill": "{{skill}}: minden szakma",
+  "config.professions-skill.help": "Be: a(z) {{skill}} az 5. és 10. szinten minden szakmát megad. Ki: a(z) {{skill}} a szokásos kettőből egy választást használja. A meglévő szakmák megmaradnak.",
+  "professions.ui.not-chosen": "Ezt a szakmát nem választottad (ez a készség a szokásos választást használja)."
 }

@@ -714,5 +714,8 @@
   "greenhouse-upgrade.upper-name": "Второй этаж теплицы",
   "afk.hint.title": "Авторыбалка",
   "afk.hint.stop": "или щелчок мыши — стоп",
-  "afk.hint.status": "{{state}} · Энергия {{energy}}%"
+  "afk.hint.status": "{{state}} · Энергия {{energy}}%",
+  "config.professions-skill": "{{skill}}: все профессии",
+  "config.professions-skill.help": "Вкл.: {{skill}} даёт все профессии на 5 и 10 уровнях. Выкл.: {{skill}} сохраняет обычный выбор одной из двух. Уже полученные профессии остаются.",
+  "professions.ui.not-chosen": "Вы не выбрали эту профессию (этот навык использует обычный выбор)."
 }

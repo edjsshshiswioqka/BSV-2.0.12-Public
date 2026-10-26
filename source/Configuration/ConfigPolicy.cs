@@ -8,6 +8,7 @@ internal static class ConfigPolicy
     internal static void Normalize(ModConfig c)
     {
         c.AfkFishing ??=new(); c.HarvestBonus ??=new();
+        c.AllProfessionsExcludedSkills=(c.AllProfessionsExcludedSkills??Array.Empty<string>()).Where(s=>!string.IsNullOrWhiteSpace(s)).Distinct().ToArray();
         c.SeedChance=HarvestRules.NormalizeChance(c.SeedChance);
         c.HorseSpeedBonus=double.IsFinite(c.HorseSpeedBonus)?Math.Clamp(c.HorseSpeedBonus,0,1):.20;
         c.AfkFishing.ReturnStaminaThreshold=double.IsFinite(c.AfkFishing.ReturnStaminaThreshold)?Math.Clamp(c.AfkFishing.ReturnStaminaThreshold,.01,.50):.05;

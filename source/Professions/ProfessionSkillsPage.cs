@@ -33,19 +33,23 @@ internal static class ProfessionSkillsPage
     {
         internal Farmer Owner=null!;internal Rectangle Bounds;internal int First,Focus=-1,Pinned=-1,Hover=-1,HoverSkill=-1,NameWidth=72;
         internal readonly List<(int Id,Rectangle Box)> Icons=new();
-        internal int Pitch=>PitchFor(Bounds.Height);
-        internal int Visible=>Math.Max(1,Math.Min(5,Math.Max(0,Bounds.Height-HeaderHeight)/Pitch));
+        internal List<SkillRow> Rows=new();
+        internal int Count=>Rows.Count;
+        internal int[] AllIds=>Rows.SelectMany(r=>r.Ids).ToArray();
+        internal SkillRow RowOf(int id)=>Rows.First(r=>r.Ids.Contains(id));
+        internal int Pitch=>PitchFor(Bounds.Height,Count);
+        internal int Visible=>Math.Max(1,Math.Min(Count,Math.Max(0,Bounds.Height-HeaderHeight)/Pitch));
         internal int RowTop(int row)=>Bounds.Y+HeaderHeight+(row-First)*Pitch;
         /// <summary>Visible skill row under a screen y coordinate, or -1.</summary>
         internal int RowAt(int y)
         {
             int rel=y-Bounds.Y-HeaderHeight;if(rel<0)return -1;
-            int row=First+rel/Pitch;return row<Math.Min(5,First+Visible)?row:-1;
+            int row=First+rel/Pitch;return row<Math.Min(Count,First+Visible)?row:-1;
         }
     }
     /// <summary>Horizontal arrangement of one row, relative to the left edge of the page area.</summary>
     internal readonly record struct Metrics(int Slot,float BeadScale,int NameX,int NameWidth,int BarX,int PairX,int GridX,int NumberX);
-    internal static int PitchFor(int height)=>Math.Clamp((height-HeaderHeight)/5,MinPitch,MaxPitch);
+    internal static int PitchFor(int height,int count=5)=>Math.Clamp((height-HeaderHeight)/Math.Max(1,count),MinPitch,MaxPitch);
     /// <summary>Slot edge in pixels: the 16 px profession sprite at 1.5x to 2x, small enough that the 2x2 grid fits a row.</summary>
     internal static int SlotFor(int pitch)=>Math.Clamp((pitch-8)/2,24,30); // 2x2 grid + 6 px clear gap to the next row's grid
     /// <summary>Slot edge limited by the width too: the bar, both icon groups and the level number must all fit.</summary>
@@ -97,29 +101,51 @@ internal static class ProfessionSkillsPage
         ProfessionService.Trace("BSV skills page attached to SpaceCore's skills page.");
     }
     private static bool IsSpaceCore(IClickableMenu page)=>SpaceCorePage!=null&&page.GetType()==SpaceCorePage;
-    /// <summary>Only the plain five-skill SpaceCore page is redrawn; with custom skills or scrolling SpaceCore keeps its own rows.</summary>
-    private static bool SpaceCoreSimple(IClickableMenu page)
+    /// <summary>SpaceCore's page is redrawn when it has the five vanilla skills and every custom skill on it uses the
+    /// standard 5/10 profession tree (e.g. YACS cooking). Anything else keeps SpaceCore's own rows.</summary>
+    private static string[]? SpaceCoreSkills(IClickableMenu page)
     {
-        try{return (int)(ScGameCount!.GetValue(page)!)==5&&((Array)ScVisible!.GetValue(page)!).Length==0;}catch{return false;}
+        try
+        {
+            if((int)(ScGameCount!.GetValue(page)!)!=5)return null;
+            var visible=((Array)ScVisible!.GetValue(page)!).Cast<object>().Select(o=>o?.ToString()??"").ToArray();
+            var known=SkillRows.Custom.Select(r=>r.Key).ToHashSet();
+            return visible.All(known.Contains)?visible:null;
+        }
+        catch{return null;}
+    }
+    private static FieldInfo? ScUp,ScDown,ScBar;
+    private static readonly Dictionary<FieldInfo,Rectangle> ScHidden=new();
+    /// <summary>BSV shows every row itself, so SpaceCore's own scroll arrows are moved off screen while it draws.</summary>
+    private static void HideScroll(IClickableMenu page,bool hide)
+    {
+        foreach(var f in new[]{ScUp??=AccessTools.Field(page.GetType(),"upButton"),ScDown??=AccessTools.Field(page.GetType(),"downButton"),ScBar??=AccessTools.Field(page.GetType(),"scrollBar")})
+        {
+            if(f?.GetValue(page) is not ClickableComponent c)continue;
+            if(hide){ScHidden[f]=c.bounds;c.bounds=new Rectangle(-10000,-10000,c.bounds.Width,c.bounds.Height);}
+            else if(ScHidden.Remove(f,out var r))c.bounds=r;
+        }
     }
     private static void ScDrawPrefix(IClickableMenu __instance,out int __state)
     {
         __state=-1;
         if(Get(__instance)==null)return;
         __state=(int)ScOffset!.GetValue(__instance)!;
-        // Skip SpaceCore's own scroll correction for this frame; all five rows are visible anyway.
+        // Skip SpaceCore's own scroll correction for this frame; BSV draws (and scrolls) every row itself.
         ScLastSnap?.SetValue(__instance,__instance.currentlySnappedComponent);
         ScOffset.SetValue(__instance,ParkedOffset);
+        HideScroll(__instance,true);
     }
     private static void ScDrawPostfix(IClickableMenu __instance,SpriteBatch b,int __state)
     {
         if(__state<0)return;
-        ScOffset!.SetValue(__instance,__state);
+        ScOffset!.SetValue(__instance,__state);HideScroll(__instance,false);
         if(DrawRows(__instance,b))Details(__instance,b);
     }
     private static Exception? ScDrawFinalizer(IClickableMenu __instance,Exception? __exception,int __state)
     {
         if(__state>=0&&(int)(ScOffset!.GetValue(__instance)!)==ParkedOffset)ScOffset.SetValue(__instance,__state);
+        if(__state>=0)HideScroll(__instance,false);
         return __exception;
     }
     private static bool ScHover(IClickableMenu __instance,int x,int y)
@@ -130,7 +156,12 @@ internal static class ProfessionSkillsPage
         try{AccessTools.Field(__instance.GetType(),"hoverText")?.SetValue(__instance,"");AccessTools.Field(__instance.GetType(),"hoverTitle")?.SetValue(__instance,"");AccessTools.Field(__instance.GetType(),"professionImage")?.SetValue(__instance,-1);}catch{}
         return false;
     }
-    private static bool ScClick(IClickableMenu __instance,int x,int y)=>ClickCore(__instance,x,y);
+    private static bool ScClick(IClickableMenu __instance,int x,int y)
+    {
+        // SpaceCore's scroll arrows sit right of the page; they would move its rows under BSV's.
+        if(Get(__instance)!=null&&x>=__instance.xPositionOnScreen+__instance.width)return false;
+        return ClickCore(__instance,x,y);
+    }
     internal static IEnumerable<CodeInstruction> ReplaceRows(IEnumerable<CodeInstruction> instructions,ILGenerator generator)
     {
         var original=instructions.ToList();
@@ -155,7 +186,7 @@ internal static class ProfessionSkillsPage
         var page=menu.currentTab>=0&&menu.currentTab<pages.Count?pages[menu.currentTab]:null;
         return page is SkillsPage||page!=null&&IsSpaceCore(page)?page:null;
     }
-    internal static Rectangle Layout(Rectangle avatar,IEnumerable<Rectangle> rows,Rectangle page,Rectangle viewport)
+    internal static Rectangle Layout(Rectangle avatar,IEnumerable<Rectangle> rows,Rectangle page,Rectangle viewport,int count=5)
     {
         var boxes=rows.ToArray();if(boxes.Length!=5)return Rectangle.Empty;
         int left=Math.Max(avatar.Right+24,boxes.Min(b=>b.Left));
@@ -166,24 +197,27 @@ internal static class ProfessionSkillsPage
         // Native rows are 68 px apart (SkillsPage); the mastery bar starts 52 px under the last row. Never go past
         // the native row band, so the mastery bar and the Community Center / Joja box are never covered.
         int bottom=Math.Min(boxes.Max(b=>b.Bottom)+32,Math.Min(page.Bottom-32,viewport.Bottom-32));
-        return right-left<MinWidth||bottom-top<HeaderHeight+MinPitch?Rectangle.Empty:new(left,top,right-left,Math.Min(HeaderHeight+MaxPitch*5,bottom-top));
+        return right-left<MinWidth||bottom-top<HeaderHeight+MinPitch?Rectangle.Empty:new(left,top,right-left,Math.Min(HeaderHeight+MaxPitch*Math.Max(5,count),bottom-top));
     }
     private static State? Get(IClickableMenu page)
     {
         // K04: with the all-professions option off, leave the native Skills page untouched.
         if(!Installed||!ProfessionService.Active)return null;
-        List<ClickableTextureComponent> areas;Rectangle avatar;
+        List<ClickableTextureComponent> areas;Rectangle avatar;string[] custom=Array.Empty<string>();bool spaceCore=false;
         if(page.GetType()==typeof(SkillsPage)){areas=(List<ClickableTextureComponent>)Areas.GetValue(page)!;avatar=(Rectangle)Avatar.GetValue(page)!;}
-        else if(IsSpaceCore(page)&&SpaceCoreSimple(page)){areas=(List<ClickableTextureComponent>)ScAreas!.GetValue(page)!;avatar=((ClickableComponent)ScPanel!.GetValue(page)!).bounds;}
+        else if(IsSpaceCore(page)&&SpaceCoreSkills(page) is {} visible){areas=(List<ClickableTextureComponent>)ScAreas!.GetValue(page)!;avatar=((ClickableComponent)ScPanel!.GetValue(page)!).bounds;custom=visible;spaceCore=true;}
         else return null;
+        var rows=SkillRows.All.Where(r=>!r.Custom).Concat(custom.Select(k=>SkillRows.Custom.First(r=>r.Key==k))).ToList();
         var vanilla=areas.Where(c=>int.TryParse(c.name,out int n)&&n>=0&&n<5).ToArray();
-        var rect=Layout(avatar,vanilla.Select(c=>c.bounds),new(page.xPositionOnScreen,page.yPositionOnScreen,page.width,page.height),new(0,0,Game1.uiViewport.Width,Game1.uiViewport.Height));
-        // Respect custom skill components that occupy the same horizontal region.
-        foreach(var c in areas.Except(vanilla))if(c.bounds.Left<rect.Right&&c.bounds.Right>rect.Left&&c.bounds.Top>=rect.Top&&c.bounds.Top<rect.Bottom)rect.Height=c.bounds.Top-rect.Top;
+        var rect=Layout(avatar,vanilla.Select(c=>c.bounds),new(page.xPositionOnScreen,page.yPositionOnScreen,page.width,page.height),new(0,0,Game1.uiViewport.Width,Game1.uiViewport.Height),rows.Count);
+        // Respect other mods' components in the same region (SpaceCore's custom rows are drawn by BSV itself).
+        if(!spaceCore)foreach(var c in areas.Except(vanilla))if(c.bounds.Left<rect.Right&&c.bounds.Right>rect.Left&&c.bounds.Top>=rect.Top&&c.bounds.Top<rect.Bottom)rect.Height=c.bounds.Top-rect.Top;
         if(rect.Width<MinWidth||rect.Height<HeaderHeight+MinPitch)return null;
         var state=States.GetValue(page,_=>new State{Owner=Game1.player});
         if(state.Owner!=Game1.player){state.Owner=Game1.player;state.Focus=state.Pinned=state.Hover=-1;}
-        if(rect!=state.Bounds){state.Bounds=rect;state.First=Math.Clamp(state.First,0,5-state.Visible);Build(state);}
+        bool sameRows=state.Rows.Count==rows.Count&&state.Rows.Zip(rows).All(p=>ReferenceEquals(p.First,p.Second));
+        if(!sameRows)state.Rows=rows;
+        if(rect!=state.Bounds||!sameRows){state.Bounds=rect;state.First=Math.Clamp(state.First,0,Math.Max(0,state.Count-state.Visible));Build(state);}
         return state;
     }
     /// <summary>Hit boxes only. Icon positions depend on the area, never on font metrics.</summary>
@@ -193,9 +227,9 @@ internal static class ProfessionSkillsPage
         int pitch=s.Pitch,slot=SlotFor(pitch,s.Bounds.Width),group=2*slot+SlotGap;
         var m=Measure(s.Bounds.Width,slot,s.NameWidth);
         int pairX=s.Bounds.X+m.PairX,gridX=s.Bounds.X+m.GridX;
-        for(int row=s.First;row<Math.Min(5,s.First+s.Visible);row++)
+        for(int row=s.First;row<Math.Min(s.Count,s.First+s.Visible);row++)
         {
-            var ids=ProfessionRules.Skills[row].All.ToArray();
+            var ids=s.Rows[row].Ids;
             int top=s.RowTop(row),pairY=top+(pitch-slot)/2,gridY=top+(pitch-group)/2,step=slot+SlotGap;
             // Level 5: left and right profession. Level 10: one column per level-5 profession.
             s.Icons.Add((ids[0],new(pairX,pairY,slot,slot)));
@@ -249,12 +283,11 @@ internal static class ProfessionSkillsPage
             if(big)extra+=6*scale;
         }
     }
-    private static int Branch(ProfessionRules.Skill skill,int id)=>skill.Basic.Contains(id)?Array.IndexOf(skill.Basic,id):Array.IndexOf(skill.Advanced,id)/2;
-    private static void Slot(SpriteBatch b,ProfessionRules.Skill skill,int id,Rectangle box,bool owned,bool selected)
+    private static void Slot(SpriteBatch b,SkillRow skill,int id,Rectangle box,bool owned,bool selected)
     {
-        bool left=Branch(skill,id)==0;
+        bool left=skill.Branch(id)==0;
         Fill(b,box,owned?left?LeftFill:RightFill:LockedFill,.87f);
-        if(owned)b.Draw(Game1.mouseCursors,box,ProfessionIcon(id),Color.White,0f,Vector2.Zero,SpriteEffects.None,.88f);
+        if(owned&&skill.Icon(id) is {} icon)b.Draw(icon.Texture,box,icon.Source,Color.White,0f,Vector2.Zero,SpriteEffects.None,.88f);
         else Centered(b,"?",box.Center.X,box.Center.Y-Game1.smallFont.MeasureString("?").Y/2f,1f,LockedMark,.88f);
         // 2 px branch-coloured edge (teal left branch, purple right branch) keeps the tree readable around the icon.
         Outline(b,box,owned?2:1,owned?left?LeftEdge:RightEdge:LockedEdge,.89f);
@@ -264,17 +297,17 @@ internal static class ProfessionSkillsPage
     {
         var s=Get(page);if(s==null)return false;
         int pitch=s.Pitch,slot=SlotFor(pitch,s.Bounds.Width),group=2*slot+SlotGap;
-        s.NameWidth=(int)Math.Ceiling(ProfessionRules.Skills.Max(k=>Game1.smallFont.MeasureString(Farmer.getSkillDisplayNameFromIndex(k.Id)).X));
+        s.NameWidth=(int)Math.Ceiling(s.Rows.Max(k=>Game1.smallFont.MeasureString(k.Name()).X));
         var m=Measure(s.Bounds.Width,slot,s.NameWidth);
         int left=s.Bounds.X;
         // Column headers sit above the first visible row and follow the icon groups.
         Centered(b,ProfessionService.Text("professions.ui.level-header",new{level=5}),left+m.PairX+group/2f,s.Bounds.Y,.8f,HeaderText,.87f);
         Centered(b,ProfessionService.Text("professions.ui.level-header",new{level=10}),left+m.GridX+group/2f,s.Bounds.Y,.8f,HeaderText,.87f);
-        if(s.Visible<5)b.DrawString(Game1.smallFont,$"{s.First+1}–{s.First+s.Visible}/5",new Vector2(left+2,s.Bounds.Y),HeaderText,0f,Vector2.Zero,.8f,SpriteEffects.None,.87f);
-        for(int row=s.First;row<Math.Min(5,s.First+s.Visible);row++)
+        if(s.Visible<s.Count)b.DrawString(Game1.smallFont,$"{s.First+1}–{s.First+s.Visible}/{s.Count}",new Vector2(left+2,s.Bounds.Y),HeaderText,0f,Vector2.Zero,.8f,SpriteEffects.None,.87f);
+        for(int row=s.First;row<Math.Min(s.Count,s.First+s.Visible);row++)
         {
-            var skill=ProfessionRules.Skills[row];int level=s.Owner.GetUnmodifiedSkillLevel(skill.Id),mid=s.RowTop(row)+pitch/2;
-            string name=Fit(Farmer.getSkillDisplayNameFromIndex(skill.Id),m.NameWidth);
+            var skill=s.Rows[row];int level=skill.Level(s.Owner),mid=s.RowTop(row)+pitch/2;
+            string name=Fit(skill.Name(),m.NameWidth);
             b.DrawString(Game1.smallFont,name,new Vector2(left+m.NameX,mid-Game1.smallFont.MeasureString(name).Y/2f),Game1.textColor,0f,Vector2.Zero,1f,SpriteEffects.None,.87f);
             Beads(b,left+m.BarX,mid,m.BeadScale,level);
             string number=level.ToString();var numberSize=Game1.smallFont.MeasureString(number)*1.25f;
@@ -283,7 +316,7 @@ internal static class ProfessionSkillsPage
         }
         foreach(var icon in s.Icons)
         {
-            var skill=ProfessionRules.Skills.First(k=>k.All.Contains(icon.Id));
+            var skill=s.RowOf(icon.Id);
             Slot(b,skill,icon.Id,icon.Box,s.Owner.professions.Contains(icon.Id),icon.Id==s.Focus||icon.Id==s.Pinned);
         }
         return true;
@@ -312,17 +345,17 @@ internal static class ProfessionSkillsPage
     }
     internal static void Move(State s,int direction)
     {
-        int[] ids=ProfessionRules.Skills.SelectMany(k=>k.All).ToArray();int index=Array.IndexOf(ids,s.Focus);
-        index=index<0?s.First*6:Math.Clamp(index+direction,0,29);s.Focus=ids[index];
+        int[] ids=s.AllIds;int index=Array.IndexOf(ids,s.Focus);
+        index=index<0?s.First*6:Math.Clamp(index+direction,0,ids.Length-1);s.Focus=ids[index];
         int row=index/6;if(row<s.First)s.First=row;if(row>=s.First+s.Visible)s.First=row-s.Visible+1;Build(s);
     }
     private static bool NativeFocus(IClickableMenu page,State s)=>s.Focus<0&&page.currentlySnappedComponent is {} c
-        && !(c.myID is >=0 and <=4 or >=100 and <=104 or >=200 and <=204 or >=60000 and <60030);
+        && !(c.myID is >=0 and <=4 or >=100 and <=104 or >=200 and <=204 or >=60000 and <61000);
     private static bool Navigate(IClickableMenu page,State s,int direction)
     {
         if(NativeFocus(page,s))return false;
-        int[] ids=ProfessionRules.Skills.SelectMany(k=>k.All).ToArray();int index=Array.IndexOf(ids,s.Focus);
-        if(index>=0&&(index+direction<0||index+direction>=30))
+        int[] ids=s.AllIds;int index=Array.IndexOf(ids,s.Focus);
+        if(index>=0&&(index+direction<0||index+direction>=ids.Length))
         {
             var next=page.allClickableComponents?.Where(c=>c.myID<60000&&!(c.myID is >=0 and <=4 or >=100 and <=104 or >=200 and <=204))
                 .Where(c=>direction>0?c.bounds.Top>=s.Bounds.Bottom:c.bounds.Bottom<=s.Bounds.Top)
@@ -331,7 +364,7 @@ internal static class ProfessionSkillsPage
             s.Focus=-1;page.setCurrentlySnappedComponentTo(direction<0?0:4);return false;
         }
         Move(s,direction);var box=s.Icons.First(c=>c.Id==s.Focus).Box;
-        page.currentlySnappedComponent=new ClickableComponent(box,"BSV profession "+s.Focus){myID=60000+s.Focus};
+        page.currentlySnappedComponent=new ClickableComponent(box,"BSV profession "+s.Focus){myID=60000+Array.IndexOf(s.AllIds,s.Focus)};
         Game1.setMousePosition(box.Center);return true;
     }
     private static bool Key(GameMenu __instance,Keys key)
@@ -353,24 +386,32 @@ internal static class ProfessionSkillsPage
     }
     private static bool Scroll(GameMenu __instance,int direction)
     {
-        var page=Page(__instance);var s=page==null?null:Get(page);if(s==null||s.Visible==5||!s.Bounds.Contains(Game1.getMouseX(),Game1.getMouseY()))return true;
-        s.First=Math.Clamp(s.First+(direction<0?1:-1),0,5-s.Visible);s.Focus=s.Hover=-1;Build(s);return false;
+        var page=Page(__instance);var s=page==null?null:Get(page);if(s==null)return true;
+        bool spaceCore=IsSpaceCore(page!); // SpaceCore would scroll its own (hidden) rows and shift the layout
+        if(s.Visible==s.Count||!s.Bounds.Contains(Game1.getMouseX(),Game1.getMouseY()))return !spaceCore;
+        s.First=Math.Clamp(s.First+(direction<0?1:-1),0,s.Count-s.Visible);s.Focus=s.Hover=-1;Build(s);return false;
     }
     private static void Details(IClickableMenu __instance,SpriteBatch b)
     {
         var s=Get(__instance);if(s==null)return;
         int id=s.Pinned>=0?s.Pinned:s.Hover>=0?s.Hover:s.Focus;
-        if(id<0){if(s.HoverSkill>=0&&s.HoverSkill<5)IClickableMenu.drawHoverText(b,Farmer.getSkillDisplayNameFromIndex(ProfessionRules.Skills[s.HoverSkill].Id),Game1.smallFont);return;}
-        var skill=ProfessionRules.Skills.First(k=>k.All.Contains(id));int level=skill.Basic.Contains(id)?5:10;
+        if(id<0){if(s.HoverSkill>=0&&s.HoverSkill<s.Count)IClickableMenu.drawHoverText(b,s.Rows[s.HoverSkill].Name(),Game1.smallFont);return;}
+        var skill=s.RowOf(id);int level=skill.StageOf(id);
         bool owned=s.Owner.professions.Contains(id);
         // Mockup: title + description; locked professions also say when they unlock.
-        string text=string.Join("\n",LevelUpMenu.getProfessionDescription(id).Skip(1));
+        string text=skill.Description(id);
         if(!owned)
         {
-            text+="\n\n"+ProfessionService.Text("professions.ui.locked",new{level});
-            if(s.Owner.GetUnmodifiedSkillLevel(skill.Id)>=level)text+="\n"+ProfessionService.Text("professions.ui.pending");
+            bool reached=skill.Level(s.Owner)>=level;
+            // A skill switched back to the native choice: a reached but unchosen profession stays unchosen.
+            if(reached&&!ProfessionService.SkillActive(skill.Key))text+="\n\n"+ProfessionService.Text("professions.ui.not-chosen");
+            else
+            {
+                text+="\n\n"+ProfessionService.Text("professions.ui.locked",new{level});
+                if(reached)text+="\n"+ProfessionService.Text("professions.ui.pending");
+            }
         }
         text=Game1.parseText(text,Game1.smallFont,Math.Max(180,Math.Min(380,Game1.uiViewport.Width-96)));
-        IClickableMenu.drawHoverText(b,text,Game1.smallFont,0,0,-1,LevelUpMenu.getProfessionTitleFromNumber(id));
+        IClickableMenu.drawHoverText(b,text,Game1.smallFont,0,0,-1,skill.Title(id));
     }
 }
