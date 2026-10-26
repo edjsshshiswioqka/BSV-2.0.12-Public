@@ -33,7 +33,7 @@ internal static class GreenhouseRooms
     internal static readonly int[] StairCols = { StairsX + 1, StairsX + 2 };
     // Mushroom cave (upgrade 2): an underground room reached by stairs down in the greenhouse's bottom wall.
     internal const int CaveWidth = 24, CaveHeight = 30, CaveLadderX = 12, CaveLadderY = 5, CaveArrivalY = 6;
-    internal const int CaveStairsX = 6, CaveStairsTop = BaseHeight - 1;   // two columns (6, 7); the walls sit at 5 and 8
+    internal const int CaveStairsX = 3, CaveStairsTop = BaseHeight - 1;   // bottom-left corner, far from the door: columns 3, 4; walls at 2 and 5
     internal const string CaveLayoutKey = "Eddie.BetterStardewValley/MushroomCaveLayout", CaveLayout = "2";
     internal static IEnumerable<(int X, int Y)> MushroomBoxes()
     {
@@ -175,6 +175,14 @@ internal static class GreenhouseRooms
         if (back.LayerHeight < CaveStairsTop + 3) throw new InvalidOperationException("The greenhouse map is too short for the cave stairs.");
         int x0 = CaveStairsX, l = x0 - 1, r = x0 + 2, y = CaveStairsTop;
         void Set(Layer layer, int x, int yy, int index) => layer.Tiles[x, yy] = index < 0 ? null : New(layer, Sheet, index);
+        // The corner's bush and basket (map decoration, not items) move four tiles right to make room for the stairs.
+        void Move(Layer layer, int x, int yy)
+        {
+            if (layer.Tiles[x, yy] is not { } t) return;
+            if (layer.Tiles[x + 4, yy] == null) layer.Tiles[x + 4, yy] = Copy(t, layer);
+            layer.Tiles[x, yy] = null;
+        }
+        for (int x = l; x <= r - 1; x++) { Move(buildings, x, y - 2); Move(buildings, x, y - 1); Move(front, x, y - 2); }
         // Wall caps on the floor row above the opening.
         Set(front, l, y - 1, 162); Set(front, r, y - 1, 163); Set(front, x0, y - 1, -1); Set(front, x0 + 1, y - 1, -1);
         for (int x = x0; x <= x0 + 1; x++)

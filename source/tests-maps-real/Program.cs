@@ -109,8 +109,8 @@ internal static class Program
         Check(!seen.Any(p => p.Item1 is >= 43 and <= 45 && p.Item2 is < 18 or > 20), "nobody can walk into the black gap between greenhouse and orchard");
         Check(!seen.Any(p => p.Item1 < 43 && p.Item2 >= 34), "nobody can walk below the greenhouse");
         GreenhouseRooms.AddCaveDoor(up, "Cave");
-        Check(up.Properties["Warp"].ToString().Contains("6 34 Cave 12 6 7 34 Cave 12 6"), "stairs down in the bottom wall warp into the mushroom cave");
-        Check(Walk(6, 32) && Walk(6, 33) && Walk(7, 34) && !Walk(5, 33) && !Walk(8, 34) && !Walk(6, 35), "cave stairs are walkable between their walls");
+        Check(up.Properties["Warp"].ToString().Contains("3 34 Cave 12 6 4 34 Cave 12 6"), "stairs down in the bottom wall warp into the mushroom cave");
+        Check(Walk(3, 32) && Walk(3, 33) && Walk(4, 34) && !Walk(2, 33) && !Walk(5, 34) && !Walk(3, 35), "cave stairs (bottom-left corner) are walkable between their walls");
         Check(Enumerable.Range(0, 43).Count(x => ub.Tiles[x, 33]?.TileIndex == 2109) == 1, "the greenhouse's own front door is untouched");
         GreenhouseRooms.AddStairs(up, "Upper");
         Check(up.Properties["Warp"].ToString().Contains("21 4 Upper 21 7"), "stairs warp to the upper floor");
@@ -132,7 +132,7 @@ internal static class Program
             Check(caveMap.Layers.All(l => l.LayerWidth == 24 && l.LayerHeight == 30), "mushroom cave is 24 x 30");
             var boxes = GreenhouseRooms.MushroomBoxes().ToList();
             Check(boxes.Count == 35 && boxes.All(b => cb.Tiles[b.X, b.Y] != null && cbu.Tiles[b.X, b.Y] == null), "35 mushroom box spots on open cave floor");
-            Check(caveMap.Properties["Warp"].ToString() == "12 5 Greenhouse 6 32", "cave ladder climbs back to the greenhouse stairs");
+            Check(caveMap.Properties["Warp"].ToString() == "12 5 Greenhouse 3 32", "cave ladder climbs back to the greenhouse stairs");
             Check(cb.Tiles[12, 6] != null && cbu.Tiles[12, 6] == null && cbu.Tiles[12, 5] == null, "cave arrival and ladder foot are walkable");
             var cp = caveMap.GetLayer("Paths");
             int lights = Enumerable.Range(0, 24).Sum(x => Enumerable.Range(0, 30).Count(y => cp.Tiles[x, y]?.TileIndex == 8));
