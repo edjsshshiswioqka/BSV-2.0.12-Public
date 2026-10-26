@@ -111,17 +111,17 @@ internal sealed partial class ProductionService
         bool upgrade=crab?s.Level==1:s.Level<3;
         // Chests Anywhere draws its chest list just above the window: keep that strip on screen when it is installed
         // (first pass), and only give it up if the window can't fit otherwise (second pass).
-        int caReserve=ModEntry.Instance.Helper.ModRegistry.IsLoaded("Pathoschild.ChestsAnywhere")?64:0;
-        for(int pass=0;pass<2;pass++)
-        // Variants, roomiest first: 0 = mockup; 1 = without section labels; 2 = also three condition columns.
-        for(int variant=0;variant<3;variant++)
+        int caReserve=ModEntry.Instance.Helper.ModRegistry.IsLoaded("Pathoschild.ChestsAnywhere")?56:0;
+        for(int pass=0;pass<(caReserve>0?2:1);pass++)
+        // Variants, roomiest first: 0 = mockup; 1 = without section labels; 2 = also three condition columns;
+        // 3 = also the totals line moved next to the upgrade heading (only to make room for Chests Anywhere).
+        for(int variant=0;variant<(pass==0&&caReserve>0?4:3);variant++)
         {
             int reserve=pass==0?caReserve:0;
-            if(pass==1&&caReserve==0)break;
-            bool labels=variant==0;int columns=variant==2?3:2;
+            bool labels=variant==0,compact=variant==3;int columns=variant>=2?3:2;
             int rows=upgrade?(conditions+columns-1)/columns:0;
             int upgradeHeight=upgrade?10+40+rows*RowStep+4+52:10+34;
-            int machine=Pad+44+10+50+30+10+(labels?44:0)+areaH+Gap+upgradeHeight+Pad-4;
+            int machine=Pad+44+10+50+(compact?0:30)+10+(labels?44:0)+areaH+Gap+upgradeHeight+Pad-4;
             int backpack=18+(labels?32:0)+bag.height+Pad;
             int total=machine+Gap+backpack;
             if(total>vh-16-reserve)continue;
@@ -134,7 +134,8 @@ internal sealed partial class ProductionService
             g.Take=new(0,0,170,40);
             cy+=44;dividers.Add(cy+4);cy+=10;
             g.Status=new(cx,cy,cw,28);g.Bar=new(cx,cy+30,cw,16);cy+=50;
-            g.Stats=new(cx,cy,cw,28);cy+=30;dividers.Add(cy+2);cy+=10;
+            if(!compact){g.Stats=new(cx,cy,cw,28);cy+=30;}
+            dividers.Add(cy+2);cy+=10;
             if(labels){g.Catch=new(cx,cy,cw,44);g.Take=new(cx+cw-170,cy+2,170,40);cy+=44;}
             g.Grid=new(x+(width-grid.width)/2,cy);
             if(areaH-grid.height>=cellH)g.Locked=new(x+(width-areaW)/2,cy+grid.height+8,areaW,areaH-grid.height-8);
@@ -142,7 +143,9 @@ internal sealed partial class ProductionService
             dividers.Add(cy);cy+=10;
             if(upgrade)
             {
-                g.UpgradeTitle=new(cx,cy,cw,40);cy+=40;
+                g.UpgradeTitle=new(cx,cy,compact?cw/2:cw,40);
+                if(compact)g.Stats=new(cx+cw/2,cy+6,cw-cw/2,28);
+                cy+=40;
                 int column=(cw-(columns-1)*12)/columns;
                 // Column-major like the mockup: the first column is filled top to bottom before the next.
                 g.Conditions=Enumerable.Range(0,conditions).Select(n=>new Rectangle(cx+n/rows*(column+12),cy+n%rows*RowStep,column,BoxHeight)).ToArray();
@@ -150,7 +153,11 @@ internal sealed partial class ProductionService
                 // Same bar for both machines: the crab catcher's is a button, the fishing machine's explains its automatic upgrade.
                 g.Button=new(cx,cy,cw,44);
             }
-            else g.Note=new(cx,cy,cw,34);
+            else
+            {
+                g.Note=new(cx,cy,compact?cw/2:cw,34);
+                if(compact)g.Stats=new(cx+cw/2,cy+3,cw-cw/2,28);
+            }
             g.Dividers=dividers.ToArray();
             int by=g.BagWindow.Y+18;
             if(labels)by+=32;
@@ -307,9 +314,11 @@ internal sealed partial class ProductionService
         // Totals.
         string cycles=Mod.T("panel.cycles-done",new{count=s.CompletedCycles});
         string items=Mod.T("panel.items",new{count=TakeCandidates(c,s).Sum(i=>(long)i.Stack)});
-        float itemsWidth=Game1.smallFont.MeasureString(items).X;
-        PanelText(b,cycles,new Vector2(g.Stats.X,g.Stats.Y),Soft,g.Stats.Width-itemsWidth-16,1f);
-        b.DrawString(Game1.smallFont,items,new Vector2(g.Stats.Right-itemsWidth,g.Stats.Y),Soft);
+        // The compact layout gives the totals half a line: both texts shrink to fit, never below zero width.
+        float itemsScale=Math.Min(1f,g.Stats.Width*.6f/Math.Max(1f,Game1.smallFont.MeasureString(items).X));
+        float itemsWidth=Game1.smallFont.MeasureString(items).X*itemsScale;
+        b.DrawString(Game1.smallFont,items,new Vector2(g.Stats.Right-itemsWidth,g.Stats.Y),Soft,0f,Vector2.Zero,itemsScale,SpriteEffects.None,1f);
+        if(g.Stats.Width-itemsWidth-16>24)PanelText(b,cycles,new Vector2(g.Stats.X,g.Stats.Y),Soft,g.Stats.Width-itemsWidth-16,1f);
 
         // Catch label + Take all.
         if(g.Labels)b.DrawString(Game1.smallFont,Mod.T("panel.catch"),new Vector2(g.Catch.X,g.Catch.Y+10),Ink);
