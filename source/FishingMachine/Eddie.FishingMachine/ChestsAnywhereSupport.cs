@@ -1,5 +1,6 @@
 using System.Reflection;
 using HarmonyLib;
+using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -90,8 +91,51 @@ internal sealed class ChestsAnywhereSupport
     /// <summary>The machine is opened from somewhere else (another location, or out of reach).</summary>
     internal static bool Remote(Chest c) => c.Location != Game1.currentLocation || !Mod.World.InReach(Game1.player, c);
 
+    private static object? CaMod;
+    private static bool CaLookedUp, CaFailed;
+    /// <summary>Chests Anywhere's chest and category lists sit above the machine window. When either would leave the
+    /// screen (short window, big UI scale), both move to the left of the machine window, one under the other.</summary>
+    private static void KeepListsOnScreen()
+    {
+        if (CaFailed || Mod.Production.FullMenu is not { } menu || !ReferenceEquals(Game1.activeClickableMenu, menu) || Mod.Production.FullGeometry is not { } g) return;
+        try
+        {
+            if (!CaLookedUp)
+            {
+                CaLookedUp = true;
+                var info = Mod.Helper.ModRegistry.Get("Pathoschild.ChestsAnywhere");
+                CaMod = info?.GetType().GetProperty("Mod", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(info);
+            }
+            if (CaMod == null) return;
+            var perScreen = AccessTools.Field(CaMod.GetType(), "CurrentOverlay")?.GetValue(CaMod);
+            var overlay = perScreen?.GetType().GetProperty("Value")?.GetValue(perScreen);
+            if (overlay == null || !ReferenceEquals(AccessTools.Field(overlay.GetType(), "Menu")?.GetValue(overlay), menu)) return;
+            var chest = AccessTools.Field(overlay.GetType(), "ChestDropdown")?.GetValue(overlay) as ClickableComponent;
+            var category = AccessTools.Field(overlay.GetType(), "CategoryDropdown")?.GetValue(overlay) as ClickableComponent;
+            var edit = AccessTools.Field(overlay.GetType(), "EditButton")?.GetValue(overlay) as ClickableComponent;
+            if (chest == null) return;
+            var screen = new Rectangle(0, 0, Game1.uiViewport.Width, Game1.uiViewport.Height);
+            bool Off(ClickableComponent? c) => c != null && (c.bounds.Top < 0 || c.bounds.Left < 0 || c.bounds.Right > screen.Right || c.bounds.Bottom > screen.Bottom);
+            if (!Off(chest) && !Off(category) && !Off(edit)) return;
+            // Left of the window: chest list (with its edit button) on top, category list under it.
+            int editWidth = edit?.bounds.Width ?? 0, gap = 8;
+            int width = Math.Max(chest.bounds.Width + editWidth, category?.bounds.Width ?? 0);
+            int x = Math.Max(4, g.Window.X - 12 - width), y = Math.Max(4, g.Window.Y);
+            void Move(ClickableComponent c, int nx, int ny)
+            {
+                c.bounds = new Rectangle(nx, ny, c.bounds.Width, c.bounds.Height);
+                c.GetType().GetMethod("ReinitializeComponents", BindingFlags.Instance | BindingFlags.Public)?.Invoke(c, null);
+            }
+            Move(chest, x, y);
+            if (edit != null) edit.bounds = new Rectangle(x + chest.bounds.Width, y, edit.bounds.Width, edit.bounds.Height);
+            if (category != null) Move(category, x, y + chest.bounds.Height + gap);
+        }
+        catch (Exception ex) { CaFailed = true; Mod.Monitor.Log("BSV could not move Chests Anywhere's lists next to the machine window: " + ex.Message, LogLevel.Trace); }
+    }
+
     private static void Tick()
     {
+        KeepListsOnScreen();
         if (!Context.IsWorldReady || !Supported) return;
         if (Context.IsMainPlayer)
         {
