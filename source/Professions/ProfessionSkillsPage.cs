@@ -114,7 +114,8 @@ internal static class ProfessionSkillsPage
         }
         catch{return null;}
     }
-    private static FieldInfo? ScUp,ScDown,ScBar;
+    private static FieldInfo? ScUp,ScDown,ScBar,ScRunner;
+    private static Rectangle ScRunnerSaved;
     private static readonly Dictionary<FieldInfo,Rectangle> ScHidden=new();
     /// <summary>BSV shows every row itself, so SpaceCore's own scroll arrows are moved off screen while it draws.</summary>
     private static void HideScroll(IClickableMenu page,bool hide)
@@ -124,6 +125,13 @@ internal static class ProfessionSkillsPage
             if(f?.GetValue(page) is not ClickableComponent c)continue;
             if(hide){ScHidden[f]=c.bounds;c.bounds=new Rectangle(-10000,-10000,c.bounds.Width,c.bounds.Height);}
             else if(ScHidden.Remove(f,out var r))c.bounds=r;
+        }
+        // The scroll bar's track is a plain rectangle field.
+        ScRunner??=AccessTools.Field(page.GetType(),"scrollBarRunner");
+        if(ScRunner?.FieldType==typeof(Rectangle))
+        {
+            if(hide){ScRunnerSaved=(Rectangle)ScRunner.GetValue(page)!;ScRunner.SetValue(page,new Rectangle(-10000,-10000,ScRunnerSaved.Width,ScRunnerSaved.Height));}
+            else if(ScRunnerSaved!=default){ScRunner.SetValue(page,ScRunnerSaved);ScRunnerSaved=default;}
         }
     }
     private static void ScDrawPrefix(IClickableMenu __instance,out int __state)
@@ -303,7 +311,7 @@ internal static class ProfessionSkillsPage
         // Column headers sit above the first visible row and follow the icon groups.
         Centered(b,ProfessionService.Text("professions.ui.level-header",new{level=5}),left+m.PairX+group/2f,s.Bounds.Y,.8f,HeaderText,.87f);
         Centered(b,ProfessionService.Text("professions.ui.level-header",new{level=10}),left+m.GridX+group/2f,s.Bounds.Y,.8f,HeaderText,.87f);
-        if(s.Visible<s.Count)b.DrawString(Game1.smallFont,$"{s.First+1}–{s.First+s.Visible}/{s.Count}",new Vector2(left+2,s.Bounds.Y),HeaderText,0f,Vector2.Zero,.8f,SpriteEffects.None,.87f);
+        if(s.Visible<s.Count)b.DrawString(Game1.smallFont,$"{s.First+1}-{s.First+s.Visible}/{s.Count}",new Vector2(left+2,s.Bounds.Y),HeaderText,0f,Vector2.Zero,.8f,SpriteEffects.None,.87f);
         for(int row=s.First;row<Math.Min(s.Count,s.First+s.Visible);row++)
         {
             var skill=s.Rows[row];int level=skill.Level(s.Owner),mid=s.RowTop(row)+pitch/2;
