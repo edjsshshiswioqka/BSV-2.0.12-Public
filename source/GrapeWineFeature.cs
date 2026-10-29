@@ -18,6 +18,7 @@ public sealed class GrapeWineFeature
     private static GrapeWineFeature instance = null!;
     private readonly HashSet<string> loggedErrors = new();
     private readonly HashSet<SObject> kegs = new();
+    private CropData? vanillaGrape;
     private const string GrapeTexture = "Mods/" + WineRules.Prefix + "/GrapeWine";
     private const string BloodTexture = "Mods/" + WineRules.Prefix + "/BloodOfJesus";
 
@@ -77,18 +78,16 @@ public sealed class GrapeWineFeature
         else if (e.NameWithoutLocale.IsEquivalentTo(BloodTexture))
             e.LoadFromModFile<Texture2D>("assets/items/blood_of_jesus.png", AssetLoadPriority.Exclusive);
         else if (e.NameWithoutLocale.IsEquivalentTo("Data/Crops"))
-            e.Edit(a =>
+        {
+            // Read the game's grape before other mods edit it (BSV's own grape is copied from it), then add BSV's grape last.
+            e.Edit(a => { if (a.AsDictionary<string, CropData>().Data.TryGetValue(WineRules.GrapeSeedId, out var g)) vanillaGrape = WineData.Copy(g); },
+                AssetEditPriority.Early - 1000);
+            e.Edit(a => Guard("crops", () =>
             {
-                var crops = a.AsDictionary<string, CropData>().Data;
-                // Another mod turned the grape starter into something else (a Custom Bush bush, for example): leave it to that mod.
-                if (!crops.ContainsKey(WineRules.GrapeSeedId))
-                {
-                    if (loggedErrors.Add("crops-missing"))
-                        monitor.Log("BSV grapes: another mod replaced the Grape Starter crop (301), so BSV's grape season and growth changes are skipped. Grape wine still works.", LogLevel.Warn);
-                    return;
-                }
-                Guard("crops", () => WineData.EditCrops(crops));
-            }, BetterStardewValley.BsvAssets.EditPriority);
+                if (!WineData.EditCrops(a.AsDictionary<string, CropData>().Data, vanillaGrape) && loggedErrors.Add("crops-missing"))
+                    monitor.Log("BSV grapes: the game's Grape Starter crop (301) could not be read, so BSV's Grape Starter can't be planted.", LogLevel.Warn);
+            }), BetterStardewValley.BsvAssets.EditPriority);
+        }
         else if (e.NameWithoutLocale.IsEquivalentTo("Data/Shops"))
             e.Edit(a => Guard("shops", () => WineData.EditShops(a.AsDictionary<string, ShopData>().Data)), BetterStardewValley.BsvAssets.EditPriority);
         else if (e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))
@@ -195,7 +194,7 @@ public sealed class GrapeWineFeature
         if (!Context.IsWorldReady) { monitor.Log("Load a save first.", LogLevel.Info); return; }
         Guard("status", () =>
         {
-            var crop = helper.GameContent.Load<Dictionary<string, CropData>>("Data/Crops")[WineRules.GrapeSeedId];
+            var crop = helper.GameContent.Load<Dictionary<string, CropData>>("Data/Crops")[WineRules.StarterId];
             var machines = helper.GameContent.Load<Dictionary<string, MachineData>>("Data/Machines");
             monitor.Log($"BSV grape: seasons={string.Join(',', crop.Seasons)}, growth={crop.DaysInPhase.Sum()}, regrow={crop.RegrowDays}; seed price={WineRules.GrapeSeedPrice}; host={Game1.IsMasterGame}.", LogLevel.Info);
             foreach (var id in new[] { WineRules.GrapeWine, WineRules.BloodOfJesus })

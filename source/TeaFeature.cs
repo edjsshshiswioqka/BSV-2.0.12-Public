@@ -1,3 +1,4 @@
+using System.Reflection;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -35,8 +36,12 @@ internal sealed partial class TeaFeature
         Patch(typeof(Bush), nameof(Bush.tickUpdate), null, nameof(Tick));
         Patch(typeof(Bush), nameof(Bush.performToolAction), nameof(Tool), null);
         Patch(typeof(SObject), nameof(SObject.ApplySprinkler), null, nameof(Sprinkler));
-        Patch(typeof(SObject), nameof(SObject.placementAction), nameof(PlantOutside), nameof(PlacedOutside));
-        Patch(typeof(IndoorPot), nameof(IndoorPot.performObjectDropInAction), nameof(PlantPot), nameof(PlacedPot));
+        Patch(typeof(SObject), nameof(SObject.placementAction), nameof(PlantOutside), null);
+        foreach (var check in typeof(SObject).GetMethods(BindingFlags.Instance | BindingFlags.Public)
+            .Where(m => m.Name == nameof(SObject.canBePlacedHere) && m.DeclaringType == typeof(SObject) && m.ReturnType == typeof(bool)))
+            h.Patch(check, prefix: new HarmonyMethod(typeof(TeaFeature), nameof(AsGameSapling)));
+        Patch(typeof(IndoorPot), nameof(IndoorPot.performObjectDropInAction), nameof(PlantPot), null);
+        if (AccessTools.Method(typeof(SObject), "IsTeaSapling") != null) Patch(typeof(SObject), "IsTeaSapling", null, nameof(IsTea));
         Patch(typeof(IndoorPot), nameof(IndoorPot.Water), null, nameof(PotWater));
         h.Patch(AccessTools.Constructor(typeof(Bush), new[] { typeof(Vector2), typeof(int), typeof(GameLocation), typeof(int) }),
             postfix: new HarmonyMethod(typeof(TeaFeature), nameof(NewBush)));
@@ -138,6 +143,7 @@ internal sealed partial class TeaFeature
         void Visit(Bush b)
         {
             Release(b);
+            Adopt(b);
             if (!Managed(b)) return;
             Initialize(b, false);
             if (!InSeason(b))
@@ -155,7 +161,16 @@ internal sealed partial class TeaFeature
     /// <summary>Custom Bush (furyx639.CustomBush) bushes are tea-sized too; they follow their own mod's rules, never BSV's tea.</summary>
     internal const string CustomBushKey = "furyx639.CustomBush/Id";
     internal static bool Managed(Bush? b) => b != null && b.size.Value == Bush.greenTeaBush
-        && b.Location != null && b.Location.Name != "Sunroom" && !b.modData.ContainsKey(CustomBushKey);
+        && b.Location != null && b.Location.Name != "Sunroom" && !b.modData.ContainsKey(CustomBushKey)
+        && b.modData.ContainsKey(TeaAppleRules.OwnedKey);
+    /// <summary>A bush grown from BSV's own Tea Sapling. Older BSV versions managed every tea bush; those (already carrying
+    /// BSV tea state and not a Custom Bush) become BSV tea once, so existing tea keeps BSV's rules.</summary>
+    private static void Own(Bush b) => b.modData[TeaAppleRules.OwnedKey] = "1";
+    private static void Adopt(Bush b)
+    {
+        if (b.size.Value == Bush.greenTeaBush && !b.modData.ContainsKey(CustomBushKey) && !b.modData.ContainsKey(TeaAppleRules.OwnedKey)
+            && b.modData.ContainsKey(TeaAppleRules.VersionKey)) Own(b);
+    }
     /// <summary>A Custom Bush bush an older BSV treated as tea: its BSV tea state is removed so only Custom Bush drives it.</summary>
     private static void Release(Bush b)
     {
@@ -264,24 +279,45 @@ internal sealed partial class TeaFeature
         if (location.terrainFeatures.TryGetValue(tile, out var feature) && feature is Bush b) Water(b);
         if (location.objects.TryGetValue(tile, out var obj) && obj is IndoorPot pot && pot.bush.Value is { } p) Water(p);
     }
-    private static bool PlantOutside(SObject __instance, GameLocation location, int x, int y, out bool __state, ref bool __result)
+    /// <summary>BSV's Tea Sapling is planted by the game's own Tea Sapling code (a one-item stand-in), then the new bush is
+    /// marked as BSV tea. Season, watered soil and pots work as before.</summary>
+    private static SObject StandIn() => ItemRegistry.Create<SObject>(TeaAppleRules.VanillaSapling);
+    private static bool Ours(Item? item) => item?.QualifiedItemId == TeaAppleRules.Sapling;
+    private static void IsTea(SObject __instance, ref bool __result) { if (Ours(__instance)) __result = true; }
+    private static bool AsGameSapling(SObject __instance, MethodBase __originalMethod, object[] __args, ref bool __result)
     {
-        __state = __instance.QualifiedItemId == TeaAppleRules.Sapling
-            && location.terrainFeatures.TryGetValue(new Vector2(x / 64, y / 64), out var soil) && soil is HoeDirt dirt && dirt.isWatered();
-        if (__instance.QualifiedItemId != TeaAppleRules.Sapling || TeaAppleRules.GrowingSeason((int)Game1.season)
-            || !location.IsOutdoors || location.SeedsIgnoreSeasonsHere()) return true;
-        Game1.showRedMessage(BetterStardewValley.BsvI18n.Get(Instance.Helper, "tea.wrong-season")); __result = false; return false;
+        if (!Ours(__instance)) return true;
+        __result = (bool)__originalMethod.Invoke(StandIn(), __args)!;
+        return false;
     }
-    private static void PlacedOutside(SObject __instance, GameLocation location, int x, int y, bool __state, bool __result)
+    private static bool PlantOutside(SObject __instance, GameLocation location, int x, int y, MethodBase __originalMethod, object[] __args, ref bool __result)
     {
-        if (__result && __state && location.terrainFeatures.TryGetValue(new Vector2(x / 64, y / 64), out var f) && f is Bush b) Water(b);
+        if (!Ours(__instance)) return true;
+        if (!TeaAppleRules.GrowingSeason((int)Game1.season) && location.IsOutdoors && !location.SeedsIgnoreSeasonsHere())
+        { Game1.showRedMessage(BetterStardewValley.BsvI18n.Get(Instance.Helper, "tea.wrong-season")); __result = false; return false; }
+        var tile = new Vector2(x / 64, y / 64);
+        bool wet = location.terrainFeatures.TryGetValue(tile, out var soil) && soil is HoeDirt dirt && dirt.isWatered();
+        __result = (bool)__originalMethod.Invoke(StandIn(), __args)!;
+        if (__result && location.terrainFeatures.TryGetValue(tile, out var f) && f is Bush b && b.size.Value == Bush.greenTeaBush)
+        {
+            Own(b); Initialize(b, true);
+            if (wet) Water(b);
+        }
+        return false;
     }
     // Garden pots are sheltered: a tea sapling may go into a pot in any season, exactly like vanilla.
-    private static bool PlantPot(Item dropInItem, bool probe, ref bool __result) => true;
-    private static void PlacedPot(IndoorPot __instance, Item dropInItem, bool probe, bool __result)
+    private static bool PlantPot(IndoorPot __instance, Item dropInItem, bool probe, MethodBase __originalMethod, object[] __args, ref bool __result)
     {
-        if (!probe && __result && dropInItem.QualifiedItemId == TeaAppleRules.Sapling
-            && __instance.bush.Value is { } b && __instance.hoeDirt.Value.isWatered()) Water(b);
+        if (!Ours(dropInItem)) return true;
+        var args = (object[])__args.Clone(); args[0] = StandIn();
+        bool wet = __instance.hoeDirt.Value?.isWatered() == true;
+        __result = (bool)__originalMethod.Invoke(__instance, args)!;
+        if (!probe && __result && __instance.bush.Value is { } b)
+        {
+            Own(b); Initialize(b, true);
+            if (wet) Water(b);
+        }
+        return false;
     }
     private static bool Harvest(Bush __instance)
     {

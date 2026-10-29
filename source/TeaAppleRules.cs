@@ -6,7 +6,9 @@ namespace BetterStardewValley;
 internal static class TeaAppleRules
 {
     internal const string Prefix = "Eddie.BetterStardewValley";
-    internal const string Sapling = "(O)251", Leaves = "(O)815", Apple = "(O)613", GoldBar = "(O)336";
+    internal const string VanillaSapling = "(O)251", SaplingId = Prefix + "_TeaSapling", Sapling = "(O)" + SaplingId;
+    internal const string OwnedKey = Prefix + "/Tea/Owned";
+    internal const string Leaves = "(O)815", Apple = "(O)613", GoldBar = "(O)336";
     internal const string CupId = Prefix + "_ACupOfGreenTea", CakeId = Prefix + "_TeaCake", AppleId = Prefix + "_GoldenApple";
     internal const string Cup = "(O)" + CupId, Cake = "(O)" + CakeId, GoldenApple = "(O)" + AppleId;
     internal const string Tenacity = Prefix + "/Tenacity", TeaUnlock = Prefix + "/TeaKnowledge";

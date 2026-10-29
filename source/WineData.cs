@@ -11,31 +11,30 @@ internal static class WineData
 {
     internal static T Copy<T>(T value) => JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(value))!;
 
-    internal static void EditCrops(IDictionary<string, CropData> crops)
+    /// <summary>Adds BSV's own grape crop, copied from the game's grape (<paramref name="template"/>, read before other mods
+    /// change it). The game's Grape Starter crop (301) is left exactly as the game and other mods have it.</summary>
+    internal static bool EditCrops(IDictionary<string, CropData> crops, CropData? template)
     {
-        if (!crops.TryGetValue(WineRules.GrapeSeedId, out var grape))
-            throw new InvalidOperationException("Grape starter crop 301 is missing.");
+        if (template == null && !crops.TryGetValue(WineRules.GrapeSeedId, out template)) return false;
+        var grape = Copy(template);
         grape.Seasons = new() { Season.Spring, Season.Summer, Season.Fall };
         // Five native visual phases, totaling 15 days; mature sentinel is added by Crop.
         grape.DaysInPhase = new() { 2, 3, 3, 3, WineRules.GrapeDaysToMature - 11 };
         grape.RegrowDays = WineRules.GrapeRegrowDays;
+        grape.HarvestItemId = WineRules.GrapeId;   // always the game's grape: wine, bundles and recipes keep working
+        crops[WineRules.StarterId] = grape;
+        return true;
     }
 
+    /// <summary>Pierre sells BSV's Grape Starter all year (it grows spring to fall) instead of the game's.</summary>
     internal static void EditShops(IDictionary<string, ShopData> shops)
     {
-        foreach (var shop in shops.Values)
-            foreach (var item in shop.Items ?? new())
-                if (item.ItemId is "301" or "(O)301") FixSeedPrice(item);
-        if (shops.TryGetValue("SeedShop", out var pierre))
-        {
-            pierre.Items ??= new();
-            // One permanent listing prevents seasonal/stocklist duplicates. Spring is available
-            // without changing any other seed listing or the seed's resale price.
-            pierre.Items.RemoveAll(p => p.ItemId is "301" or "(O)301");
-            var item = new ShopItemData { Id = WineRules.Prefix + "/GrapeStarter", ItemId = "(O)301" };
-            FixSeedPrice(item);
-            pierre.Items.Add(item);
-        }
+        if (!shops.TryGetValue("SeedShop", out var pierre)) return;
+        pierre.Items ??= new();
+        pierre.Items.RemoveAll(p => p.ItemId is "301" or "(O)301" or WineRules.StarterId or WineRules.Starter);
+        var item = new ShopItemData { Id = WineRules.Prefix + "/GrapeStarter", ItemId = WineRules.Starter };
+        FixSeedPrice(item);
+        pierre.Items.Add(item);
     }
 
     private static void FixSeedPrice(ShopItemData item)
@@ -52,8 +51,12 @@ internal static class WineData
     {
         if (!objects.TryGetValue("348", out var wine))
             throw new InvalidOperationException("Vanilla wine object 348 is missing.");
-        if (objects.TryGetValue(WineRules.GrapeSeedId, out var starter))
-            starter.Description = translate("grape-starter.description");
+        // BSV's own Grape Starter: a copy of the game's (same name and picture) with its own ID.
+        var starter = objects.TryGetValue(WineRules.GrapeSeedId, out var native) ? Copy(native)
+            : new ObjectData { Name = "Grape Starter", DisplayName = "[LocalizedText Strings\\Objects:GrapeStarter_Name]", Type = "Seeds",
+                Category = -74, Price = 30, Texture = null, SpriteIndex = 301 };
+        starter.Name = "BSV Grape Starter"; starter.Description = translate("grape-starter.description"); starter.ExcludeFromRandomSale = true;
+        objects[WineRules.StarterId] = starter;
         Add(WineRules.GrapeWineId, "Farmhouse Special Grape Wine", "grape-wine", WineRules.GrapeWinePrice, grapeTexture);
         objects[WineRules.GrapeWineId].Edibility = WineRules.GrapeWineEdibility;   // native wine buffs (Tipsy) kept
         Add(WineRules.BloodOfJesusId, "Ruby Reserve", "blood-of-jesus", WineRules.BloodOfJesusPrice, bloodTexture);

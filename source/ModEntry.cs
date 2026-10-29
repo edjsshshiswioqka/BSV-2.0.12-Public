@@ -144,6 +144,8 @@ public sealed partial class ModEntry : Mod
         catch (Exception ex) { Monitor.Log($"BSV placement reach unavailable; BSV machines and totems use the native one-tile reach.\n{ex}", LogLevel.Warn); }
         try { _ = new TeaFeature(helper, Monitor); }
         catch (Exception ex) { Startup.Check(false); Monitor.Log($"BSV tea initialization failed. Existing BSV modules remain registered.\n{ex}", LogLevel.Error); }
+        try { OwnSeeds.Install(helper, Monitor); }
+        catch (Exception ex) { Monitor.Log("BSV Tea Sapling / Grape Starter conversion unavailable: " + ex, LogLevel.Warn); }
         try { _ = new GoldenAppleFeature(helper, Monitor); }
         catch (Exception ex) { Startup.Check(false); Monitor.Log($"BSV Golden Apple initialization failed. Existing BSV modules remain registered.\n{ex}", LogLevel.Error); }
         IntegrationHost.Register(helper, Monitor, Config);

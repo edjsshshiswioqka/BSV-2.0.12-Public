@@ -4,6 +4,9 @@ internal static class WineRules
 {
     internal const string Prefix = "Eddie.BetterStardewValley";
     internal const string GrapeSeedId = "301", GrapeId = "398";
+    /// <summary>BSV's own Grape Starter (a copy of the game's, same name and picture). BSV's grape rules live on this ID only,
+    /// so a mod that changes the game's Grape Starter (301) never clashes with BSV.</summary>
+    internal const string StarterId = Prefix + "_GrapeStarter", Starter = "(O)" + StarterId;
     internal const string GrapeWineId = Prefix + "_GrapeWine";
     internal const string BloodOfJesusId = Prefix + "_BloodOfJesus";
     internal const string GrapeWine = "(O)" + GrapeWineId;

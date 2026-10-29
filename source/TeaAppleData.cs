@@ -17,7 +17,13 @@ internal static class TeaAppleData
     {
         // Preserve every other field and the identities of vanilla tea items (including Green Tea).
         if (data.TryGetValue("815", out var leaves)) leaves.Price = TeaAppleRules.LeavesPrice;
-        if (data.TryGetValue("251", out var sapling)) sapling.Description = tr("tea.sapling.description");
+        // BSV's own Tea Sapling: a copy of the game's (same name and picture) with its own ID, so other mods that use or change
+        // the game's Tea Sapling (251) or tea-sized bushes never meet BSV's tea rules.
+        var own = data.TryGetValue("251", out var native) ? WineData.Copy(native)
+            : new ObjectData { Name = "Tea Sapling", DisplayName = "[LocalizedText Strings\\Objects:TeaSapling_Name]", Type = "Basic",
+                Category = -74, Price = 500, Texture = null, SpriteIndex = 251 };
+        own.Name = "BSV Tea Sapling"; own.Description = tr("tea.sapling.description"); own.ExcludeFromRandomSale = true;
+        data[TeaAppleRules.SaplingId] = own;
         Add(TeaAppleRules.CupId, "A Cup of Green Tea", "tea.cup", "Cup", TeaAppleRules.CupPrice, -7, 13, true);
         Add(TeaAppleRules.CakeId, "Tea Cake", "tea.cake", "Cake", TeaAppleRules.CakePrice, -26, -300, false);
         Add(TeaAppleRules.AppleId, "Golden Apple", "apple", "Apple", TeaAppleRules.ApplePrice, -7, 15, false);
@@ -33,7 +39,7 @@ internal static class TeaAppleData
     {
         if (!shops.TryGetValue("SeedShop", out var shop)) return;
         shop.Items ??= new();
-        shop.Items.RemoveAll(i => i.ItemId is "251" or TeaAppleRules.Sapling);
+        shop.Items.RemoveAll(i => i.ItemId is "251" or TeaAppleRules.VanillaSapling or TeaAppleRules.SaplingId or TeaAppleRules.Sapling);
         shop.Items.Add(new ShopItemData { Id = TeaAppleRules.Prefix + "/TeaSapling", ItemId = TeaAppleRules.Sapling,
             Price = TeaAppleRules.SaplingPrice, UseObjectDataPrice = false, ApplyProfitMargins = false,
             IgnoreShopPriceModifiers = true, AvailableStock = -1,

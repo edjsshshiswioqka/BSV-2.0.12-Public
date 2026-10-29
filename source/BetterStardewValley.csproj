@@ -21,6 +21,7 @@
     <Compile Include="WalkThroughPlants.cs" />
     <Compile Include="PlacementReach.cs" />
     <Compile Include="BsvAssets.cs" />
+    <Compile Include="OwnSeeds.cs" />
     <Compile Include="InventoryScroll.cs" />
     <Compile Include="BackpackUpgrade.cs" />
     <Compile Include="Configuration/*.cs" /><Compile Include="Farming/*.cs" />
