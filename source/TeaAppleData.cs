@@ -22,7 +22,7 @@ internal static class TeaAppleData
         var own = data.TryGetValue("251", out var native) ? WineData.Copy(native)
             : new ObjectData { Name = "Tea Sapling", DisplayName = "[LocalizedText Strings\\Objects:TeaSapling_Name]", Type = "Basic",
                 Category = -74, Price = 500, Texture = null, SpriteIndex = 251 };
-        own.Name = "BSV Tea Sapling"; own.Description = tr("tea.sapling.description"); own.ExcludeFromRandomSale = true;
+        own.Name = "BSV Tea Sapling"; own.DisplayName = "BSV " + own.DisplayName;   // the game's localized name with a BSV prefix own.Description = tr("tea.sapling.description"); own.ExcludeFromRandomSale = true;
         data[TeaAppleRules.SaplingId] = own;
         Add(TeaAppleRules.CupId, "A Cup of Green Tea", "tea.cup", "Cup", TeaAppleRules.CupPrice, -7, 13, true);
         Add(TeaAppleRules.CakeId, "Tea Cake", "tea.cake", "Cake", TeaAppleRules.CakePrice, -26, -300, false);

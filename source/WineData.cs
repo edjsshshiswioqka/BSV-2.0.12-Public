@@ -55,7 +55,7 @@ internal static class WineData
         var starter = objects.TryGetValue(WineRules.GrapeSeedId, out var native) ? Copy(native)
             : new ObjectData { Name = "Grape Starter", DisplayName = "[LocalizedText Strings\\Objects:GrapeStarter_Name]", Type = "Seeds",
                 Category = -74, Price = 30, Texture = null, SpriteIndex = 301 };
-        starter.Name = "BSV Grape Starter"; starter.Description = translate("grape-starter.description"); starter.ExcludeFromRandomSale = true;
+        starter.Name = "BSV Grape Starter"; starter.DisplayName = "BSV " + starter.DisplayName;   // the game's localized name with a BSV prefix starter.Description = translate("grape-starter.description"); starter.ExcludeFromRandomSale = true;
         objects[WineRules.StarterId] = starter;
         Add(WineRules.GrapeWineId, "Farmhouse Special Grape Wine", "grape-wine", WineRules.GrapeWinePrice, grapeTexture);
         objects[WineRules.GrapeWineId].Edibility = WineRules.GrapeWineEdibility;   // native wine buffs (Tipsy) kept
