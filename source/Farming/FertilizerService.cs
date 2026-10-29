@@ -182,7 +182,12 @@ internal sealed class FertilizerService
         string State(bool value)=>BsvI18n.Get(Helper,value?"config.state-on":"config.state-off");
         string text=BsvI18n.Get(Helper,"farming.dual-status",new{quality=ItemRegistry.GetDataOrErrorItem(s.Quality).DisplayName,speed=ItemRegistry.GetDataOrErrorItem(s.Speed).DisplayName,
             fertilizer=State(c.HarvestBonus.EnableFertilizerYieldBonus),regrow=State(c.EnableBsvSpeedGro),extra=State(c.HarvestBonus.Enabled)});
-        StardewValley.Menus.IClickableMenu.drawHoverText(b,text,Game1.smallFont);
+        // Above-left of the cursor: the game and other mods (UI Info Suite 2's crop days, for example) draw their crop
+        // boxes below-right of it, so both stay readable. drawHoverText places a box at cursor + 32 + offset.
+        var size=Game1.smallFont.MeasureString(text);int w=(int)size.X+32,h=Math.Max(60,(int)size.Y+32);
+        int mx=Game1.getOldMouseX(),my=Game1.getOldMouseY();
+        int x=Math.Max(0,mx-w-16),y=Math.Max(0,my-h-16);
+        StardewValley.Menus.IClickableMenu.drawHoverText(b,text,Game1.smallFont,x-(mx+32),y-(my+32));
     }
     internal void Notice(string key)=>Game1.showRedMessage(BsvI18n.Get(Helper,key));
     internal void Error(Exception ex){if(LoggedErrors.Add(ex.GetType().FullName+":"+ex.Message))Monitor.Log("BSV farming transaction paused; state retained: "+ex,LogLevel.Error); }
