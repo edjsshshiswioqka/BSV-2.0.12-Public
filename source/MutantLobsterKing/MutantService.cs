@@ -31,7 +31,7 @@ internal sealed class MutantService
         }catch{h.UnpatchAll(h.Id);throw;}
         helper.Events.Content.AssetRequested+=(_,e)=>
         {
-            if(e.NameWithoutLocale.IsEquivalentTo(MutantData.Texture))e.LoadFrom(()=>Texture(16),StardewModdingAPI.Events.AssetLoadPriority.Exclusive);
+            if(e.NameWithoutLocale.IsEquivalentTo(MutantData.Texture))e.LoadFrom(()=>HdSprites.Handoff(Texture(16)),StardewModdingAPI.Events.AssetLoadPriority.Exclusive);
             else if(e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))e.Edit(a=>MutantData.Objects(a.AsDictionary<string,ObjectData>().Data,k=>BsvI18n.Get(helper,k)), BetterStardewValley.BsvAssets.EditPriority);
         };
         helper.Events.Content.AssetsInvalidated+=(_,e)=>

@@ -23,7 +23,7 @@ internal sealed class LobsterService
         helper.Events.Content.AssetRequested+=(_,e)=>
         {
             if(e.NameWithoutLocale.StartsWith(LobsterData.TextureRoot))
-            {string name=e.NameWithoutLocale.Name[LobsterData.TextureRoot.Length..];if(name is "fish" or "bait" or "dinner")e.LoadFrom(()=>Texture(name,16),AssetLoadPriority.Exclusive);}
+            {string name=e.NameWithoutLocale.Name[LobsterData.TextureRoot.Length..];if(name is "fish" or "bait" or "dinner")e.LoadFrom(()=>HdSprites.Handoff(Texture(name,16)),AssetLoadPriority.Exclusive);}
             else if(e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))e.Edit(a=>LobsterData.Objects(a.AsDictionary<string,ObjectData>().Data,Tr), BetterStardewValley.BsvAssets.EditPriority);
             else if(e.NameWithoutLocale.IsEquivalentTo("Data/Fish"))e.Edit(a=>LobsterData.Fish(a.AsDictionary<string,string>().Data), BetterStardewValley.BsvAssets.EditPriority);
             else if(e.NameWithoutLocale.IsEquivalentTo("Data/CraftingRecipes"))e.Edit(a=>LobsterData.Crafting(a.AsDictionary<string,string>().Data,Tr), BetterStardewValley.BsvAssets.EditPriority);

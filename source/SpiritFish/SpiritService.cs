@@ -70,7 +70,7 @@ internal sealed class SpiritService
         if(e.NameWithoutLocale.StartsWith(SpiritRules.TextureRoot))
         {
             string name=e.NameWithoutLocale.Name[SpiritRules.TextureRoot.Length..];
-            if(name is "fish" or "soup")e.LoadFrom(()=>SpiritArt.Texture(name,16),AssetLoadPriority.Exclusive);
+            if(name is "fish" or "soup")e.LoadFrom(()=>BetterStardewValley.HdSprites.Handoff(SpiritArt.Texture(name,16)),AssetLoadPriority.Exclusive);
         }
         else if(e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))e.Edit(a=>SpiritData.Objects(a.AsDictionary<string,ObjectData>().Data,Tr), BetterStardewValley.BsvAssets.EditPriority);
         else if(e.NameWithoutLocale.IsEquivalentTo("Data/Fish"))e.Edit(a=>SpiritData.Fish(a.AsDictionary<string,string>().Data), BetterStardewValley.BsvAssets.EditPriority);

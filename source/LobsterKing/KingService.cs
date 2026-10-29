@@ -34,7 +34,7 @@ internal sealed class KingService
         helper.Events.Content.AssetRequested+=(_,e)=>
         {
             if(e.NameWithoutLocale.StartsWith(KingData.TextureRoot))
-            {string name=e.NameWithoutLocale.Name[KingData.TextureRoot.Length..];if(name is "fish" or "sashimi")e.LoadFrom(()=>Texture(name,16),StardewModdingAPI.Events.AssetLoadPriority.Exclusive);}
+            {string name=e.NameWithoutLocale.Name[KingData.TextureRoot.Length..];if(name is "fish" or "sashimi")e.LoadFrom(()=>HdSprites.Handoff(Texture(name,16)),StardewModdingAPI.Events.AssetLoadPriority.Exclusive);}
             else if(e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))e.Edit(a=>KingData.Objects(a.AsDictionary<string,ObjectData>().Data,Tr,KingData.ApprovedSashimi), BetterStardewValley.BsvAssets.EditPriority);
             else if(e.NameWithoutLocale.IsEquivalentTo("Data/CookingRecipes"))e.Edit(a=>KingData.Cooking(a.AsDictionary<string,string>().Data,Tr,KingData.ApprovedSashimi!=null), BetterStardewValley.BsvAssets.EditPriority);
             else if(e.NameWithoutLocale.IsEquivalentTo("Data/mail"))e.Edit(a=>KingMail.Data(a.AsDictionary<string,string>().Data,Tr,KingData.ApprovedSashimi!=null), BetterStardewValley.BsvAssets.EditPriority);

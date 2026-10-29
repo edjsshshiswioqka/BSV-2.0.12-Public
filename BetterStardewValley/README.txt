@@ -1,4 +1,4 @@
-Better Stardew Valley (BSV) 2.0.15 beta
+Better Stardew Valley (BSV) 2.0.16 beta
 =======================================
 
 Requirements: Stardew Valley 1.6.15 and SMAPI 4.5.2 or newer.
@@ -31,7 +31,7 @@ This is a beta. Please report problems on the Nexus page (mod 53251) with your S
 
 ---------------------------------------
 
-Better Stardew Valley（BSV）2.0.15 测试版
+Better Stardew Valley（BSV）2.0.16 测试版
 
 需要：星露谷物语 1.6.15，SMAPI 4.5.2 或更新版本。
 可选：Generic Mod Config Menu（游戏内设置菜单）、Automate、Chests Anywhere（在任何地方打开钓鱼机和捕蟹器，取鱼、放鱼饵）。

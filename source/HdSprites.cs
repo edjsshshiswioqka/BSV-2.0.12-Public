@@ -71,6 +71,16 @@ internal static class HdSprites
         if(Math.Abs(factor-(float)replacement.Height/original.Height)>.001f)throw new ArgumentException("Non-uniform prepared sprite scale.");
         Unregister(original);Replacements[original]=new(replacement,factor){Filter=false};
     }
+    /// <summary>A texture handed to SMAPI from AssetRequested.LoadFrom belongs to SMAPI: it may dispose it at any time (cache
+    /// invalidation, a language change, a temporary content manager being unloaded). Each load therefore gets its own copy;
+    /// the mod's cached original is never given out, so one disposal can't break an icon that is still drawn elsewhere.</summary>
+    internal static Texture2D Handoff(Texture2D cached)
+    {
+        var data=new Color[checked(cached.Width*cached.Height)];cached.GetData(data);
+        var copy=new Texture2D(Game1.graphics.GraphicsDevice,cached.Width,cached.Height);copy.SetData(data);
+        if(Replacements.TryGetValue(cached,out var entry))Replacements[copy]=new(entry.Texture,entry.Factor){Filter=entry.Filter};
+        return copy;
+    }
     internal static void Unregister(Texture2D original)
     {
         if(Replacements.Remove(original,out var entry))foreach(var mip in entry.Mips)mip.Dispose();
