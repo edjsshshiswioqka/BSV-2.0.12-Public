@@ -77,7 +77,18 @@ public sealed class GrapeWineFeature
         else if (e.NameWithoutLocale.IsEquivalentTo(BloodTexture))
             e.LoadFromModFile<Texture2D>("assets/items/blood_of_jesus.png", AssetLoadPriority.Exclusive);
         else if (e.NameWithoutLocale.IsEquivalentTo("Data/Crops"))
-            e.Edit(a => Guard("crops", () => WineData.EditCrops(a.AsDictionary<string, CropData>().Data)), BetterStardewValley.BsvAssets.EditPriority);
+            e.Edit(a =>
+            {
+                var crops = a.AsDictionary<string, CropData>().Data;
+                // Another mod turned the grape starter into something else (a Custom Bush bush, for example): leave it to that mod.
+                if (!crops.ContainsKey(WineRules.GrapeSeedId))
+                {
+                    if (loggedErrors.Add("crops-missing"))
+                        monitor.Log("BSV grapes: another mod replaced the Grape Starter crop (301), so BSV's grape season and growth changes are skipped. Grape wine still works.", LogLevel.Warn);
+                    return;
+                }
+                Guard("crops", () => WineData.EditCrops(crops));
+            }, BetterStardewValley.BsvAssets.EditPriority);
         else if (e.NameWithoutLocale.IsEquivalentTo("Data/Shops"))
             e.Edit(a => Guard("shops", () => WineData.EditShops(a.AsDictionary<string, ShopData>().Data)), BetterStardewValley.BsvAssets.EditPriority);
         else if (e.NameWithoutLocale.IsEquivalentTo("Data/Objects"))

@@ -137,6 +137,7 @@ internal sealed partial class TeaFeature
         });
         void Visit(Bush b)
         {
+            Release(b);
             if (!Managed(b)) return;
             Initialize(b, false);
             if (!InSeason(b))
@@ -151,8 +152,19 @@ internal sealed partial class TeaFeature
     /// <summary>Greenhouse, Ginger Island, indoors and any garden pot: tea there ignores the seasons and never dies.</summary>
     internal static bool Sheltered(Bush b) => b.inPot.Value || b.Location is { } l && (!l.IsOutdoors || l.SeedsIgnoreSeasonsHere());
     internal static bool InSeason(Bush b) => Sheltered(b) || TeaAppleRules.GrowingSeason((int)Game1.season);
+    /// <summary>Custom Bush (furyx639.CustomBush) bushes are tea-sized too; they follow their own mod's rules, never BSV's tea.</summary>
+    internal const string CustomBushKey = "furyx639.CustomBush/Id";
     internal static bool Managed(Bush? b) => b != null && b.size.Value == Bush.greenTeaBush
-        && b.Location != null && b.Location.Name != "Sunroom";
+        && b.Location != null && b.Location.Name != "Sunroom" && !b.modData.ContainsKey(CustomBushKey);
+    /// <summary>A Custom Bush bush an older BSV treated as tea: its BSV tea state is removed so only Custom Bush drives it.</summary>
+    private static void Release(Bush b)
+    {
+        if (!b.modData.ContainsKey(CustomBushKey) || !b.modData.ContainsKey(TeaAppleRules.VersionKey)) return;
+        foreach (string key in new[] { TeaAppleRules.GrowthKey, TeaAppleRules.RegrowKey, TeaAppleRules.DeadKey, TeaAppleRules.WaterKey,
+            TeaAppleRules.PreviousWaterKey, TeaAppleRules.DayKey, TeaAppleRules.VersionKey })
+            b.modData.Remove(key);
+        b.setUpSourceRect();
+    }
     internal static int Get(Bush b, string key, int fallback = -1) =>
         TeaAppleRules.Number(b.modData.TryGetValue(key, out string? s) ? s : null, fallback);
     private static void Set(Bush b, string key, int n) => b.modData[key] = TeaAppleRules.Text(n);
