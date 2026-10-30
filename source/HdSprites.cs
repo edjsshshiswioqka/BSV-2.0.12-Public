@@ -233,7 +233,8 @@ internal static class HdSprites
     }
     private static bool Remap(ref Texture2D texture,ref Rectangle? source,out float factor,float desired=0)
     {
-        factor=1;if(!Replacements.TryGetValue(texture,out var entry))return false;
+        // Another mod may draw a missing (null) texture: leave that draw untouched, the game reports it to that mod.
+        factor=1;if(texture==null||!Replacements.TryGetValue(texture,out var entry))return false;
         var r=source??new Rectangle(0,0,texture.Width,texture.Height);
         var full=entry.Texture;var selected=full;factor=entry.Factor;
         if(entry.Filter&&desired>0)
@@ -259,11 +260,12 @@ internal static class HdSprites
     {if(Remap(ref __0,ref __2,out float factor,Math.Max(Math.Abs(__6.X),Math.Abs(__6.Y)))){__5*=factor;__6/=factor;}}
     private static void Destination(ref Texture2D __0,Rectangle __1,ref Rectangle? __2,ref Vector2 __5)
     {
+        if(__0==null)return;
         var rect=__2??new Rectangle(0,0,__0.Width,__0.Height);
         if(Remap(ref __0,ref __2,out float factor,Math.Max(Math.Abs(__1.Width/(float)rect.Width),Math.Abs(__1.Height/(float)rect.Height))))__5*=factor;
     }
     private static void RectSource(ref Texture2D __0,Rectangle __1,ref Rectangle? __2)
-    {var r=__2??new Rectangle(0,0,__0.Width,__0.Height);Remap(ref __0,ref __2,out _,Math.Max(Math.Abs(__1.Width/(float)r.Width),Math.Abs(__1.Height/(float)r.Height)));}
+    {if(__0==null)return;var r=__2??new Rectangle(0,0,__0.Width,__0.Height);Remap(ref __0,ref __2,out _,Math.Max(Math.Abs(__1.Width/(float)r.Width),Math.Abs(__1.Height/(float)r.Height)));}
     private static bool VectorSource(SpriteBatch __instance,Texture2D __0,Vector2 __1,Rectangle? __2,Color __3)
     {
         if(!Remap(ref __0,ref __2,out float factor,1))return true;
@@ -273,6 +275,7 @@ internal static class HdSprites
         =>VectorSource(__instance,__0,__1,null,__2);
     private static bool RectSimple(SpriteBatch __instance,Texture2D __0,Rectangle __1,Color __2)
     {
+        if(__0==null)return true;
         Rectangle? source=null;float desired=Math.Max(Math.Abs(__1.Width/(float)__0.Width),Math.Abs(__1.Height/(float)__0.Height));
         if(!Remap(ref __0,ref source,out _,desired))return true;
         __instance.Draw(__0,__1,source,__2);return false;
